@@ -267,10 +267,6 @@ bool AppInit2(int argc, char* argv[])
     }
 
     fTestNet = GetBoolArg("-testnet");
-    if (fTestNet)
-    {
-        SoftSetBoolArg("-irc", true);
-    }
 
     fDebug = GetBoolArg("-debug");
     fDetachDB = GetBoolArg("-detachdb", false);
