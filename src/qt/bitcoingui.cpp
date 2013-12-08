@@ -404,7 +404,7 @@ void BitcoinGUI::createTrayIcon()
     trayIconMenu->addAction(quitAction);
 #endif
 
-    notificator = new Notificator(tr("ppcoin-qt"), trayIcon);
+    notificator = new Notificator(tr("emercoin-qt"), trayIcon);
 }
 
 #ifndef Q_WS_MAC

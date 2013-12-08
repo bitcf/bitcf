@@ -18,12 +18,12 @@ help further advance the field of crypto-currency.
 
 Setup
 -----
-After completing windows setup then run ppcoin-qt.
+After completing windows setup then run emercoin-qt.
 Alternatively you can run windows command line (cmd) in ppcoin program dir.
   cd daemon
-  ppcoind
-You would need to create a configuration file ppcoin.conf in the default
-wallet directory. Grant access to ppcoind/ppcoin-qt in anti-virus and firewall
+  emercoind
+You would need to create a configuration file emercoin.conf in the default
+wallet directory. Grant access to emercoind/emercoin-qt in anti-virus and firewall
 applications if necessary.
 
 The software automatically finds other nodes to connect to.  You can
@@ -37,11 +37,11 @@ Upgrade
 -------
 All your existing coins/transactions should be intact with the upgrade.
 To upgrade from 0.2, first backup wallet
-ppcoind backupwallet <destination_backup_file>
-Then shutdown ppcoind by
-ppcoind stop
-Remove files inside wallet directory other than wallet.dat and ppcoin.conf
-Start up the new ppcoin-qt (0.3.0). It would start re-download of block chain.
+emercoind backupwallet <destination_backup_file>
+Then shutdown emercoind by
+emercoind stop
+Remove files inside wallet directory other than wallet.dat and emercoin.conf
+Start up the new emercoin-qt (0.3.0). It would start re-download of block chain.
 
 
 See the documentation/wiki at the ppcoin website:

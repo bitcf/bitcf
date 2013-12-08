@@ -19,10 +19,10 @@ help further advance the field of crypto-currency.
 Setup
 -----
 Unpack the files into a directory and run:
- bin/32/ppcoin-qt (GUI, 32-bit)
- bin/32/ppcoind (headless, 32-bit)
- bin/64/ppcoin-qt (GUI, 64-bit)
- bin/64/ppcoind (headless, 64-bit)
+ bin/32/emercoin-qt (GUI, 32-bit)
+ bin/32/emercoind (headless, 32-bit)
+ bin/64/emercoin-qt (GUI, 64-bit)
+ bin/64/emercoind (headless, 64-bit)
 
 The software automatically finds other nodes to connect to.  You can
 enable Universal Plug and Play (UPnP) with your router/firewall
@@ -35,11 +35,11 @@ Upgrade
 -------
 All your existing coins/transactions should be intact with the upgrade.
 To upgrade from 0.2, first backup wallet
-ppcoind backupwallet <destination_backup_file>
-Then shutdown ppcoind by
-ppcoind stop
-Remove files inside wallet directory other than wallet.dat and ppcoin.conf
-Start up the new ppcoind (0.3.0). It would start re-download of block chain.
+emercoind backupwallet <destination_backup_file>
+Then shutdown emercoind by
+emercoind stop
+Remove files inside wallet directory other than wallet.dat and emercoin.conf
+Start up the new emercoind (0.3.0). It would start re-download of block chain.
 
 
 See the documentation/wiki at the ppcoin website:
