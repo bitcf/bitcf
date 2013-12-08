@@ -5,9 +5,9 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.3.0
+!define VERSION 0.1.0
 !define COMPANY "EmerCoin project"
-!define URL http://www.ppcoin.org/
+!define URL http://www.emercoin.com/
 
 # MUI Symbol Definitions
 !define MUI_ICON "../share/pixmaps/bitcoin.ico"
@@ -45,13 +45,13 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile ppcoin-0.3.0-win32-setup.exe
+OutFile emercoin-0.1.0-win32-setup.exe
 InstallDir $PROGRAMFILES\EmerCoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.3.0.0
+VIProductVersion 0.1.0.0
 VIAddVersionKey ProductName EmerCoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -141,7 +141,7 @@ Section -un.post UNSEC0001
     DeleteRegValue HKCU "${REGKEY}" Path
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
-    DeleteRegKey HKCR "ppcoin"
+    DeleteRegKey HKCR "emercoin"
     RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
     RmDir /REBOOTOK $INSTDIR
     Push $R0

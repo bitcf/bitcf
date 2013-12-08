@@ -1,5 +1,5 @@
 ---
-name: "ppcoin"
+name: "emercoin"
 suites:
 - "lucid"
 architectures:
@@ -12,12 +12,12 @@ packages:
 - "faketime"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
-- "url": "https://github.com/ppcoin/ppcoin.git"
-  "dir": "ppcoin"
+- "url": "/home/evgenij/1/test/emercoin/.git"
+  "dir": "emercoin"
 files:
 - "qt-win32-4.7.4-gitian.zip"
 - "boost-win32-1.47.0-gitian.zip"
-- "ppcoin-deps-0.0.1.zip"
+- "emercoin-deps-0.0.1.zip"
 script: |
   #
   mkdir $HOME/qt
@@ -39,11 +39,11 @@ script: |
   mv include/boost .
   cd ..
   #
-  unzip ppcoin-deps-0.0.1.zip
+  unzip emercoin-deps-0.0.1.zip
   #
   find -type f | xargs touch --date="$REFERENCE_DATETIME"
   #
-  cd ppcoin
+  cd emercoin
   mkdir -p $OUTDIR/src
   git archive HEAD | tar -x -C $OUTDIR/src
   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
@@ -71,4 +71,4 @@ script: |
   cp ../../release/* ../release/
   cp ../../src/*.exe .
   makensis ../share/setup.nsi
-  cp ../share/ppcoin-*-win32-setup.exe $OUTDIR/
+  cp ../share/emercoin-*-win32-setup.exe $OUTDIR/

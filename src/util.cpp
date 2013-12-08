@@ -855,7 +855,7 @@ boost::filesystem::path GetDefaultDataDir()
 
     // Windows: C:\Documents and Settings\username\Application Data\EmerCoin
     // Mac: ~/Library/Application Support/EmerCoin
-    // Unix: ~/.ppcoin
+    // Unix: ~/.emercoin
 #ifdef WIN32
     // Windows
     return MyGetSpecialFolderPath(CSIDL_APPDATA, true) / "EmerCoin";
@@ -1204,7 +1204,7 @@ boost::filesystem::path static GetAutostartDir()
 
 boost::filesystem::path static GetAutostartFilePath()
 {
-    return GetAutostartDir() / "ppcoin.desktop";
+    return GetAutostartDir() / "emercoin.desktop";
 }
 
 bool GetStartOnSystemStartup()

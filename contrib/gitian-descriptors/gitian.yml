@@ -1,5 +1,5 @@
 ---
-name: "ppcoin"
+name: "emercoin"
 suites:
 - "lucid"
 architectures:
@@ -20,8 +20,8 @@ packages:
 - "libpng12-dev"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
-- "url": "https://github.com/ppcoin/ppcoin.git"
-  "dir": "ppcoin"
+- "url": "/home/evgenij/1/test/emercoin/.git"
+  "dir": "emercoin"
 files:
 - "miniupnpc-1.6.tar.gz"
 - "qrencode-3.2.0.tar.bz2"
@@ -40,7 +40,7 @@ script: |
   make $MAKEOPTS install
   cd ..
   #
-  cd ppcoin
+  cd emercoin
   mkdir -p $OUTDIR/src
   git archive HEAD | tar -x -C $OUTDIR/src
   cp $OUTDIR/src/doc/README $OUTDIR

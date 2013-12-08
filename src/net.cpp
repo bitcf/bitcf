@@ -980,7 +980,7 @@ void MapPort(bool /* unused fMapPort */)
 // Each pair gives a source name and a seed name.
 // The first name is used as information source for addrman.
 // The second name should resolve to a list of seed addresses.
-// testnet dns seed begins with 't', all else are ppcoin dns seeds.
+// testnet dns seed begins with 't', all else are emercoin dns seeds.
 static const char *strDNSSeed[][2] = {
     {"seed", "seed.emercoin.com"},
     {"tnseed", "tnseed.emercoin.com"},

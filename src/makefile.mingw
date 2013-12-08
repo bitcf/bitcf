@@ -54,7 +54,7 @@
 #
 # - Build emercoind.exe
 #   in MinGW MSYS
-#     cd ppcoin/src
+#     cd emercoin/src
 #     make emercoind.exe -f makefile.mingw USE_UPNP=1
 #
 #
