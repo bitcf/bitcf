@@ -1,5 +1,5 @@
 
-PPCoin official development tree
+EmerCoin official development tree
 
 Bitcoin development process
 ===========================

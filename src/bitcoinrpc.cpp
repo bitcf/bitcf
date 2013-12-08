@@ -1819,10 +1819,10 @@ Value getwork(const Array& params, bool fHelp)
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
 
     if (vNodes.empty())
-        throw JSONRPCError(-9, "PPCoin is not connected!");
+        throw JSONRPCError(-9, "EmerCoin is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(-10, "PPCoin is downloading blocks...");
+        throw JSONRPCError(-10, "EmerCoin is downloading blocks...");
 
     typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;
@@ -1950,10 +1950,10 @@ Value getblocktemplate(const Array& params, bool fHelp)
         throw JSONRPCError(-8, "Invalid mode");
 
     if (vNodes.empty())
-        throw JSONRPCError(-9, "PPCoin is not connected!");
+        throw JSONRPCError(-9, "EmerCoin is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(-10, "PPCoin is downloading blocks...");
+        throw JSONRPCError(-10, "EmerCoin is downloading blocks...");
 
     static CReserveKey reservekey(pwalletMain);
 

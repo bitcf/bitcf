@@ -69,7 +69,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     notificator(0)
 {
     resize(850, 550);
-    setWindowTitle(tr("PPCoin Wallet"));
+    setWindowTitle(tr("EmerCoin Wallet"));
 #ifndef Q_WS_MAC
     setWindowIcon(QIcon(":icons/ppcoin"));
 #else
@@ -229,7 +229,7 @@ void BitcoinGUI::createActions()
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     aboutAction = new QAction(QIcon(":/icons/ppcoin"), tr("&About %1").arg(qApp->applicationName()), this);
-    aboutAction->setToolTip(tr("Show information about PPCoin"));
+    aboutAction->setToolTip(tr("Show information about EmerCoin"));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutQtAction = new QAction(tr("About &Qt"), this);
     aboutQtAction->setToolTip(tr("Show information about Qt"));
@@ -237,8 +237,8 @@ void BitcoinGUI::createActions()
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
     optionsAction->setToolTip(tr("Modify configuration options for ppcoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
-    toggleHideAction = new QAction(QIcon(":/icons/ppcoin"), tr("Show/Hide &PPCoin"), this);
-    toggleHideAction->setToolTip(tr("Show or hide the PPCoin window"));
+    toggleHideAction = new QAction(QIcon(":/icons/ppcoin"), tr("Show/Hide &EmerCoin"), this);
+    toggleHideAction->setToolTip(tr("Show or hide the EmerCoin window"));
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
     exportAction->setToolTip(tr("Export the data in the current tab to a file"));
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet"), this);
@@ -377,7 +377,7 @@ void BitcoinGUI::createTrayIcon()
     trayIcon = new QSystemTrayIcon(this);
     trayIconMenu = new QMenu(this);
     trayIcon->setContextMenu(trayIconMenu);
-    trayIcon->setToolTip(tr("PPCoin client"));
+    trayIcon->setToolTip(tr("EmerCoin client"));
     trayIcon->setIcon(QIcon(":/icons/toolbar"));
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
@@ -468,7 +468,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to PPCoin network", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to EmerCoin network", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
