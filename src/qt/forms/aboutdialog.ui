@@ -60,7 +60,7 @@
        <item>
         <widget class="QLabel" name="versionLabel">
          <property name="text">
-          <string notr="true">0.3.666-beta</string>
+          <string notr="true">0.1.666-beta</string>
          </property>
          <property name="textFormat">
           <enum>Qt::RichText</enum>

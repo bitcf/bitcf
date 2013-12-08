@@ -527,7 +527,7 @@ bool AppInit2(int argc, char* argv[])
         addrProxy = CService(mapArgs["-proxy"], 9050);
         if (!addrProxy.IsValid())
         {
-            ThreadSafeMessageBox(_("Invalid -proxy address"), _("PPCcoin"), wxOK | wxMODAL);
+            ThreadSafeMessageBox(_("Invalid -proxy address"), _("EmerCoin"), wxOK | wxMODAL);
             return false;
         }
     }
