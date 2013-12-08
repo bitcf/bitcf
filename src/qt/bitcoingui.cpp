@@ -235,7 +235,7 @@ void BitcoinGUI::createActions()
     aboutQtAction->setToolTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setToolTip(tr("Modify configuration options for ppcoin"));
+    optionsAction->setToolTip(tr("Modify configuration options for emercoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     toggleHideAction = new QAction(QIcon(":/icons/ppcoin"), tr("Show/Hide &EmerCoin"), this);
     toggleHideAction->setToolTip(tr("Show or hide the EmerCoin window"));

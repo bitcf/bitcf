@@ -958,7 +958,10 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
     // ppcoin: retarget with exponential moving toward target spacing
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
-    int64 nTargetSpacing = fProofOfStake? STAKE_TARGET_SPACING : min(nTargetSpacingWorkMax, (int64) STAKE_TARGET_SPACING * (1 + pindexLast->nHeight - pindexPrev->nHeight));
+
+    double fModifier = min(1.0, (double)pindexLast->nHeight / 10000.0);
+    int nSpacingRatio = max(10, (int)(STAKE_TARGET_SPACING * fModifier));
+    int64 nTargetSpacing = fProofOfStake? STAKE_TARGET_SPACING : min(nTargetSpacingWorkMax, (int64) nSpacingRatio * (1 + pindexLast->nHeight - pindexPrev->nHeight));
     int64 nInterval = nTargetTimespan / nTargetSpacing;
     bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * nTargetSpacing);
