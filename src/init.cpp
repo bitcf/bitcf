@@ -599,6 +599,7 @@ bool AppInit2(int argc, char* argv[])
     {
         if (!Checkpoints::SetCheckpointPrivKey(GetArg("-checkpointkey", "")))
             ThreadSafeMessageBox(_("Unable to sign checkpoint, wrong checkpointkey?\n"), _("EmerCoin"), wxOK | wxMODAL);
+        else printf("Setting private key is.... successful\n");
     }
 
     //
