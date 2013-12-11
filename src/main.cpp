@@ -963,7 +963,9 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
     int nSpacingRatio = max(10, (int)(STAKE_TARGET_SPACING * fModifier));
     int64 nTargetSpacing = fProofOfStake? STAKE_TARGET_SPACING : min(nTargetSpacingWorkMax, (int64) nSpacingRatio * (1 + pindexLast->nHeight - pindexPrev->nHeight));
     int64 nInterval = nTargetTimespan / nTargetSpacing;
-    bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+
+    int n = fProofOfStake ? 1 : ((pindexLast->nHeight < 6666) ? 1 : 3);
+    bnNew *= ((nInterval - n) * nTargetSpacing + (n + 1) * nActualSpacing);
     bnNew /= ((nInterval + 1) * nTargetSpacing);
 
     if (bnNew > bnProofOfWorkLimit)
