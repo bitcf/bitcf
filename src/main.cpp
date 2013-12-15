@@ -2305,8 +2305,8 @@ bool LoadBlockIndex(bool fAllowNew)
 
         if (fTestNet)
         {
-            block.nTime    = 1386628333;
-            block.nNonce   = 122894938;
+            block.nTime    = 1386628033;
+            block.nNonce   = 18330017;
         }
 
         //// debug print
@@ -2337,6 +2337,8 @@ bool LoadBlockIndex(bool fAllowNew)
                     printf("nonce %08u: hash = %s \n", block.nNonce, block.GetHash().ToString().c_str());
                 }
             }
+            block.print();
+            printf("block.GetHash() == %s\n", block.GetHash().ToString().c_str());
         }
 
         assert(block.GetHash() == hashGenesisBlock);
