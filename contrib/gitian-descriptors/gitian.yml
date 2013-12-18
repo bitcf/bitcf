@@ -20,7 +20,7 @@ packages:
 - "libpng12-dev"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
-- "url": "/home/evgenij/1/test/emercoin/.git"
+- "url": "https://github.com/EvgenijM86/emercoin"
   "dir": "emercoin"
 files:
 - "miniupnpc-1.6.tar.gz"
