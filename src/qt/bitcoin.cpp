@@ -21,6 +21,7 @@
 #include <QLibraryInfo>
 
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
 #define _BITCOIN_QT_PLUGINS_INCLUDED
@@ -129,9 +130,6 @@ static void handleRunawayException(std::exception *e)
     exit(1);
 }
 
-#ifdef WIN32
-#define strncasecmp strnicmp
-#endif
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
@@ -141,7 +139,7 @@ int main(int argc, char *argv[])
     // Do this early as we don't want to bother initializing if we are just calling IPC
     for (int i = 1; i < argc; i++)
     {
-        if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
+        if (boost::algorithm::istarts_with(argv[i], "bitcoin:"))
         {
             const char *strURI = argv[i];
             try {
@@ -268,7 +266,7 @@ int main(int argc, char *argv[])
                 // Check for URI in argv
                 for (int i = 1; i < argc; i++)
                 {
-                    if (strlen(argv[i]) > 7 && strncasecmp(argv[i], "bitcoin:", 8) == 0)
+                    if (boost::algorithm::istarts_with(argv[i], "bitcoin:"))
                     {
                         const char *strURI = argv[i];
                         try {
