@@ -296,7 +296,7 @@ bool AppInit2(int argc, char* argv[])
 
 #ifndef QT_GUI
     for (int i = 1; i < argc; i++)
-        if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+        if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "emercoin:"))
             fCommandLine = true;
 
     if (fCommandLine)
