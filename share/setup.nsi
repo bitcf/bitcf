@@ -10,7 +10,7 @@ SetCompressor /SOLID lzma
 !define URL http://www.emercoin.com/
 
 # MUI Symbol Definitions
-!define MUI_ICON "../share/pixmaps/bitcoin.ico"
+!define MUI_ICON "../share/pixmaps/emercoin.ico"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
@@ -99,11 +99,11 @@ Section -post SEC0001
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
 
-    # bitcoin: URI handling
-    WriteRegStr HKCR "bitcoin" "URL Protocol" ""
-    WriteRegStr HKCR "bitcoin" "" "URL:Bitcoin"
-    WriteRegStr HKCR "bitcoin\DefaultIcon" "" $INSTDIR\bitcoin-qt.exe
-    WriteRegStr HKCR "bitcoin\shell\open\command" "" '"$INSTDIR\bitcoin-qt.exe" "$$1"'
+    # emercoin: URI handling
+    WriteRegStr HKCR "emercoin" "URL Protocol" ""
+    WriteRegStr HKCR "emercoin" "" "URL:Emercoin"
+    WriteRegStr HKCR "emercoin\DefaultIcon" "" $INSTDIR\emercoin-qt.exe
+    WriteRegStr HKCR "emercoin\shell\open\command" "" '"$INSTDIR\emercoin-qt.exe" "%1"'
 SectionEnd
 
 # Macro for selecting uninstaller sections
