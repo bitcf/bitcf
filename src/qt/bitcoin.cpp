@@ -133,9 +133,6 @@ static void handleRunawayException(std::exception *e)
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
-#if !defined(MAC_OSX) && !defined(WIN32)
-// TODO: implement qtipcserver.cpp for Mac and Windows
-
     // Do this early as we don't want to bother initializing if we are just calling IPC
     for (int i = 1; i < argc; i++)
     {
@@ -154,7 +151,6 @@ int main(int argc, char *argv[])
             }
         }
     }
-#endif
 
     // Internal string conversion is all UTF-8
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
@@ -260,9 +256,6 @@ int main(int argc, char *argv[])
                 // Place this here as guiref has to be defined if we dont want to lose URIs
                 ipcInit();
 
-#if !defined(MAC_OSX) && !defined(WIN32)
-// TODO: implement qtipcserver.cpp for Mac and Windows
-
                 // Check for URI in argv
                 for (int i = 1; i < argc; i++)
                 {
@@ -277,7 +270,7 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-#endif
+
                 app.exec();
 
                 window.hide();
