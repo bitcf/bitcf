@@ -1,42 +1,63 @@
+Emercoin integration/staging tree
+================================
 
-EmerCoin official development tree
+http://emercoin.com
 
-Bitcoin development process
-===========================
+Copyright (c) 2009-2013 Bitcoin Developers
+Copyright (c) 2013-2014 Emercoin Developers
 
-Developers work in their own trees, then submit pull requests when
-they think their feature or bug fix is ready.
+What is Emercoin?
+----------------
 
-If it is a simple/trivial/non-controversial change, then one of the
-bitcoin development team members simply pulls it.
+Emercoin is an experimental new digital currency that enables instant payments to
+anyone, anywhere in the world. Emercoin uses peer-to-peer technology to operate
+with no central authority: managing transactions and issuing money are carried
+out collectively by the network. Emercoin is also the name of the open source
+software which enables the use of this currency.
 
-If it is a more complicated or potentially controversial
-change, then the patch submitter will be asked to start a
-discussion (if they haven't already) on the mailing list:
-http://sourceforge.net/mailarchive/forum.php?forum_name=bitcoin-development
+For more information, as well as an immediately useable, binary version of
+the Emercoin client software, see http://emercoin.com.
 
-The patch will be accepted if there is broad consensus that it is a
-good thing.  Developers should expect to rework and resubmit patches
-if they don't match the project's coding conventions (see coding.txt)
-or are controversial.
+License
+-------
 
-The master branch is regularly built and tested, but is not guaranteed
-to be completely stable. Tags are regularly created to indicate new
-official, stable release versions of Bitcoin. If you would like to
-help test the Bitcoin core, please contact QA@BitcoinTesting.org.
+Emercoin is released under the terms of the MIT license AND GPL3 license. See `COPYING` for more
+information or see http://www.gnu.org/licenses/gpl.html.
 
-Feature branches are created when there are major new features being
-worked on by several people.
+Development process
+-------------------
 
-From time to time a pull request will become outdated. If this occurs, and
-the pull is no longer automatically mergeable; a comment on the pull will
-be used to issue a warning of closure. The pull will be closed 15 days
-after the warning if action is not taken by the author. Pull requests closed
-in this manner will have their corresponding issue labeled 'stagnant'.
+Developers work in their own trees, then submit pull requests when they think
+their feature or bug fix is ready.
 
-Issues with no commits will be given a similar warning, and closed after
-15 days from their last activity. Issues closed in this manner will be 
-labeled 'stale'. 
+The patch will be accepted if there is broad consensus that it is a good thing.
+Developers should expect to rework and resubmit patches if the code doesn't
+match the project's coding conventions (see `doc/coding.md`) or are
+controversial.
 
-Requests to reopen closed pull requests and/or issues can be submitted to 
-QA@BitcoinTesting.org. 
+The `master` branch is regularly built and tested, but is not guaranteed to be
+completely stable. [Tags](https://github.com/EvgenijM86/emercoin/tags) are created
+regularly to indicate new official, stable release versions of Emercoin.
+
+Testing
+-------
+
+Testing and code review is the bottleneck for development; we get more pull
+requests than we can review and test. Please be patient and help out, and
+remember this is a security-critical project where any mistake might cost people
+lots of money.
+
+### Automated Testing
+
+Developers are strongly encouraged to write unit tests for new code, and to
+submit new unit tests for old code.
+
+Unit tests can be compiled and run (assuming they weren't disabled in configure) with:
+  make check
+
+### Manual Quality Assurance (QA) Testing
+
+Large changes should have a test plan, and should be tested by somebody other
+than the developer who wrote the code.
+
+See https://github.com/bitcoin/QA/ for how to create a test plan.
