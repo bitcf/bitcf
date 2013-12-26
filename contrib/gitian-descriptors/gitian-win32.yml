@@ -15,14 +15,14 @@ remotes:
 - "url": "/home/evgenij/SSD/test/emercoin/.git"
   "dir": "emercoin"
 files:
-- "qt-win32-4.7.4-gitian.zip"
+- "qt-win32-4.7.4-gitian-r1.zip"
 - "boost-win32-1.49.0-gitian2.zip"
 - "emercoin-deps-0.0.1.zip"
 script: |
   #
   mkdir $HOME/qt
   cd $HOME/qt
-  unzip ../build/qt-win32-4.7.4-gitian.zip
+  unzip ../build/qt-win32-4.7.4-gitian-r1.zip
   cd $HOME/build/
   export PATH=$PATH:$HOME/qt/bin/
   #
