@@ -3,6 +3,9 @@
 #include "walletmodel.h"
 #include "bitcoinunits.h"
 
+#include "util.h"
+#include "init.h"
+
 #include <QString>
 #include <QDateTime>
 #include <QDoubleValidator>
@@ -16,6 +19,9 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 #include <QThread>
+
+#include <boost/filesystem.hpp>
+//#include <boost/filesystem/fstream.hpp>
 
 namespace GUIUtil {
 
@@ -212,6 +218,37 @@ bool isObscured(QWidget *w)
            && checkPoint(QPoint(0, w->height() - 1), w)
            && checkPoint(QPoint(w->width() - 1, w->height() - 1), w)
            && checkPoint(QPoint(w->width()/2, w->height()/2), w));
+}
+
+void openDebugLogfile()
+{
+    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+
+    /* Open debug.log with the associated application */
+    if (boost::filesystem::exists(pathDebug))
+        QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdString(pathDebug.string())));
+}
+
+HelpMessageBox::HelpMessageBox(QWidget *parent) :
+    QMessageBox(parent)
+{
+    header = tr("Bitcoin-Qt") + " " + tr("version") + " " +
+        QString::fromStdString(FormatFullVersion()) + "\n\n" +
+        tr("Usage:") + "\n" +
+        "  bitcoin-qt [" + tr("command-line options") + "]                     " + "\n";
+
+    coreOptions = QString::fromStdString(HelpMessage());
+
+    uiOptions = tr("UI options") + ":\n" +
+        "  -lang=<lang>           " + tr("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
+        "  -min                   " + tr("Start minimized") + "\n" +
+        "  -splash                " + tr("Show splash screen on startup (default: 1)") + "\n";
+
+    setWindowTitle(tr("Bitcoin-Qt"));
+    setTextFormat(Qt::PlainText);
+    // setMinimumWidth is ignored for QMessageBox so put in non-breaking spaces to make it wider.
+    setText(header + QString(QChar(0x2003)).repeated(50));
+    setDetailedText(coreOptions + "\n" + uiOptions);
 }
 
 } // namespace GUIUtil

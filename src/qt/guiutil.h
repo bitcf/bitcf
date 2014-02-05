@@ -2,6 +2,7 @@
 #define GUIUTIL_H
 
 #include <QString>
+#include <QMessageBox>
 
 QT_BEGIN_NAMESPACE
 class QFont;
@@ -68,6 +69,29 @@ namespace GUIUtil
 
     // Determine whether a widget is hidden behind other windows
     bool isObscured(QWidget *w);
+
+    // Open debug.log
+    void openDebugLogfile();
+
+    /** Help message for Bitcoin-Qt, shown with --help. */
+    class HelpMessageBox : public QMessageBox
+    {
+        Q_OBJECT
+
+    public:
+        HelpMessageBox(QWidget *parent = 0);
+
+        /** Show message box or print help message to standard output, based on operating system. */
+        void showOrPrint();
+
+        /** Print help message to console */
+        void printToConsole();
+
+    private:
+        QString header;
+        QString coreOptions;
+        QString uiOptions;
+    };
 
 } // namespace GUIUtil
 

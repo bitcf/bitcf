@@ -13,5 +13,6 @@ void StartShutdown();
 void Shutdown(void* parg);
 bool AppInit(int argc, char* argv[]);
 bool AppInit2(int argc, char* argv[]);
+std::string HelpMessage();
 
 #endif

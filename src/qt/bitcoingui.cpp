@@ -25,6 +25,7 @@
 #include "askpassphrasedialog.h"
 #include "notificator.h"
 #include "guiutil.h"
+#include "rpcconsole.h"
 #include "wallet.h"
 
 #ifdef Q_WS_MAC
@@ -66,7 +67,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     changePassphraseAction(0),
     aboutQtAction(0),
     trayIcon(0),
-    notificator(0)
+    notificator(0),
+    rpcConsole(0)
 {
     resize(850, 550);
     setWindowTitle(tr("EmerCoin Wallet"));
@@ -153,6 +155,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statusBar()->addPermanentWidget(frameBlocks);
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
+
+    rpcConsole = new RPCConsole(this);
+    connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
@@ -249,6 +254,9 @@ void BitcoinGUI::createActions()
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Passphrase"), this);
     changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
 
+    openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Debug window"), this);
+    openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
+
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -286,6 +294,8 @@ void BitcoinGUI::createMenuBar()
     settings->addAction(optionsAction);
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
+    help->addAction(openRPCConsoleAction);
+    help->addSeparator();
     help->addAction(aboutAction);
     help->addAction(aboutQtAction);
 }
@@ -338,6 +348,8 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
 
         // Report errors from network/worker thread
         connect(clientModel, SIGNAL(error(QString,QString, bool)), this, SLOT(error(QString,QString,bool)));
+
+        rpcConsole->setClientModel(clientModel);
     }
 }
 
@@ -399,6 +411,7 @@ void BitcoinGUI::createTrayIcon()
     trayIconMenu->addAction(sendCoinsAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
+    trayIconMenu->addAction(openRPCConsoleAction);
 #ifndef Q_WS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
