@@ -254,7 +254,7 @@ void RPCConsole::setClientModel(ClientModel *model)
     {
         // Subscribe to information, replies, messages, errors
         connect(model, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
-        connect(model, SIGNAL(numBlocksChanged(int,int)), this, SLOT(setNumBlocks(int,int)));
+        connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
 
         // Provide initial values
         ui->clientVersion->setText(model->formatFullVersion());
@@ -332,8 +332,9 @@ void RPCConsole::setNumConnections(int count)
     ui->numberOfConnections->setText(QString::number(count));
 }
 
-void RPCConsole::setNumBlocks(int count, int countOfPeers)
+void RPCConsole::setNumBlocks(int count)
 {
+    int countOfPeers = 0;
     ui->numberOfBlocks->setText(QString::number(count));
     // If there is no current countOfPeers available display N/A instead of 0, which can't ever be true
     ui->totalBlocks->setText(countOfPeers == 0 ? tr("N/A") : QString::number(countOfPeers));
