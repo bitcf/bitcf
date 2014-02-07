@@ -15,7 +15,7 @@ src/build.h
 #compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
+emercoin-qt
 #resources cpp
 qrc_*.cpp
 #qt creator

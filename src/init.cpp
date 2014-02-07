@@ -80,7 +80,7 @@ void Shutdown(void* parg)
         printf("EmerCoin exiting\n\n");
         fExit = true;
 #ifndef QT_GUI
-        // ensure non UI client get's exited here, but let Bitcoin-Qt reach return 0; in bitcoin.cpp
+        // ensure non UI client get's exited here, but let Emercoin-Qt reach return 0; in bitcoin.cpp
         exit(0);
 #endif
     }
@@ -375,7 +375,7 @@ bool AppInit2(int argc, char* argv[])
         strErrors << _("Error loading blkindex.dat") << "\n";
 
     // as LoadBlockIndex can take several minutes, it's possible the user
-    // requested to kill bitcoin-qt during the last operation. If so, exit.
+    // requested to kill emercoin-qt during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
     if (fRequestShutdown)
     {
@@ -479,7 +479,7 @@ bool AppInit2(int argc, char* argv[])
     // Add wallet transactions that aren't already in a block to mapTransactions
     pwalletMain->ReacceptWalletTransactions();
 
-    // Note: Bitcoin-QT stores several settings in the wallet, so we want
+    // Note: Emercoin-QT stores several settings in the wallet, so we want
     // to load the wallet BEFORE parsing command-line arguments, so
     // the command-line/bitcoin.conf settings override GUI setting.
 

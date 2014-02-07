@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
                 clientmodel = 0;
                 walletmodel = 0;
             }
-            // Shutdown the core and it's threads, but don't exit Bitcoin-Qt here
+            // Shutdown the core and it's threads, but don't exit Emercoin-Qt here
             Shutdown(NULL);
         }
         else

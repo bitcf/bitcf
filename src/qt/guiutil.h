@@ -73,7 +73,7 @@ namespace GUIUtil
     // Open debug.log
     void openDebugLogfile();
 
-    /** Help message for Bitcoin-Qt, shown with --help. */
+    /** Help message for Emercoin-Qt, shown with --help. */
     class HelpMessageBox : public QMessageBox
     {
         Q_OBJECT

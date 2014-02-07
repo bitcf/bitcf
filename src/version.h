@@ -13,8 +13,8 @@
 
 // These need to be macro's, as version.cpp's voodoo requires it
 #define CLIENT_VERSION_MAJOR       0
-#define CLIENT_VERSION_MINOR       6
-#define CLIENT_VERSION_REVISION    3
+#define CLIENT_VERSION_MINOR       1
+#define CLIENT_VERSION_REVISION    5
 #define CLIENT_VERSION_BUILD       0
 
 static const int CLIENT_VERSION =
@@ -30,7 +30,7 @@ extern const std::string CLIENT_DATE;
 // ppcoin version - intended for display purpose ONLY
 #define PPCOIN_VERSION_MAJOR       0
 #define PPCOIN_VERSION_MINOR       1
-#define PPCOIN_VERSION_REVISION    0
+#define PPCOIN_VERSION_REVISION    5
 #define PPCOIN_VERSION_BUILD       0
 
 //
