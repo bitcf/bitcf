@@ -13,6 +13,8 @@
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_utils.h"
 
+#include "util.h"
+
 // Bitcoin RPC error codes
 enum RPCErrorCode
 {
@@ -48,6 +50,8 @@ enum RPCErrorCode
     RPC_WALLET_ENCRYPTION_FAILED    = -16, // Failed to encrypt the wallet
     RPC_WALLET_ALREADY_UNLOCKED     = -17, // Wallet is already unlocked
 };
+
+json_spirit::Object JSONRPCError(int code, const std::string& message);
 
 void ThreadRPCServer(void* parg);
 int CommandLineRPC(int argc, char *argv[]);
@@ -85,5 +89,16 @@ public:
 };
 
 extern const CRPCTable tableRPC;
+
+extern json_spirit::Value ValueFromAmount(int64 amount);
+
+extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
+extern json_spirit::Value listunspent(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value lockunspent(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value listlockunspent(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value createrawtransaction(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value decoderawtransaction(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value signrawtransaction(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, bool fHelp);
 
 #endif

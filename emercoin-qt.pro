@@ -216,7 +216,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/notificator.cpp \
     src/qt/qtipcserver.cpp \
     src/kernel.cpp \
-    src/qt/rpcconsole.cpp
+    src/qt/rpcconsole.cpp \
+    src/rpcrawtransaction.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
