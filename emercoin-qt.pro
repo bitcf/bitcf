@@ -160,7 +160,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/allocators.h \
     src/ui_interface.h \
     src/kernel.h \
-    src/qt/rpcconsole.h
+    src/qt/rpcconsole.h \
+    src/hash.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \

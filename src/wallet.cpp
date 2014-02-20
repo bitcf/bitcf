@@ -886,6 +886,35 @@ int64 CWallet::GetUnconfirmedBalance() const
     return nTotal;
 }
 
+// populate vCoins with vector of spendable COutputs
+void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed) const
+{
+    vCoins.clear();
+
+    {
+        LOCK(cs_wallet);
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx* pcoin = &(*it).second;
+
+            if (!pcoin->IsFinal())
+                continue;
+
+            if (fOnlyConfirmed && !pcoin->IsConfirmed())
+                continue;
+
+            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+                continue;
+
+            for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
+                if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) &&
+                    !IsLockedCoin((*it).first, i) && pcoin->vout[i].nValue > 0)
+                    vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain()));
+            }
+        }
+    }
+}
+
 // ppcoin: total coins staked (non-spendable until maturity)
 int64 CWallet::GetStake() const
 {
@@ -1882,4 +1911,11 @@ void CWallet::GetAllReserveAddresses(set<CBitcoinAddress>& setAddress)
             throw runtime_error("GetAllReserveKeyHashes() : unknown key in key pool");
         setAddress.insert(address);
     }
+}
+
+bool CWallet::IsLockedCoin(uint256 hash, unsigned int n) const
+{
+    COutPoint outpt(hash, n);
+
+    return (setLockedCoins.count(outpt) > 0);
 }

@@ -16,6 +16,7 @@ extern bool fWalletUnlockMintOnly;
 class CWalletTx;
 class CReserveKey;
 class CWalletDB;
+class COutput;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
@@ -113,8 +114,13 @@ public:
 
     std::vector<unsigned char> vchDefaultKey;
 
+    std::set<COutPoint> setLockedCoins;
+
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
+
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true) const;
+    bool IsLockedCoin(uint256 hash, unsigned int n) const;
 
     // keystore implementation
     // Generate a new key
@@ -617,6 +623,34 @@ public:
     void RelayWalletTransaction(CTxDB& txdb);
     void RelayWalletTransaction();
 };
+
+
+
+
+class COutput
+{
+public:
+    const CWalletTx *tx;
+    int i;
+    int nDepth;
+
+    COutput(const CWalletTx *txIn, int iIn, int nDepthIn)
+    {
+        tx = txIn; i = iIn; nDepth = nDepthIn;
+    }
+
+    std::string ToString() const
+    {
+        return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString().c_str(), i, nDepth, FormatMoney(tx->vout[i].nValue).c_str());
+    }
+
+    void print() const
+    {
+        printf("%s\n", ToString().c_str());
+    }
+};
+
+
 
 
 /** Private key that includes an expiration date in case it never gets used. */

@@ -1482,6 +1482,32 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     return false;
 }
 
+bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
+{
+    vector<valtype> vSolutions;
+    txnouttype whichType;
+    if (!Solver(scriptPubKey, whichType, vSolutions))
+        return false;
+
+    if (whichType == TX_PUBKEY)
+    {
+        addressRet = CPubKey(vSolutions[0]).GetID();
+        return true;
+    }
+    else if (whichType == TX_PUBKEYHASH)
+    {
+        addressRet = CKeyID(uint160(vSolutions[0]));
+        return true;
+    }
+    else if (whichType == TX_SCRIPTHASH)
+    {
+        addressRet = CScriptID(uint160(vSolutions[0]));
+        return true;
+    }
+    // Multisig txns have more than one address...
+    return false;
+}
+
 bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet)
 {
     vector<valtype> vSolutions;

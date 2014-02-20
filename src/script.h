@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <boost/foreach.hpp>
+#include <boost/variant.hpp>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -37,6 +38,20 @@ enum txnouttype
     TX_SCRIPTHASH,
     TX_MULTISIG,
 };
+
+class CNoDestination {
+public:
+    friend bool operator==(const CNoDestination &a, const CNoDestination &b) { return true; }
+    friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
+};
+
+/** A txout script template with a specific destination. It is either:
+ *  * CNoDestination: no destination set
+ *  * CKeyID: TX_PUBKEYHASH destination
+ *  * CScriptID: TX_SCRIPTHASH destination
+ *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
+ */
+typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
 
 const char* GetTxnOutputType(txnouttype t);
 
@@ -570,6 +585,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
 int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions);
 bool IsStandard(const CScript& scriptPubKey);
 bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
+bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
 bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet);
 bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CBitcoinAddress>& addressRet, int& nRequiredRet);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
