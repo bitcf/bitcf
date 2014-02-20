@@ -6,18 +6,18 @@
 #ifndef H_BITCOIN_SCRIPT
 #define H_BITCOIN_SCRIPT
 
-#include "base58.h"
-
 #include <string>
 #include <vector>
 
 #include <boost/foreach.hpp>
 #include <boost/variant.hpp>
 
+#include "keystore.h"
+#include "bignum.h"
+
 typedef std::vector<unsigned char> valtype;
 
 class CTransaction;
-class CKeyStore;
 
 /** Signature hash types/flags */
 enum
@@ -338,6 +338,12 @@ public:
         return *this;
     }
 
+    CScript& operator<<(const CPubKey& key)
+    {
+        std::vector<unsigned char> vchKey = key.Raw();
+        return (*this) << vchKey;
+    }
+
     CScript& operator<<(const CBigNum& b)
     {
         *this << b.getvch();
@@ -532,14 +538,8 @@ public:
         return true;
     }
 
-
-    void SetBitcoinAddress(const CBitcoinAddress& address);
-    void SetBitcoinAddress(const std::vector<unsigned char>& vchPubKey)
-    {
-        SetBitcoinAddress(CBitcoinAddress(vchPubKey));
-    }
+    void SetDestination(const CTxDestination& address);
     void SetMultisig(int nRequired, const std::vector<CKey>& keys);
-    void SetPayToScriptHash(const CScript& subscript);
 
 
     void PrintHex() const
@@ -574,6 +574,11 @@ public:
     {
         printf("%s\n", ToString().c_str());
     }
+
+    CScriptID GetID() const
+    {
+        return CScriptID(Hash160(*this));
+    }
 };
 
 
@@ -585,9 +590,9 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
 int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions);
 bool IsStandard(const CScript& scriptPubKey);
 bool IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
+bool IsMine(const CKeyStore& keystore, const CTxDestination &dest);
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
-bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet);
-bool ExtractAddresses(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CBitcoinAddress>& addressRet, int& nRequiredRet);
+bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 bool SignSignature(const CKeyStore& keystore, const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
 bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType);
 

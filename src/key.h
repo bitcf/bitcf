@@ -12,6 +12,7 @@
 #include "serialize.h"
 #include "uint256.h"
 #include "hash.h"
+#include "util.h"
 
 #include <openssl/ec.h> // for EC_KEY definition
 
@@ -98,6 +99,7 @@ public:
     }
 };
 
+
 // secure_allocator is defined in serialize.h
 // CPrivKey is a serialized private key, with all parameters included (279 bytes)
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
@@ -133,8 +135,8 @@ public:
     bool SetSecret(const CSecret& vchSecret, bool fCompressed = false);
     CSecret GetSecret(bool &fCompressed) const;
     CPrivKey GetPrivKey() const;
-    bool SetPubKey(const std::vector<unsigned char>& vchPubKey);
-    std::vector<unsigned char> GetPubKey() const;
+    bool SetPubKey(const CPubKey& vchPubKey);
+    CPubKey GetPubKey() const;
 
     bool Sign(uint256 hash, std::vector<unsigned char>& vchSig);
 
