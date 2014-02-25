@@ -130,29 +130,31 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
             else
                 entry.push_back(Pair("confirmations", 0));
         }
-     }
+    }
 }
 
-Value getrawtransaction(const Array& params, bool fHelp) {
- if (fHelp || params.size() < 1 || params.size() > 2)
+Value getrawtransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "getrawtransaction <txid> [verbose=0]\n"
-            "If verbose=0, returns a string that is "
-            "serialized, hex-encoded data for <txid>. "
-            "If verbose is non-zero, returns an Object "
+            "If verbose=0, returns a string that is\n"
+            "serialized, hex-encoded data for <txid>.\n"
+            "If verbose is non-zero, returns an Object\n"
             "with information about <txid>.");
 
- uint256 hash;
- hash.SetHex(params[0].get_str());
- bool fVerbose = false;
- if (params.size() > 1) fVerbose = (params[1].get_int() != 0);
+    uint256 hash = ParseHashV(params[0], "parameter 1");
 
- CTransaction tx;
- uint256 hashBlock = 0; //Block which contained the tx.
- if (!GetTransaction(hash, tx, hashBlock))
-    throw JSONRPCError(-5, "No information available about transaction");
+    bool fVerbose = false;
+    if (params.size() > 1)
+        fVerbose = (params[1].get_int() != 0);
 
-  CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    CTransaction tx;
+    uint256 hashBlock = 0;
+    if (!GetTransaction(hash, tx, hashBlock))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << tx;
     string strHex = HexStr(ssTx.begin(), ssTx.end());
 
@@ -161,7 +163,7 @@ Value getrawtransaction(const Array& params, bool fHelp) {
 
     Object result;
     result.push_back(Pair("hex", strHex));
-    //TxToJSON(tx, hashBlock, result);
+    TxToJSON(tx, hashBlock, result);
     return result;
 }
 
@@ -313,20 +315,19 @@ Value createrawtransaction(const Array& params, bool fHelp)
 
 Value decoderawtransaction(const Array& params, bool fHelp)
 {
-  if (fHelp || params.size() != 1)
+    if (fHelp || params.size() != 1)
         throw runtime_error(
             "decoderawtransaction <hex string>\n"
             "Return a JSON object representing the serialized, hex-encoded transaction.");
-   //RPCTypeCheck(params, list_of(str_type));
 
-    vector<unsigned char> txData(ParseHex(params[0].get_str()));
+    vector<unsigned char> txData(ParseHexV(params[0], "argument"));
     CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
     try {
         ssData >> tx;
     }
     catch (std::exception &e) {
-        throw JSONRPCError(-22, "TX decode failed");
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
 
     Object result;
@@ -335,29 +336,6 @@ Value decoderawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
-/*Value signrawtransaction(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 1 || params.size() > 4)
-        throw runtime_error(
-            "signrawtransaction <hex string> [{\"txid\":txid,\"vout\":n,\"scriptPubKey\":hex},...] [<privatekey1>,...] [sighashtype=\"ALL\"]\n"
-            "Sign inputs for raw transaction (serialized, hex-encoded).\n"
-            "Second optional argument (may be null) is an array of previous transaction outputs that\n"
-            "this transaction depends on but may not yet be in the blockchain.\n"
-            "Third optional argument (may be null) is an array of base58-encoded private\n"
-            "keys that, if given, will be the only keys used to sign the transaction.\n"
-            "Fourth optional argument is a string that is one of six values; ALL, NONE, SINGLE or\n"
-            "ALL|ANYONECANPAY, NONE|ANYONECANPAY, SINGLE|ANYONECANPAY.\n"
-            "Returns json object with keys:\n"
-            "  hex : raw transaction with signature(s) (hex-encoded string)\n"
-            "  complete : 1 if transaction has a complete set of signature (0 if not)"
-            "UPDATE ME");
-
-
-    Object result;
-
-    return result;
-}*/
-
 Value signrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 4)
@@ -365,7 +343,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             "signrawtransaction <hex string> [{\"txid\":txid,\"vout\":n,\"scriptPubKey\":hex},...] [<privatekey1>,...] [sighashtype=\"ALL\"]\n"
             "Sign inputs for raw transaction (serialized, hex-encoded).\n"
             "Second optional argument (may be null) is an array of previous transaction outputs that\n"
-            "this transaction depends on but may not yet be in the blockchain.\n"
+            "this transaction depends on but may not yet be in the block chain.\n"
             "Third optional argument (may be null) is an array of base58-encoded private\n"
             "keys that, if given, will be the only keys used to sign the transaction.\n"
             "Fourth optional argument is a string that is one of six values; ALL, NONE, SINGLE or\n"
@@ -377,7 +355,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     RPCTypeCheck(params, list_of(str_type)(array_type)(array_type)(str_type), true);
 
-    vector<unsigned char> txData(ParseHex(params[0].get_str()));
+    vector<unsigned char> txData(ParseHexV(params[0], "argument 1"));
     CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     vector<CTransaction> txVariants;
     while (!ssData.empty())
@@ -436,20 +414,13 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
             RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type));
 
-            string txidHex = find_value(prevOut, "txid").get_str();
-            if (!IsHex(txidHex))
-                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "txid must be hexadecimal");
-            uint256 txid;
-            txid.SetHex(txidHex);
+            uint256 txid = ParseHashO(prevOut, "txid");
 
             int nOut = find_value(prevOut, "vout").get_int();
             if (nOut < 0)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "vout must be positive");
 
-            string pkHex = find_value(prevOut, "scriptPubKey").get_str();
-            if (!IsHex(pkHex))
-                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "scriptPubKey must be hexadecimal");
-            vector<unsigned char> pkData(ParseHex(pkHex));
+            vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
             COutPoint outpoint(txid, nOut);
@@ -558,7 +529,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     RPCTypeCheck(params, list_of(str_type));
 
     // parse hex string from parameter
-    vector<unsigned char> txData(ParseHex(params[0].get_str()));
+    vector<unsigned char> txData(ParseHexV(params[0], "parameter"));
     CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     CTransaction tx;
 
@@ -595,14 +566,3 @@ Value sendrawtransaction(const Array& params, bool fHelp)
 
     return hashTx.GetHex();
 }
-
-//Value sendrawtransaction(const Array& params, bool fHelp)
-//{
-//    if (fHelp || params.size() < 1 || params.size() > 1)
-//        throw runtime_error(
-//            "sendrawtransaction <hex string>\n"
-//            "Submits raw transaction (serialized, hex-encoded) to local node and network.");
-//  Object result;
-
-//  return result;
-//}
