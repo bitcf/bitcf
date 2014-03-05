@@ -510,10 +510,20 @@ Value signrawtransaction(const Array& params, bool fHelp)
             fComplete = false;
     }
 
-    // Check if we can add this tx to memory pool.
-    CTxDB txdb("r");
-    if (!mergedTx.AcceptToMemoryPool(txdb, true, NULL, true))
-        fComplete = false;
+    // Check if we if this transaction exists in memory pool or block.
+    CTransaction existingTx;
+    uint256 hashBlock = 0;
+    if (GetTransaction(mergedTx.GetHash(), existingTx, hashBlock))
+    {
+        if (hashBlock != 0)
+            fComplete = false;
+    }
+    else
+    {
+        CTxDB txdb("r");
+        if (!mergedTx.AcceptToMemoryPool(txdb, true, NULL, true))
+            fComplete = false;
+    }
 
     Object result;
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
