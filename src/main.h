@@ -746,7 +746,7 @@ public:
                        const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash=true);
     bool ClientConnectInputs();
     bool CheckTransaction() const;
-    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
+    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL, bool fOnlyCheckWithoutAdding=false);
     bool GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const;  // ppcoin: get transaction coin age
 
 protected:
@@ -1835,7 +1835,7 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
 
     bool accept(CTxDB& txdb, CTransaction &tx,
-                bool fCheckInputs, bool* pfMissingInputs);
+                bool fCheckInputs, bool* pfMissingInputs, bool fOnlyCheckWithoutAdding=false);
     bool addUnchecked(CTransaction &tx);
     bool remove(CTransaction &tx);
 

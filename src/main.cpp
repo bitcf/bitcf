@@ -523,7 +523,7 @@ bool CTransaction::CheckTransaction() const
 }
 
 bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
-                        bool* pfMissingInputs)
+                        bool* pfMissingInputs, bool fOnlyCheckWithoutAdding)
 {
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -647,29 +647,34 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         }
     }
 
-    // Store transaction in memory
+    // Do not write to memory if read only mode.
+    if(!fOnlyCheckWithoutAdding)
     {
-        LOCK(cs);
-        if (ptxOld)
+        // Store transaction in memory
         {
-            printf("CTxMemPool::accept() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
-            remove(*ptxOld);
+            LOCK(cs);
+            if (ptxOld)
+            {
+                printf("CTxMemPool::accept() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
+                remove(*ptxOld);
+            }
+            addUnchecked(tx);
         }
-        addUnchecked(tx);
+
+
+        ///// are we sure this is ok when loading transactions or restoring block txes
+        // If updated, erase old tx from wallet
+        if (ptxOld)
+            EraseFromWallets(ptxOld->GetHash());
+
+        printf("CTxMemPool::accept() : accepted %s\n", hash.ToString().substr(0,10).c_str());
     }
-
-    ///// are we sure this is ok when loading transactions or restoring block txes
-    // If updated, erase old tx from wallet
-    if (ptxOld)
-        EraseFromWallets(ptxOld->GetHash());
-
-    printf("CTxMemPool::accept() : accepted %s\n", hash.ToString().substr(0,10).c_str());
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
+bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs, bool fOnlyCheckWithoutAdding)
 {
-    return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs);
+    return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs, fOnlyCheckWithoutAdding);
 }
 
 bool CTxMemPool::addUnchecked(CTransaction &tx)
