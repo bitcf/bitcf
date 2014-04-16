@@ -13,7 +13,6 @@ packages:
 - "libboost-filesystem-dev"
 - "libboost-program-options-dev"
 - "libboost-thread-dev"
-- "libssl-dev"
 - "git-core"
 - "unzip"
 - "pkg-config"
@@ -25,6 +24,7 @@ remotes:
 files:
 - "miniupnpc-1.6.tar.gz"
 - "qrencode-3.2.0.tar.bz2"
+- "openssl-1.0.1g.tar.gz"
 script: |
   INSTDIR="$HOME/install"
   export LIBRARY_PATH="$INSTDIR/lib"
@@ -38,6 +38,15 @@ script: |
   cd qrencode-3.2.0
   ./configure --prefix=$INSTDIR --enable-static --disable-shared
   make $MAKEOPTS install
+  cd ..
+  #
+  tar xzf openssl-1.0.1g.tar.gz
+  cd openssl-1.0.1g
+    # need -fPIC to avoid relocation error in 64 bit builds
+  ./config no-shared no-zlib no-dso no-krb5 --openssldir=$INSTDIR -fPIC
+    # need to build OpenSSL with faketime because a timestamp is embedded into cversion.o
+  make
+  make install_sw
   cd ..
   #
   cd emercoin
