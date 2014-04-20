@@ -20,4 +20,8 @@ static const int STATUSBAR_ICONSIZE = 16;
 /* Transaction list -- bare address (without label) */
 #define COLOR_BAREADDRESS QColor(140, 140, 140)
 
+// Should be set to MAX_VALUE_LENGTH (from namecoin.h) when it's supported by the network
+// (currently due to limitations of CScript the limit is 519 bytes)
+static const int GUI_MAX_VALUE_LENGTH = 519;
+
 #endif // GUICONSTANTS_H

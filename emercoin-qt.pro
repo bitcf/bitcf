@@ -161,7 +161,11 @@ HEADERS += src/qt/bitcoingui.h \
     src/ui_interface.h \
     src/kernel.h \
     src/qt/rpcconsole.h \
-    src/hash.h
+    src/hash.h \
+    src/namecoin.h \
+    src/qt/nametablemodel.h \
+    src/qt/managenamespage.h \
+    src/hooks.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -219,7 +223,10 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/kernel.cpp \
     src/qt/rpcconsole.cpp \
     src/rpcrawtransaction.cpp \
-    src/rpcwallet.cpp
+    src/rpcwallet.cpp \
+    src/namecoin.cpp \
+    src/qt/nametablemodel.cpp \
+    src/qt/managenamespage.cpp \
 
 RESOURCES += \
     src/qt/bitcoin.qrc
@@ -234,7 +241,8 @@ FORMS += \
     src/qt/forms/overviewpage.ui \
     src/qt/forms/sendcoinsentry.ui \
     src/qt/forms/askpassphrasedialog.ui \
-    src/qt/forms/rpcconsole.ui
+    src/qt/forms/rpcconsole.ui \
+    src/qt/forms/managenamespage.ui
 
 contains(USE_QRCODE, 1) {
 HEADERS += src/qt/qrcodedialog.h

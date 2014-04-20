@@ -37,6 +37,7 @@ bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 /** RAII class that provides access to a Berkeley database */
 class CDB
 {
+friend class CNameDB;
 protected:
     Db* pdb;
     std::string strFile;

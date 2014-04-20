@@ -11,6 +11,7 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
+class ManageNamesPage;
 class MessagePage;
 class Notificator;
 class RPCConsole;
@@ -64,6 +65,7 @@ private:
     AddressBookPage *addressBookPage;
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
+    ManageNamesPage *manageNamesPage;
     MessagePage *messagePage;
 
     QLabel *labelEncryptionIcon;
@@ -77,6 +79,7 @@ private:
     QAction *historyAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
+    QAction *manageNamesAction;
     QAction *addressBookAction;
     QAction *messageAction;
     QAction *aboutAction;
@@ -144,6 +147,8 @@ private slots:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage();
+    /** Switch to manage names page */
+    void gotoManageNamesPage();
 
     /** Show configuration dialog */
     void optionsClicked();

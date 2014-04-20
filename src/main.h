@@ -714,7 +714,7 @@ public:
     bool ReadFromDisk(CTxDB& txdb, COutPoint prevout, CTxIndex& txindexRet);
     bool ReadFromDisk(CTxDB& txdb, COutPoint prevout);
     bool ReadFromDisk(COutPoint prevout);
-    bool DisconnectInputs(CTxDB& txdb);
+    bool DisconnectInputs(CTxDB& txdb, CBlockIndex *pindex);
 
     /** Fetch from memory and/or disk. inputsRet keys are transaction hashes.
 

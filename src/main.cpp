@@ -66,6 +66,8 @@ int64 nHPSTimerStart;
 // Settings
 int64 nTransactionFee = MIN_TX_FEE;
 
+CHooks* hooks; //this adds namecoin hooks which allow splicing of code inside standart emercoin functions.
+
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -518,8 +520,8 @@ bool CTransaction::CheckTransaction() const
             if (txin.prevout.IsNull())
                 return DoS(10, error("CTransaction::CheckTransaction() : prevout is null"));
     }
-
-    return true;
+//    return true;
+    return hooks->CheckTransaction(*this);
 }
 
 bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
@@ -661,6 +663,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
             addUnchecked(tx);
         }
 
+        hooks->AcceptToMemoryPool(txdb, tx);
 
         ///// are we sure this is ok when loading transactions or restoring block txes
         // If updated, erase old tx from wallet
@@ -1071,8 +1074,11 @@ void CBlock::UpdateTime(const CBlockIndex* pindexPrev)
 
 
 
-bool CTransaction::DisconnectInputs(CTxDB& txdb)
+bool CTransaction::DisconnectInputs(CTxDB& txdb, CBlockIndex* pindex)
 {
+    if (!hooks->DisconnectInputs(txdb, *this, pindex))
+        return false;
+
     // Relinquish previous transactions' spent pointers
     if (!IsCoinBase())
     {
@@ -1234,6 +1240,9 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
     // ... both are false when called from CTransaction::AcceptToMemoryPool
     if (!IsCoinBase())
     {
+        vector<CTransaction> vTxPrev;
+        vector<CTxIndex> vTxindex;
+
         int64 nValueIn = 0;
         int64 nFees = 0;
         for (unsigned int i = 0; i < vin.size(); i++)
@@ -1303,7 +1312,13 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             {
                 mapTestPool[prevout.hash] = txindex;
             }
+
+            vTxPrev.push_back(txPrev);
+            vTxindex.push_back(txindex);
         }
+
+        if (!hooks->ConnectInputs(txdb, mapTestPool, *this, vTxPrev, vTxindex, pindexBlock, posThisTx, fBlock, fMiner))
+            return false;
 
         if (IsCoinStake())
         {
@@ -1390,7 +1405,7 @@ bool CBlock::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 {
     // Disconnect in reverse order
     for (int i = vtx.size()-1; i >= 0; i--)
-        if (!vtx[i].DisconnectInputs(txdb))
+        if (!vtx[i].DisconnectInputs(txdb, pindex))
             return false;
 
     // Update block index on disk without changing it in memory.

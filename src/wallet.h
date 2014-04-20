@@ -11,6 +11,9 @@
 #include "keystore.h"
 #include "script.h"
 
+#include "hooks.h"
+extern CHooks* hooks;
+
 extern bool fWalletUnlockMintOnly;
 
 class CWalletTx;
@@ -64,7 +67,6 @@ class CWallet : public CCryptoKeyStore
 {
 private:
     bool SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
-    bool SelectCoins(int64 nTargetValue, unsigned int nSpendTime, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
 
     CWalletDB *pwalletdbEncryption;
 
@@ -75,6 +77,9 @@ private:
     int nWalletMaxVersion;
 
 public:
+    // visible for NAMECOIN
+    bool SelectCoins(int64 nTargetValue, unsigned int nSpendTime, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
+
     mutable CCriticalSection cs_wallet;
 
     bool fFileBacked;
@@ -197,6 +202,8 @@ public:
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
             if (IsMine(txout))
                 return true;
+        if (hooks->IsMine(tx))
+            return true;
         return false;
     }
     bool IsFromMe(const CTransaction& tx) const

@@ -353,6 +353,8 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
+    hooks = InitHook();
+
     std::ostringstream strErrors;
     //
     // Load data files
