@@ -527,6 +527,7 @@ bool CTransaction::CheckTransaction() const
 bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
                         bool* pfMissingInputs, bool fOnlyCheckWithoutAdding)
 {
+    printf("CTxMemPool::accept\n");
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
@@ -3688,6 +3689,7 @@ int64 nLastCoinStakeSearchInterval = 0;
 //   fProofOfStake: try (best effort) to make a proof-of-stake block
 CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
 {
+    printf("CreateNewBlock\n");
     CReserveKey reservekey(pwallet);
 
     // Create new block

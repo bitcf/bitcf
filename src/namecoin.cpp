@@ -504,6 +504,7 @@ bool CNameDB::ScanNames(
 
 CHooks* InitHook()
 {
+    CNameDB("cr"); //create nameindex.dat if it does not exist
     return new CNamecoinHooks();
 }
 
@@ -557,13 +558,10 @@ bool DecodeNameScript(const CScript& script, int& op, vector<vector<unsigned cha
 
 bool GetTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTransaction& tx)
 {
-    //vector<CDiskTxPos> vtxPos;
     vector<CNameIndex> vtxPos;
     if (!dbName.ReadName(vchName, vtxPos) || vtxPos.empty())
         return false;
-    //CDiskTxPos& txPos = vtxPos.back();
     CNameIndex& txPos = vtxPos.back();
-    //int nHeight = GetTxPosHeight(txPos);
     int nHeight = txPos.nHeight;
     if (nHeight + GetExpirationDepth(pindexBest->nHeight) < pindexBest->nHeight)
     {
@@ -1115,7 +1113,7 @@ Value name_new(const Array& params, bool fHelp)
         if (mapNamePending.count(vchName) && mapNamePending[vchName].size())
         {
 
-            error("name_firstupdate() : there are %d pending operations on that name, including %s",
+            error("name_new() : there are %d pending operations on that name, including %s",
                     mapNamePending[vchName].size(),
                     mapNamePending[vchName].begin()->GetHex().c_str());
             throw runtime_error("there are pending operations on that name");
@@ -1637,7 +1635,6 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
         for (int i = 0; i < vTxPrev.size(); i++){
             printf(vTxPrev[i].ToString().c_str());
         }
-        printf("\n");
     }
 
 
@@ -1706,7 +1703,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
     switch (op)
     {
         case OP_NAME_NEW:
-            if (fDebug) printf("op = OP_NAME_NEW, ");
+            if (fDebug) printf("op = OP_NAME_NEW, end! \n");
             return false;
         case OP_NAME_FIRSTUPDATE:
             if (fDebug) printf("op = OP_NAME_FIRSTUPDATE, ");
