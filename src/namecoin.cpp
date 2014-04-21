@@ -1631,8 +1631,9 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
         bool fMiner)
 {
     if (fDebug) {
-        printf("\nCNamecoinHooks::ConnectInputs: fBlock = %d, fMiner = %d\n, nHeight = %d", fBlock, fMiner, pindexBlock->nHeight);
-        printf(tx.ToString().c_str());
+        printf("\n\nCNamecoinHooks::ConnectInputs: fBlock = %d, fMiner = %d, nHeight = %d\n", fBlock, fMiner, pindexBlock->nHeight);
+        printf("Current tx:\n%s", tx.ToString().c_str());
+        printf("Previous tx:\n");
         for (int i = 0; i < vTxPrev.size(); i++){
             printf(vTxPrev[i].ToString().c_str());
         }
@@ -1648,7 +1649,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 
     {
         // Strict check - bug disallowed
-        if (fDebug) printf("strict check\n\n");
+        if (fDebug) printf("strict check\n");
         for (int i = 0; i < tx.vin.size(); i++)
         {
             CTxOut& out = vTxPrev[i].vout[tx.vin[i].prevout.n];
@@ -1848,7 +1849,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
         }
         dbName.TxnCommit();
     }
-    if (fDebug) printf("end!");
+    if (fDebug) printf("end!\n\n");
 
     return true;
 }
