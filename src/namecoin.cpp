@@ -1095,132 +1095,12 @@ Value name_scan(const Array& params, bool fHelp)
     return oRes;
 }
 
-Value name_firstupdate(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 3 || params.size() > 4)
-        throw runtime_error(
-                "name_firstupdate <name> <rand> [<tx>] <value>\n"
-                "Perform a first update after a name_new reservation.\n"
-                "Note that the first update will go into a block 12 blocks after the name_new, at the soonest."
-                + HelpRequiringPassphrase());
-    vector<unsigned char> vchName = vchFromValue(params[0]);
-    vector<unsigned char> vchRand = ParseHex(params[1].get_str());
-    vector<unsigned char> vchValue;
-
-    if (params.size() == 3)
-    {
-        vchValue = vchFromValue(params[2]);
-    }
-    else
-    {
-        vchValue = vchFromValue(params[3]);
-    }
-
-    CWalletTx wtx;
-    wtx.nVersion = NAMECOIN_TX_VERSION;
-
-    {
-        LOCK(cs_main);
-        if (mapNamePending.count(vchName) && mapNamePending[vchName].size())
-        {
-            error("name_firstupdate() : there are %d pending operations on that name, including %s",
-                    mapNamePending[vchName].size(),
-                    mapNamePending[vchName].begin()->GetHex().c_str());
-            throw runtime_error("there are pending operations on that name");
-        }
-    }
-
-    {
-        CNameDB dbName("r");
-        CTransaction tx;
-        if (GetTxOfName(dbName, vchName, tx))
-        {
-            error("name_firstupdate() : this name is already active with tx %s",
-                    tx.GetHash().GetHex().c_str());
-            throw runtime_error("this name is already active");
-        }
-    }
-
-    {
-        LOCK(cs_main);
-        EnsureWalletIsUnlocked();
-
-        // Make sure there is a previous NAME_NEW tx on this name
-        // and that the random value matches
-        uint256 wtxInHash;
-        if (params.size() == 3)
-        {
-            if (!mapMyNames.count(vchName))
-            {
-                throw runtime_error("could not find a coin with this name, try specifying the name_new transaction id");
-            }
-            wtxInHash = mapMyNames[vchName];
-        }
-        else
-        {
-            wtxInHash.SetHex(params[2].get_str());
-        }
-
-        if (!pwalletMain->mapWallet.count(wtxInHash))
-        {
-            throw runtime_error("previous transaction is not in the wallet");
-        }
-
-        CPubKey vchPubKey;
-        if(!pwalletMain->GetKeyFromPool(vchPubKey, true))
-        {
-            //TODO add actions on failure
-        }
-        CScript scriptPubKeyOrig;
-        scriptPubKeyOrig.SetDestination(vchPubKey.GetID());
-        CScript scriptPubKey;
-        scriptPubKey << OP_NAME_FIRSTUPDATE << vchName << vchRand << vchValue << OP_2DROP << OP_2DROP;
-        scriptPubKey += scriptPubKeyOrig;
-
-        CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-        vector<unsigned char> vchHash;
-        bool found = false;
-        BOOST_FOREACH(CTxOut& out, wtxIn.vout)
-        {
-            vector<vector<unsigned char> > vvch;
-            int op;
-            if (DecodeNameScript(out.scriptPubKey, op, vvch)) {
-                if (op != OP_NAME_NEW)
-                    throw runtime_error("previous transaction wasn't a name_new");
-                vchHash = vvch[0];
-                found = true;
-            }
-        }
-
-        if (!found)
-        {
-            throw runtime_error("previous tx on this name is not a name tx");
-        }
-
-        vector<unsigned char> vchToHash(vchRand);
-        vchToHash.insert(vchToHash.end(), vchName.begin(), vchName.end());
-        uint160 hash =  Hash160(vchToHash);
-        if (uint160(vchHash) != hash)
-        {
-            throw runtime_error("previous tx used a different random value");
-        }
-
-        int64 nNetFee = GetNetworkFee(pindexBest->nHeight);
-        // Round up to CENT
-        nNetFee += CENT - 1;
-        nNetFee = (nNetFee / CENT) * CENT;
-        string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee, wtxIn, wtx, false);
-        if (strError != "")
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    }
-    return wtx.GetHash().GetHex();
-}
-
-Value name_new_test(const Array& params, bool fHelp)
+//new version
+Value name_new(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-                "name_new_test <name> <value>"
+                "name_new <name> <value>"
                 + HelpRequiringPassphrase());
     vector<unsigned char> vchName = vchFromValue(params[0]);
     vector<unsigned char> vchValue = vchFromValue(params[1]);
@@ -1247,7 +1127,7 @@ Value name_new_test(const Array& params, bool fHelp)
         CTransaction tx;
         if (GetTxOfName(dbName, vchName, tx))
         {
-            error("name_new_test() : this name is already active with tx %s",
+            error("name_new() : this name is already active with tx %s",
                     tx.GetHash().GetHex().c_str());
             throw runtime_error("this name is already active");
         }
@@ -1349,56 +1229,6 @@ Value name_update(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     return wtx.GetHash().GetHex();
-}
-
-Value name_new(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-                "name_new <name>"
-                + HelpRequiringPassphrase());
-
-    vector<unsigned char> vchName = vchFromValue(params[0]);
-
-    CWalletTx wtx;
-    wtx.nVersion = NAMECOIN_TX_VERSION;
-
-    uint64 rand = GetRand((uint64)-1);
-    vector<unsigned char> vchRand = CBigNum(rand).getvch();
-    vector<unsigned char> vchToHash(vchRand);
-    vchToHash.insert(vchToHash.end(), vchName.begin(), vchName.end());
-    uint160 hash =  Hash160(vchToHash);
-
-    CPubKey vchPubKey;
-    if(!pwalletMain->GetKeyFromPool(vchPubKey, true))
-    {
-        //TODO add actions on failure
-    }
-
-    CScript scriptPubKeyOrig;
-    scriptPubKeyOrig.SetDestination(vchPubKey.GetID());
-    CScript scriptPubKey;
-    scriptPubKey << OP_NAME_NEW << hash << OP_2DROP;
-    scriptPubKey += scriptPubKeyOrig;
-
-    {
-        LOCK(cs_main);
-        EnsureWalletIsUnlocked();
-
-        //TODO: stop if we have already tried to use name_new with that name before.
-
-        string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx, false);
-        if (strError != "")
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-        mapMyNames[vchName] = wtx.GetHash();
-    }
-
-    printf("name_new : name=%s, rand=%s, tx=%s\n", stringFromVch(vchName).c_str(), HexStr(vchRand).c_str(), wtx.GetHash().GetHex().c_str());
-
-    vector<Value> res;
-    res.push_back(wtx.GetHash().GetHex());
-    res.push_back(HexStr(vchRand));
-    return res;
 }
 
 void UnspendInputs(CWalletTx& wtx)
@@ -1801,7 +1631,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
         bool fMiner)
 {
     if (fDebug) {
-        printf("\nCNamecoinHooks::ConnectInputs: fBlock = %d, fMiner = %d\n", fBlock, fMiner);
+        printf("\nCNamecoinHooks::ConnectInputs: fBlock = %d, fMiner = %d\n, nHeight = %d", fBlock, fMiner, pindexBlock->nHeight);
         printf(tx.ToString().c_str());
         for (int i = 0; i < vTxPrev.size(); i++){
             printf(vTxPrev[i].ToString().c_str());
@@ -1874,6 +1704,9 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 
     switch (op)
     {
+        case OP_NAME_NEW:
+            if (fDebug) printf("op = OP_NAME_NEW, ");
+            return false;
         case OP_NAME_FIRSTUPDATE:
             if (fDebug) printf("op = OP_NAME_FIRSTUPDATE, ");
 //            nNetFee = GetNameNetFee(tx);
