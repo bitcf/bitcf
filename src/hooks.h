@@ -42,28 +42,12 @@ public:
     virtual bool ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex) = 0;
     virtual bool DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex) = 0;
     virtual bool ExtractAddress(const CScript& script, std::string& address) = 0;
-    virtual bool GenesisBlock(CBlock& block) = 0;
-    virtual bool Lockin(int nHeight, uint256 hash) = 0;
-    virtual int LockinHeight() = 0;
-    virtual std::string IrcPrefix() = 0;
-    virtual void MessageStart(char* pchMessageStart) = 0;
     virtual void AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx) = 0;
 
     /* These are for display and wallet management purposes.  Not for use to decide
      * whether to spend a coin. */
     virtual bool IsMine(const CTransaction& tx) = 0;
     virtual bool IsMine(const CTransaction& tx, const CTxOut& txout, bool ignore_name_new = false) = 0;
-    virtual int GetOurChainID() = 0;
-
-    virtual int GetAuxPowStartBlock() = 0;
-    virtual int GetFullRetargetStartBlock() = 0;
-
-    virtual std::string GetAlertPubkey1()
-    {
-        return "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
-    }
-
-    virtual std::string GetAlertPubkey2() { return GetAlertPubkey1(); }
 };
 
 extern CHooks* InitHook();

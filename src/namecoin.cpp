@@ -19,9 +19,6 @@ static const bool NAME_DEBUG = false;
 
 template<typename T> void ConvertTo(Value& value, bool fAllowNull=false);
 
-static const int BUG_WORKAROUND_BLOCK_START = 0;   // Bug was not exploited before block 139872, so skip checking earlier blocks
-static const int BUG_WORKAROUND_BLOCK = 0;         // Point of hard fork - 150000
-
 map<vector<unsigned char>, uint256> mapMyNames;
 map<vector<unsigned char>, set<uint256> > mapNamePending;
 
@@ -59,47 +56,10 @@ public:
     virtual bool ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex);
     virtual bool DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex);
     virtual bool ExtractAddress(const CScript& script, string& address);
-    virtual bool GenesisBlock(CBlock& block);
-    virtual bool Lockin(int nHeight, uint256 hash);
-    virtual int LockinHeight();
-    virtual string IrcPrefix();
     virtual void AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx);
 
-    virtual void MessageStart(char* pchMessageStart)
-    {
-        // Make the message start different
-        pchMessageStart[3] = 0xfe;
-    }
     virtual bool IsMine(const CTransaction& tx);
     virtual bool IsMine(const CTransaction& tx, const CTxOut& txout, bool ignore_name_new = false);
-    virtual int GetOurChainID()
-    {
-        return 0x0001;
-    }
-
-    virtual int GetAuxPowStartBlock()
-    {
-        if (fTestNet)
-            return 0;
-        return 19200;
-    }
-
-    virtual int GetFullRetargetStartBlock()
-    {
-        if (fTestNet)
-            return 0;
-        return 19200;
-    }
-
-    string GetAlertPubkey1()
-    {
-        return "04ba207043c1575208f08ea6ac27ed2aedd4f84e70b874db129acb08e6109a3bbb7c479ae22565973ebf0ac0391514511a22cb9345bdb772be20cfbd38be578b0c";
-    }
-
-    string GetAlertPubkey2()
-    {
-        return "04fc4366270096c7e40adb8c3fcfbff12335f3079e5e7905bce6b1539614ae057ee1e61a25abdae4a7a2368505db3541cd81636af3f7c7afe8591ebc85b2a1acdd";
-    }
 };
 
 vector<unsigned char> vchFromValue(const Value& value) {
@@ -1692,7 +1652,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
     }
 
 
-    int nInput;
+    int nInput = 0;
     bool found = false;
 
     int prevOp;
@@ -1739,9 +1699,6 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 
     int nPrevHeight;
     int nDepth;
-//    int64 nNetFee;
-
-    bool fBugWorkaround = false;
 
     // HACK: The following two checks are redundant after hard-fork at block 150000, because it is performed
     // in CheckTransaction. However, before that, we do not know height during CheckTransaction
@@ -1758,7 +1715,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
     {
         case OP_NAME_NEW:
             if (fDebug) printf("op = OP_NAME_NEW, ");
-//            nNetFee = GetNameNetFee(tx);
+//            int64 nNetFee = GetNameNetFee(tx);
 //            if (nNetFee < GetNetworkFee(pindexBlock->nHeight))
 //                return error("ConnectInputsHook() : got tx %s with fee too low %d", tx.GetHash().GetHex().c_str(), nNetFee);
 
@@ -1805,16 +1762,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 
             // Check name
             if (vvchPrevArgs[0] != vvchArgs[0])
-            {
-                if (pindexBlock->nHeight >= BUG_WORKAROUND_BLOCK)
-                    return error("ConnectInputsHook() : name_update name mismatch");
-                else
-                {
-                    // Accept bad transactions before the hard-fork point, but do not write them to name DB
-                    printf("ConnectInputsHook() : name_update mismatch bug workaround");
-                    fBugWorkaround = true;
-                }
-            }
+                return error("ConnectInputsHook() : name_update name mismatch");
 
             // TODO CPU intensive
             nDepth = CheckTransactionAtRelativeDepth(pindexBlock, vTxindex[nInput], GetExpirationDepth(pindexBlock->nHeight));
@@ -1826,7 +1774,6 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
     }
     if (fDebug) printf("checkpoint 1, ");
 
-    if (!fBugWorkaround)
     {
         if (fDebug) printf("checkpoint 2, ");
         CNameDB dbName("cr+", txdb);
@@ -1860,15 +1807,10 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
                 if (op == OP_NAME_UPDATE && !CheckNameTxPos(vtxPos, vTxindex[nInput].pos))
                 {
                     if (fDebug) printf("checkpoint 4, ");
-                    printf("ConnectInputsHook() : Name bug workaround: tx %s rejected, since previous tx (%s) is not in the name DB\n", tx.GetHash().ToString().c_str(), vTxPrev[nInput].GetHash().ToString().c_str());
-                    // Valid tx on top of buggy tx: reject only after hard-fork
-                    if (pindexBlock->nHeight >= BUG_WORKAROUND_BLOCK)
-                        return false;
-                    else
-                        fBugWorkaround = true;
+                    printf("ConnectInputsHook() : tx %s rejected, since previous tx (%s) is not in the name DB\n", tx.GetHash().ToString().c_str(), vTxPrev[nInput].GetHash().ToString().c_str());
+                    return false;
                 }
 
-                if (!fBugWorkaround)
                 {
                     if (fDebug) printf("checkpoint 5, ");
                     vector<unsigned char> vchValue; // add
@@ -2038,69 +1980,4 @@ bool CNamecoinHooks::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pinde
 bool CNamecoinHooks::DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
 {
     return true;
-}
-
-bool GenesisBlock(CBlock& block, int extra)
-{
-    block = CBlock();
-    block.hashPrevBlock = 0;
-    block.nVersion = 1;
-    block.nTime    = 1303000001;
-    block.nBits    = 0x1c007fff;
-    block.nNonce   = 0xa21ea192U;
-    const char* pszTimestamp = "... choose what comes next.  Lives of your own, or a return to chains. -- V";
-    CTransaction txNew;
-    txNew.vin.resize(1);
-    txNew.vout.resize(1);
-    txNew.vin[0].scriptSig = CScript() << block.nBits << CBigNum(++extra) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-    txNew.vout[0].nValue = 50 * COIN;
-    txNew.vout[0].scriptPubKey = CScript() << ParseHex("04b620369050cd899ffbbc4e8ee51e8c4534a855bb463439d63d235d4779685d8b6f4870a238cf365ac94fa13ef9a2a22cd99d0d5ee86dcabcafce36c7acf43ce5") << OP_CHECKSIG;
-    block.vtx.push_back(txNew);
-    block.hashMerkleRoot = block.BuildMerkleTree();
-    printf("====================================\n");
-    printf("Merkle: %s\n", block.hashMerkleRoot.GetHex().c_str());
-    printf("Block: %s\n", block.GetHash().GetHex().c_str());
-    block.print();
-    assert(block.GetHash() == hashGenesisBlock);
-    return true;
-}
-
-bool CNamecoinHooks::GenesisBlock(CBlock& block)
-{
-    if (fTestNet)
-        return false;
-
-    return ::GenesisBlock(block, NAME_COIN_GENESIS_EXTRA);
-}
-
-int CNamecoinHooks::LockinHeight()
-{
-    if (fTestNet)
-        return 0;
-
-    return 112896;
-}
-
-bool CNamecoinHooks::Lockin(int nHeight, uint256 hash)
-{
-    if (!fTestNet)
-        if ((nHeight == 2016 && hash != uint256("0x0000000000660bad0d9fbde55ba7ee14ddf766ed5f527e3fbca523ac11460b92")) ||
-                (nHeight ==   4032 && hash != uint256("0x0000000000493b5696ad482deb79da835fe2385304b841beef1938655ddbc411")) ||
-                (nHeight ==   6048 && hash != uint256("0x000000000027939a2e1d8bb63f36c47da858e56d570f143e67e85068943470c9")) ||
-                (nHeight ==   8064 && hash != uint256("0x000000000003a01f708da7396e54d081701ea406ed163e519589717d8b7c95a5")) ||
-                (nHeight ==  10080 && hash != uint256("0x00000000000fed3899f818b2228b4f01b9a0a7eeee907abd172852df71c64b06")) ||
-                (nHeight ==  12096 && hash != uint256("0x0000000000006c06988ff361f124314f9f4bb45b6997d90a7ee4cedf434c670f")) ||
-                (nHeight ==  14112 && hash != uint256("0x00000000000045d95e0588c47c17d593c7b5cb4fb1e56213d1b3843c1773df2b")) ||
-                (nHeight ==  16128 && hash != uint256("0x000000000001d9964f9483f9096cf9d6c6c2886ed1e5dec95ad2aeec3ce72fa9")) ||
-                (nHeight ==  18940 && hash != uint256("0x00000000000087f7fc0c8085217503ba86f796fa4984f7e5a08b6c4c12906c05")) ||
-                (nHeight ==  30240 && hash != uint256("0xe1c8c862ff342358384d4c22fa6ea5f669f3e1cdcf34111f8017371c3c0be1da")) ||
-                (nHeight ==  57000 && hash != uint256("0xaa3ec60168a0200799e362e2b572ee01f3c3852030d07d036e0aa884ec61f203")) ||
-                (nHeight == 112896 && hash != uint256("0x73f880e78a04dd6a31efc8abf7ca5db4e262c4ae130d559730d6ccb8808095bf")))
-            return false;
-    return true;
-}
-
-string CNamecoinHooks::IrcPrefix()
-{
-    return "namecoin";
 }
