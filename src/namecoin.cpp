@@ -549,9 +549,7 @@ bool DecodeNameScript(const CScript& script, int& op, vector<vector<unsigned cha
 
     pc--;
 
-    if ((op == OP_NAME_NEW && vvch.size() == 1) ||
-            (op == OP_NAME_FIRSTUPDATE && vvch.size() == 3) ||
-            (op == OP_NAME_UPDATE && vvch.size() == 2))
+    if ((op == OP_NAME_NEW && vvch.size() == 3) || (op == OP_NAME_UPDATE && vvch.size() == 2))
         return true;
     return error("invalid number of arguments for name op");
 }
@@ -1143,7 +1141,7 @@ Value name_new(const Array& params, bool fHelp)
         CScript scriptPubKeyOrig;
         scriptPubKeyOrig.SetDestination(vchPubKey.GetID());
         CScript scriptPubKey;
-        scriptPubKey << OP_NAME_FIRSTUPDATE << vchName << vchRand << vchValue << OP_2DROP << OP_2DROP;
+        scriptPubKey << OP_NAME_NEW << vchName << vchRand << vchValue << OP_2DROP << OP_2DROP;
         scriptPubKey += scriptPubKeyOrig;
 
         int64 nNetFee = GetNetworkFee(pindexBest->nHeight);
@@ -1442,8 +1440,6 @@ bool GetValueOfNameTx(const CTransaction& tx, vector<unsigned char>& value)
     switch (op)
     {
         case OP_NAME_NEW:
-            return false;
-        case OP_NAME_FIRSTUPDATE:
             value = vvch[2];
             return true;
         case OP_NAME_UPDATE:
@@ -1514,9 +1510,6 @@ bool CNamecoinHooks::IsMine(const CTransaction& tx, const CTxOut& txout, bool ig
     if (!DecodeNameScript(txout.scriptPubKey, op, vvch))
         return false;
 
-    if (ignore_name_new && op == OP_NAME_NEW)
-        return false;
-
     if (IsMyName(tx, txout))
     {
         printf("IsMine() hook : found my transaction %s value %ld\n", tx.GetHash().GetHex().c_str(), txout.nValue);
@@ -1552,10 +1545,7 @@ void CNamecoinHooks::AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx)
 
     {
         LOCK(cs_main);
-        if (op != OP_NAME_NEW)
-        {
-            mapNamePending[vvch[0]].insert(tx.GetHash());
-        }
+        mapNamePending[vvch[0]].insert(tx.GetHash());
     }
 }
 
@@ -1584,7 +1574,7 @@ bool GetNameOfTx(const CTransaction& tx, vector<unsigned char>& name)
 
     switch (op)
     {
-        case OP_NAME_FIRSTUPDATE:
+        case OP_NAME_NEW:
         case OP_NAME_UPDATE:
             name = vvchArgs[0];
             return true;
@@ -1609,7 +1599,7 @@ bool IsConflictedTx(CTxDB& txdb, const CTransaction& tx, vector<unsigned char>& 
 
     switch (op)
     {
-        case OP_NAME_FIRSTUPDATE:
+        case OP_NAME_NEW:
             nPrevHeight = GetNameHeight(txdb, vvchArgs[0]);
             name = vvchArgs[0];
             if (nPrevHeight >= 0 && pindexBest->nHeight - nPrevHeight < GetExpirationDepth(pindexBest->nHeight))
@@ -1703,10 +1693,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
     switch (op)
     {
         case OP_NAME_NEW:
-            if (fDebug) printf("op = OP_NAME_NEW, end! \n");
-            return false;
-        case OP_NAME_FIRSTUPDATE:
-            if (fDebug) printf("op = OP_NAME_FIRSTUPDATE, ");
+            if (fDebug) printf("op = OP_NAME_NEW, ");
 //            nNetFee = GetNameNetFee(tx);
 //            if (nNetFee < GetNetworkFee(pindexBlock->nHeight))
 //                return error("ConnectInputsHook() : got tx %s with fee too low %d", tx.GetHash().GetHex().c_str(), nNetFee);
@@ -1736,14 +1723,14 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
                 printf("op = OP_NAME_UPDATE, ");
                 if (!found)
                     printf("!found == true ");
-                if (prevOp != OP_NAME_FIRSTUPDATE)
-                    printf("(prevOp != OP_NAME_FIRSTUPDATE) == true ");
+                if (prevOp != OP_NAME_NEW)
+                    printf("(prevOp != OP_NAME_NEW) == true ");
                 if (prevOp != OP_NAME_UPDATE)
                     printf("(prevOp != OP_NAME_UPDATE) == true, ");
             }
 
 
-            if (!found || (prevOp != OP_NAME_FIRSTUPDATE && prevOp != OP_NAME_UPDATE))
+            if (!found || (prevOp != OP_NAME_NEW && prevOp != OP_NAME_UPDATE))
                 return error("name_update tx without previous update tx");
 
             // HACK: The following check is redundant after hard-fork at block 150000, because it is performed
@@ -1796,7 +1783,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 
         if (fBlock)
         {
-            if (op == OP_NAME_FIRSTUPDATE || op == OP_NAME_UPDATE)
+            if (op == OP_NAME_NEW || op == OP_NAME_UPDATE)
             {
                 if (fDebug) printf("checkpoint 3, ");
                 vector<CNameIndex> vtxPos;
@@ -1834,8 +1821,6 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
                 }
             }
 
-
-            if (op != OP_NAME_NEW)
             {
                 if (fDebug) printf("checkpoint 6, ");
                 LOCK(cs_main);
@@ -1866,7 +1851,7 @@ bool CNamecoinHooks::DisconnectInputs(CTxDB& txdb,
     bool good = DecodeNameTx(tx, op, nOut, vvchArgs);
     if (!good)
         return error("DisconnectInputsHook() : could not decode namecoin tx");
-    if (op == OP_NAME_FIRSTUPDATE || op == OP_NAME_UPDATE)
+    if (op == OP_NAME_NEW || op == OP_NAME_UPDATE)
     {
         CNameDB dbName("cr+", txdb);
 
@@ -1932,10 +1917,8 @@ bool CNamecoinHooks::CheckTransaction(const CTransaction& tx)
         switch (op)
         {
             case OP_NAME_NEW:
-                if (vvch[0].size() != 20)
-                    ret[iter] = error("name_new tx with incorrect hash length");
-                break;
-            case OP_NAME_FIRSTUPDATE:
+                //if (vvch[0].size() != 20) //do we need this check?
+                //    ret[iter] = error("name_new tx with incorrect hash length");
                 if (vvch[1].size() > 20)
                     ret[iter] = error("name_firstupdate tx with rand too big");
                 if (vvch[2].size() > MAX_VALUE_LENGTH)
@@ -1956,12 +1939,10 @@ static string nameFromOp(int op)
 {
     switch (op)
     {
-        case OP_NAME_NEW:
-            return "name_new";
         case OP_NAME_UPDATE:
             return "name_update";
-        case OP_NAME_FIRSTUPDATE:
-            return "name_firstupdate";
+        case OP_NAME_NEW:
+            return "name_new";
         default:
             return "<unknown name op>";
     }
@@ -1981,23 +1962,7 @@ bool CNamecoinHooks::ExtractAddress(const CScript& script, string& address)
         return false;
 
     string strOp = nameFromOp(op);
-    string strName;
-    if (op == OP_NAME_NEW)
-    {
-#ifdef GUI
-        LOCK(cs_main);
-
-        std::map<uint160, std::vector<unsigned char> >::const_iterator mi = mapMyNameHashes.find(uint160(vvch[0]));
-        if (mi != mapMyNameHashes.end())
-            strName = stringFromVch(mi->second);
-        else
-#endif
-            strName = HexStr(vvch[0]);
-    }
-    else
-        strName = stringFromVch(vvch[0]);
-
-    address = strOp + ": " + strName;
+    address = strOp + ": " + stringFromVch(vvch[0]);
     return true;
 }
 
