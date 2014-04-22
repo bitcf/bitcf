@@ -32,7 +32,7 @@ extern bool DecodeNameScript(const CScript& script, int& op, vector<vector<unsig
 extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& scriptSigRet, txnouttype& whichTypeRet);
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, bool fValidatePayToScriptHash, int nHashType);
 extern bool IsConflictedTx(CTxDB& txdb, const CTransaction& tx, vector<unsigned char>& name);
-//extern void rescanfornames();
+extern void rescanfornames();
 extern std::string _(const char* psz);
 extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption);
 
@@ -502,9 +502,63 @@ bool CNameDB::ScanNames(
     return true;
 }
 
+bool CNameDB::ReconstructNameIndex()
+{
+    CTxDB txdb("r");
+    CTxIndex txindex;
+    CBlockIndex* pindex = pindexGenesisBlock;
+    {
+        LOCK(pwalletMain->cs_wallet);
+        while (pindex)
+        {
+            TxnBegin();
+            CBlock block;
+            block.ReadFromDisk(pindex, true);
+
+            BOOST_FOREACH(CTransaction& tx, block.vtx)
+            {
+                if (tx.nVersion != NAMECOIN_TX_VERSION)
+                    continue;
+
+                vector<vector<unsigned char> > vvchArgs;
+                int op;
+                int nOut;
+
+                if (!DecodeNameTx(tx, op, nOut, vvchArgs))
+                    continue;
+
+                const vector<unsigned char> &vchName = vvchArgs[0];
+                const vector<unsigned char> &vchValue = vvchArgs[op == OP_NAME_NEW ? 2 : 1];
+
+                if(!txdb.ReadDiskTx(tx.GetHash(), tx, txindex))
+                    continue;
+
+                vector<CNameIndex> vtxPos;
+                if (ExistsName(vchName))
+                {
+                    if (!ReadName(vchName, vtxPos))
+                        return error("Rescanfornames() : failed to read from name DB");
+                }
+
+                CNameIndex txPos2;
+                txPos2.nHeight = pindex->nHeight;
+                txPos2.vValue = vchValue;
+                txPos2.txPos = txindex.pos;
+                vtxPos.push_back(txPos2);
+                if (!WriteName(vchName, vtxPos))
+                {
+                    return error("Rescanfornames() : failed to write to name DB");
+                }
+            }
+            pindex = pindex->pnext;
+            TxnCommit();
+        }
+    }
+    return true;
+}
+
 CHooks* InitHook()
 {
-    CNameDB("cr"); //create nameindex.dat if it does not exist
     return new CNamecoinHooks();
 }
 
@@ -1297,6 +1351,16 @@ Value deletetransaction(const Array& params, bool fHelp)
       }
       return "success, please restart program to clear memory";
     }
+}
+
+void rescanfornames()
+{
+    printf("Scanning blockchain for names to create fast index...\n");
+
+    CNameDB dbName("cr+");
+
+    // scan blockchain
+    dbName.ReconstructNameIndex();
 }
 
 Value name_clean(const Array& params, bool fHelp)

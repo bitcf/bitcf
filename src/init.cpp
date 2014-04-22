@@ -613,6 +613,11 @@ bool AppInit2(int argc, char* argv[])
 
     RandAddSeedPerfmon();
 
+    filesystem::path nameindexfile = filesystem::path(GetDataDir()) / "nameindex.dat";
+    extern void rescanfornames(); //in namecoin.cpp
+    if (!filesystem::exists(nameindexfile))
+        rescanfornames();
+
     if (!CreateThread(StartNode, NULL))
         ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("EmerCoin"), wxOK | wxMODAL);
 
