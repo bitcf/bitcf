@@ -1141,7 +1141,12 @@ void ThreadOpenConnections2(void* parg)
 
 
         vnThreadsRunning[THREAD_OPENCONNECTIONS]--;
-        semOutbound->wait();
+        // Removed semOutbound->wait();, because of infinitive loop in sched_yield()
+	// Added adaptive timeout with 2^N-1 step, max 255
+	unsigned char tau = 0;
+	while(!semOutbound->try_wait()) {
+	    Sleep(tau |= tau + 1);
+	}
         vnThreadsRunning[THREAD_OPENCONNECTIONS]++;
         if (fShutdown)
             return;
