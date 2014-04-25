@@ -587,32 +587,32 @@ bool GetTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTransac
     return true;
 }
 
+bool GetNameAddress(const CTransaction& tx, std::string& strAddress)
+{
+    int op;
+    int nOut;
+    vector<vector<unsigned char> > vvch;
+    if (!DecodeNameTx(tx, op, nOut, vvch))
+        return false;
+    const CTxOut& txout = tx.vout[nOut];
+    const CScript& scriptPubKey = RemoveNameScriptPrefix(txout.scriptPubKey);
 
+    CTxDestination address;
+    if (!ExtractDestination(scriptPubKey, address))
+        return false;
 
-//TODO: find out if it is possible to implement GetBitcoinAddress() when using multisignatures. Look at bf798734db4539a39edd6badf54a1c3aecf193e5
-//      this is needed for RPC: calls name_show, name_history, name_list, sendtoname
+    strAddress = CBitcoinAddress(address).ToString();
+    return true;
+}
 
-//bool GetNameAddress(const CTransaction& tx, std::string& strAddress)
-//{
-//    int op;
-//    int nOut;
-//    vector<vector<unsigned char> > vvch;
-//    if (!DecodeNameTx(tx, op, nOut, vvch, BUG_WORKAROUND_BLOCK))
-//        return false;
-//    const CTxOut& txout = tx.vout[nOut];
-//    const CScript& scriptPubKey = RemoveNameScriptPrefix(txout.scriptPubKey);
-//    strAddress = scriptPubKey.GetBitcoinAddress();
-//    return true;
-//}
+bool GetNameAddress(const CDiskTxPos& txPos, std::string& strAddress)
+{
+    CTransaction tx;
+    if (!tx.ReadFromDisk(txPos))
+        return error("GetNameAddress() : could not read tx from disk");
 
-//bool GetNameAddress(const CDiskTxPos& txPos, std::string& strAddress)
-//{
-//    CTransaction tx;
-//    if (!tx.ReadFromDisk(txPos))
-//        return error("GetNameAddress() : could not read tx from disk");
-
-//    return GetNameAddress(tx, strAddress);
-//}
+    return GetNameAddress(tx, strAddress);
+}
 
 //Value sendtoname(const Array& params, bool fHelp)
 //{
@@ -658,95 +658,95 @@ bool GetTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTransac
 //    return wtx.GetHash().GetHex();
 //}
 
-//Value name_list(const Array& params, bool fHelp)
-//{
-//    if (fHelp || params.size() > 1)
-//        throw runtime_error(
-//                "name_list [<name>]\n"
-//                "list my own names"
-//                );
+Value name_list(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+                "name_list [<name>]\n"
+                "list my own names"
+                );
 
-//    vector<unsigned char> vchName;
-//    vector<unsigned char> vchLastName;
-//    int nMax = 10000000;
+    vector<unsigned char> vchName;
+    //vector<unsigned char> vchLastName;
+    //int nMax = 10000000;
 
-//    if (params.size() == 1)
-//    {
-//        vchName = vchFromValue(params[0]);
-//        nMax = 1;
-//    }
+    if (params.size() == 1)
+    {
+        vchName = vchFromValue(params[0]);
+        //nMax = 1;
+    }
 
-//    vector<unsigned char> vchNameUniq;
-//    if (params.size() == 1)
-//    {
-//        vchNameUniq = vchFromValue(params[0]);
-//    }
+    vector<unsigned char> vchNameUniq;
+    if (params.size() == 1)
+    {
+        vchNameUniq = vchFromValue(params[0]);
+    }
 
-//    Array oRes;
-//    map< vector<unsigned char>, int > vNamesI;
-//    map< vector<unsigned char>, Object > vNamesO;
+    Array oRes;
+    map< vector<unsigned char>, int > vNamesI;
+    map< vector<unsigned char>, Object > vNamesO;
 
-//    {
-//        LOCK(pwalletMain->cs_wallet);
-//        CTxIndex txindex;
-//        uint256 hash;
-//        CTxDB txdb("r");
-//        CTransaction tx;
+    {
+        LOCK(pwalletMain->cs_wallet);
+        CTxIndex txindex;
+        uint256 hash;
+        CTxDB txdb("r");
+        CTransaction tx;
 
-//        vector<unsigned char> vchName;
-//        vector<unsigned char> vchValue;
-//        int nHeight;
+        vector<unsigned char> vchName;
+        vector<unsigned char> vchValue;
+        int nHeight;
 
-//        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-//        {
-//            hash = item.second.GetHash();
-//            if(!txdb.ReadDiskTx(hash, tx, txindex))
-//                continue;
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+        {
+            hash = item.second.GetHash();
+            if(!txdb.ReadDiskTx(hash, tx, txindex))
+                continue;
 
-//            if (tx.nVersion != NAMECOIN_TX_VERSION)
-//                continue;
+            if (tx.nVersion != NAMECOIN_TX_VERSION)
+                continue;
 
-//            // name
-//            if(!GetNameOfTx(tx, vchName))
-//                continue;
-//            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
-//                continue;
+            // name
+            if(!GetNameOfTx(tx, vchName))
+                continue;
+            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
+                continue;
 
-//            // value
-//            if(!GetValueOfNameTx(tx, vchValue))
-//                continue;
+            // value
+            if(!GetValueOfNameTx(tx, vchValue))
+                continue;
 
-//            // height
-//            nHeight = GetTxPosHeight(txindex.pos);
+            // height
+            nHeight = GetTxPosHeight(txindex.pos);
 
-//            Object oName;
-//            oName.push_back(Pair("name", stringFromVch(vchName)));
-//            oName.push_back(Pair("value", stringFromVch(vchValue)));
-//            if (!hooks->IsMine(pwalletMain->mapWallet[tx.GetHash()]))
-//                oName.push_back(Pair("transferred", 1));
-//            string strAddress = "";
-//            GetNameAddress(tx, strAddress);
-//            oName.push_back(Pair("address", strAddress));
-//            oName.push_back(Pair("expires_in", nHeight + GetDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
-//            if(nHeight + GetDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
-//            {
-//                oName.push_back(Pair("expired", 1));
-//            }
+            Object oName;
+            oName.push_back(Pair("name", stringFromVch(vchName)));
+            oName.push_back(Pair("value", stringFromVch(vchValue)));
+            if (!hooks->IsMine(pwalletMain->mapWallet[tx.GetHash()]))
+                oName.push_back(Pair("transferred", 1));
+            string strAddress = "";
+            GetNameAddress(tx, strAddress);
+            oName.push_back(Pair("address", strAddress));
+            oName.push_back(Pair("expires_in", nHeight + GetDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            if(nHeight + GetDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+            {
+                oName.push_back(Pair("expired", 1));
+            }
 
-//            // get last active name only
-//            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
-//                continue;
+            // get last active name only
+            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
+                continue;
 
-//            vNamesI[vchName] = nHeight;
-//            vNamesO[vchName] = oName;
-//        }
-//    }
+            vNamesI[vchName] = nHeight;
+            vNamesO[vchName] = oName;
+        }
+    }
 
-//    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
-//        oRes.push_back(item.second);
+    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
+        oRes.push_back(item.second);
 
-//    return oRes;
-//}
+    return oRes;
+}
 
 Value name_debug(const Array& params, bool fHelp)
 {
@@ -813,6 +813,8 @@ Value name_debug1(const Array& params, bool fHelp)
     printf("-------------------------\n");
     return true;
 }
+
+//TODO: name_show, name_history, sendtoname
 
 //Value name_show(const Array& params, bool fHelp)
 //{
@@ -1980,4 +1982,98 @@ bool CNamecoinHooks::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pinde
 bool CNamecoinHooks::DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
 {
     return true;
+}
+
+
+
+#include <boost/assign/list_of.hpp>
+using namespace boost::assign;
+
+void sha256(const uint256& input, uint256& output)
+{
+    SHA256((unsigned char*)&input, sizeof(input), (unsigned char*)&output);
+}
+
+string stringFromCKeyingMaterial(const CKeyingMaterial &vch) {
+    string res;
+    CKeyingMaterial::const_iterator vi = vch.begin();
+    while (vi != vch.end()) {
+        res += (char)(*vi);
+        vi++;
+    }
+    return res;
+}
+
+Value name_encrypt(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 3)
+        throw runtime_error(
+            "name_encrypt <msg> <sign> [to]\n"
+            "Encrypts a string and returns a hex string. Does not alter wallet or blockchain.\n"
+            "  msg: message to be signed\n"
+            "  sign: key from key->value pair that belongs to you\n"
+            "  to: [username1, username2..usernameN]\n");
+
+    RPCTypeCheck(params, list_of(str_type)(str_type)(array_type), true);
+
+    vector<unsigned char> msg = vchFromValue(params[0]);
+    if (msg.size() == 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "message is too short");
+
+    uint256 hash;
+    SHA256(&msg[0], msg.size(), (unsigned char*)&hash);
+
+    CCrypter crypter;
+
+//set pass
+    SecureString value;
+    value = "value1";
+    string str = "aaaabbbb"; //needs to be 8 byte size
+    vector<unsigned char> salt(str.begin(), str.end());
+    bool res1 = crypter.SetKeyFromPassphrase(value, salt, 25000, 0);
+
+//encrypt
+    str = "value1 value2 value3 value4";
+    CKeyingMaterial message(str.begin(), str.end());
+    vector<unsigned char> cipher;
+    bool res2 = crypter.Encrypt(message, cipher);
+
+    //printf("cipher text = %s", stringFromVch(cipher).c_str());
+
+//decrypt
+    CKeyingMaterial decryptedText;
+    crypter.Decrypt(cipher, decryptedText);
+
+
+    //printf("decrypted text = %s", stringFromCKeyingMaterial(decryptedText).c_str());
+
+
+
+
+    Object result;
+    result.push_back(Pair("msg", stringFromVch(msg)));
+    result.push_back(Pair("hash", HexStr(BEGIN(hash), END(hash))));
+    //result.push_back(Pair("crypter cipher hex", HexStr(cipher)));
+    string t1 = EncodeBase58(cipher);
+    vector<unsigned char> decoded;; DecodeBase58(t1,decoded);
+    result.push_back(Pair("crypter cipher base58", t1));
+    result.push_back(Pair("decoded == cipher", decoded == cipher));
+    result.push_back(Pair("crypter pass", res1));
+    result.push_back(Pair("crypter encrypt", res2));
+    return result;
+}
+
+
+Value name_decrypt(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 2)
+        throw runtime_error(
+            "name_decrypt <hexstring> [msg]\n"
+            "Decrypts a hex string and returns string. Does not alter wallet or blockchain.\n"
+            "hexstring: encrypted message\n"
+            "to: [username1, username2..usernameN]\n"
+            "sign: key from key->value pair that belongs to you.\n");
+
+    Object result;
+    return result;
 }
