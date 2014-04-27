@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <source>About Bitcoin</source>
-        <translation>Über Bitcoin</translation>
+        <source>About Emercoin</source>
+        <translation>Über Emercoin</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
-        <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; Version</translation>
+        <source>&lt;b&gt;Emercoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Emercoin&lt;/b&gt; Version</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="85"/>
@@ -21,7 +21,7 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>Copyright © 2009-2012 Bitcoin Entwickler
+        <translation>Copyright © 2009-2012 Emercoin Entwickler
 
 Dies ist experimentelle Software.
 
@@ -39,8 +39,8 @@ Dieses Produkt enthält Software, die vom OpenSSL Projekt zur Verwendung im Open
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
-        <source>These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Dies sind Ihre Bitcoin-Adressen zum Empfangen von Zahlungen. Es steht Ihnen frei, jedem Absender eine andere mitzuteilen, um einen besseren Überblick über eingehende Zahlungen zu erhalten.</translation>
+        <source>These are your Emercoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation>Dies sind Ihre Emercoin-Adressen zum Empfangen von Zahlungen. Es steht Ihnen frei, jedem Absender eine andere mitzuteilen, um einen besseren Überblick über eingehende Zahlungen zu erhalten.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="33"/>
@@ -238,8 +238,8 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your emercoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Verschlüsselung Ihrer Brieftasche nicht vollständig vor Diebstahl Ihrer emercoins durch Schadsoftware schützt, die Ihren Computer befällt.</translation>
+        <source>Emercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your emercoins from being stolen by malware infecting your computer.</source>
+        <translation>Emercoin wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Verschlüsselung Ihrer Brieftasche nicht vollständig vor Diebstahl Ihrer emercoins durch Schadsoftware schützt, die Ihren Computer befällt.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
@@ -290,11 +290,11 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>EmercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="69"/>
-        <source>Bitcoin Wallet</source>
-        <translation>Bitcoin-Brieftasche</translation>
+        <source>Emercoin Wallet</source>
+        <translation>Emercoin-Brieftasche</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="142"/>
@@ -354,8 +354,8 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
-        <source>Send coins to a bitcoin address</source>
-        <translation>emercoins an eine Bitcoin-Adresse überweisen</translation>
+        <source>Send coins to a emercoin address</source>
+        <translation>emercoins an eine Emercoin-Adresse überweisen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="206"/>
@@ -384,8 +384,8 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
-        <source>Show information about Bitcoin</source>
-        <translation>Informationen über Bitcoin anzeigen</translation>
+        <source>Show information about Emercoin</source>
+        <translation>Informationen über Emercoin anzeigen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
@@ -404,18 +404,18 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Modify configuration options for bitcoin</source>
-        <translation>Erweiterte Bitcoin-Einstellungen ändern</translation>
+        <source>Modify configuration options for emercoin</source>
+        <translation>Erweiterte Emercoin-Einstellungen ändern</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
-        <source>Open &amp;Bitcoin</source>
-        <translation>&amp;Bitcoin öffnen</translation>
+        <source>Open &amp;Emercoin</source>
+        <translation>&amp;Emercoin öffnen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
-        <source>Show the Bitcoin window</source>
-        <translation>Bitcoin-Fenster anzeigen</translation>
+        <source>Show the Emercoin window</source>
+        <translation>Emercoin-Fenster anzeigen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -489,13 +489,13 @@ Are you sure you wish to encrypt your wallet?</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="407"/>
-        <source>bitcoin-qt</source>
-        <translation>bitcoin-qt</translation>
+        <source>emercoin-qt</source>
+        <translation>emercoin-qt</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="449"/>
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktive Verbindung zum Bitcoin-Netzwerk</numerusform><numerusform>%n aktive Verbindungen zum Bitcoin-Netzwerk</numerusform></translation>
+        <source>%n active connection(s) to Emercoin network</source>
+        <translation><numerusform>%n aktive Verbindung zum Emercoin-Netzwerk</numerusform><numerusform>%n aktive Verbindungen zum Emercoin-Netzwerk</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="475"/>
@@ -545,7 +545,7 @@ Are you sure you wish to encrypt your wallet?</source>
     <message>
         <location filename="../bitcoingui.cpp" line="597"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Die Transaktion übersteigt das Größenlimit. Sie können sie trotzdem senden, wenn Sie eine zusätzliche Transaktionsgebühr in Höhe von %1 zahlen. Diese wird an die Knoten verteilt, die Ihre Transaktion bearbeiten und unterstützt damit das Bitcoin-Netzwerk.&lt;br&gt;&lt;br&gt;Möchten Sie die Gebühr bezahlen?</translation>
+        <translation>Die Transaktion übersteigt das Größenlimit. Sie können sie trotzdem senden, wenn Sie eine zusätzliche Transaktionsgebühr in Höhe von %1 zahlen. Diese wird an die Knoten verteilt, die Ihre Transaktion bearbeiten und unterstützt damit das Emercoin-Netzwerk.&lt;br&gt;&lt;br&gt;Möchten Sie die Gebühr bezahlen?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="602"/>
@@ -677,8 +677,8 @@ Adresse: %4</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="96"/>
-        <source>The entered address &quot;%1&quot; is not a valid bitcoin address.</source>
-        <translation>Die eingegebene Adresse &quot;%1&quot; ist keine gültige Bitcoin-Adresse.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid emercoin address.</source>
+        <translation>Die eingegebene Adresse &quot;%1&quot; ist keine gültige Emercoin-Adresse.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="101"/>
@@ -695,13 +695,13 @@ Adresse: %4</translation>
     <name>MainOptionsPage</name>
     <message>
         <location filename="../optionsdialog.cpp" line="170"/>
-        <source>&amp;Start Bitcoin on window system startup</source>
-        <translation>Bitcoin beim &amp;Systemstart ausführen</translation>
+        <source>&amp;Start Emercoin on window system startup</source>
+        <translation>Emercoin beim &amp;Systemstart ausführen</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="171"/>
-        <source>Automatically start Bitcoin after the computer is turned on</source>
-        <translation>Bitcoin automatisch ausführen, wenn der Computer eingeschaltet wird</translation>
+        <source>Automatically start Emercoin after the computer is turned on</source>
+        <translation>Emercoin automatisch ausführen, wenn der Computer eingeschaltet wird</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="175"/>
@@ -720,8 +720,8 @@ Adresse: %4</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="181"/>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatisch den Bitcoin Client-Port auf dem Router öffnen. Dies funktioniert nur, wenn Ihr Router UPnP unterstützt und dies aktiviert ist.</translation>
+        <source>Automatically open the Emercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automatisch den Emercoin Client-Port auf dem Router öffnen. Dies funktioniert nur, wenn Ihr Router UPnP unterstützt und dies aktiviert ist.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="185"/>
@@ -741,7 +741,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="191"/>
         <source>Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
-        <translation>Über einen SOCKS4-Proxy zum Bitcoin-Netzwerk verbinden (z.B. bei einer Verbindung über Tor)</translation>
+        <translation>Über einen SOCKS4-Proxy zum Emercoin-Netzwerk verbinden (z.B. bei einer Verbindung über Tor)</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="196"/>
@@ -1181,8 +1181,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Bitcoin-Adresse eingeben (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>Enter a Emercoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Emercoin-Adresse eingeben (z.B. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1630,11 +1630,11 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>emercoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="3"/>
-        <source>Bitcoin version</source>
-        <translation>Bitcoin Version</translation>
+        <source>Emercoin version</source>
+        <translation>Emercoin Version</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="4"/>
@@ -1643,8 +1643,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="5"/>
-        <source>Send command to -server or bitcoind</source>
-        <translation>Befehl an -server oder bitcoind senden</translation>
+        <source>Send command to -server or emercoind</source>
+        <translation>Befehl an -server oder emercoind senden</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="6"/>
@@ -1668,8 +1668,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>PID-Datei angeben (Standard: bitcoind.pid)</translation>
+        <source>Specify pid file (default: emercoind.pid)</source>
+        <translation>PID-Datei angeben (Standard: emercoind.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="11"/>
@@ -1844,9 +1844,9 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>
-SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+SSL options: (see the Emercoin Wiki for SSL setup instructions)</source>
         <translation>
-SSL Einstellungen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</translation>
+SSL Einstellungen: (siehe Emercoin-Wiki für SSL Installationsanweisungen)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>
@@ -1875,8 +1875,8 @@ SSL Einstellungen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</trans
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Konnte das Datenverzeichnis %s nicht sperren. Evtl. wurde Bitcoin bereits gestartet.</translation>
+        <source>Cannot obtain a lock on data directory %s.  Emercoin is probably already running.</source>
+        <translation>Konnte das Datenverzeichnis %s nicht sperren. Evtl. wurde Emercoin bereits gestartet.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="60"/>
@@ -1900,13 +1900,13 @@ SSL Einstellungen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</trans
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation>Fehler beim Laden von wallet.dat: Brieftasche benötigt neuere Version von Bitcoin</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Emercoin</source>
+        <translation>Fehler beim Laden von wallet.dat: Brieftasche benötigt neuere Version von Emercoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation>Brieftasche muss neu geschrieben werden: starten Sie Bitcoin zur Fertigstellung neu</translation>
+        <source>Wallet needed to be rewritten: restart Emercoin to complete</source>
+        <translation>Brieftasche muss neu geschrieben werden: starten Sie Emercoin zur Fertigstellung neu</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
@@ -1960,13 +1960,13 @@ SSL Einstellungen: (siehe Bitcoin-Wiki für SSL Installationsanweisungen)</trans
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
-        <translation>Fehler beim registrieren des Ports %d auf diesem Computer. Evtl. wurde Bitcoin bereits gestartet.</translation>
+        <source>Unable to bind to port %d on this computer.  Emercoin is probably already running.</source>
+        <translation>Fehler beim registrieren des Ports %d auf diesem Computer. Evtl. wurde Emercoin bereits gestartet.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>Warnung: Bitte korrigieren Sie die Datums- und Uhrzeiteinstellungen Ihres Computers, da Bitcoin ansonsten nicht ordnungsgemäß funktionieren wird.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Emercoin will not work properly.</source>
+        <translation>Warnung: Bitte korrigieren Sie die Datums- und Uhrzeiteinstellungen Ihres Computers, da Emercoin ansonsten nicht ordnungsgemäß funktionieren wird.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>

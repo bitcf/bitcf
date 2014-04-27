@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 class QDateTime;
 QT_END_NAMESPACE
 
-/** Model for Bitcoin network client. */
+/** Model for Emercoin network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT

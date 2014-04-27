@@ -1,8 +1,6 @@
 src/*.exe
-src/bitcoin
-src/bitcoind
 src/emercoind
-src/test_bitcoin
+src/test_emercoin
 src/build.h
 .*.swp
 *.*~*
@@ -11,7 +9,6 @@ src/build.h
 *.orig
 *.o
 *.patch
-.bitcoin
 #compilation and Qt preprocessor part
 *.qm
 Makefile

@@ -39,7 +39,7 @@
    ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
    cp build/out/bitcoin-deps-0.0.3.zip inputs/
 
-  * Build bitcoind and emercoin-qt on Linux32, Linux64, and Win32:
+  * Build emercoind and emercoin-qt on Linux32, Linux64, and Win32:
    ./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian.yml
    ./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian.yml
    pushd build/out

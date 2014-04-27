@@ -167,7 +167,7 @@ void AddressBookPage::on_signMessage_clicked()
     }
 
     QObject *qoGUI = parent()->parent();
-    BitcoinGUI *gui = qobject_cast<BitcoinGUI *>(qoGUI);
+    EmercoinGUI *gui = qobject_cast<EmercoinGUI *>(qoGUI);
     if (gui)
         gui->gotoMessagePage(addr);
 }

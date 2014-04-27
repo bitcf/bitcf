@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <source>About Bitcoin</source>
-        <translation>Apie Bitcoiną</translation>
+        <source>About Emercoin</source>
+        <translation>Apie Emercoiną</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
-        <source>&lt;b&gt;Bitcoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Bitcoin&lt;/b&gt; versija</translation>
+        <source>&lt;b&gt;Emercoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Emercoin&lt;/b&gt; versija</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="85"/>
@@ -39,7 +39,7 @@ Platinama pagal licenziją MIT/X11, papildomą informaciją rasite faile license
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
-        <source>These are your Bitcoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <source>These are your Emercoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>Čia yra Jūsų adresai skirti mokėjimams gauti.  Jūs galite skirtingiems žmonėms duoti skirtingus adresus. Tai Jums palengvins kontroliuoti mokėjimus bei padidins anonimiškumą.
     </translation>
     </message>
@@ -240,8 +240,8 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your emercoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin dabar užsidarys šifravimo proceso pabaigai. Atminkite, kad piniginės šifravimas  negali pilnai apsaugoti bitcoinų vagysčių kai tinkle esančios kenkėjiškos programos patenka į jūsų kompiuterį.</translation>
+        <source>Emercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your emercoins from being stolen by malware infecting your computer.</source>
+        <translation>Emercoin dabar užsidarys šifravimo proceso pabaigai. Atminkite, kad piniginės šifravimas  negali pilnai apsaugoti emercoinų vagysčių kai tinkle esančios kenkėjiškos programos patenka į jūsų kompiuterį.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
@@ -292,10 +292,10 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>EmercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="69"/>
-        <source>Bitcoin Wallet</source>
+        <source>Emercoin Wallet</source>
         <translation>Bitkoinų piniginė</translation>
     </message>
     <message>
@@ -356,7 +356,7 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
-        <source>Send coins to a bitcoin address</source>
+        <source>Send coins to a emercoin address</source>
         <translation>Siųsti monetas bitkoinų adresu</translation>
     </message>
     <message>
@@ -386,7 +386,7 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
-        <source>Show information about Bitcoin</source>
+        <source>Show information about Emercoin</source>
         <translation>Rodyti informaciją apie Bitkoiną</translation>
     </message>
     <message>
@@ -406,18 +406,18 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Modify configuration options for bitcoin</source>
-        <translation>Keisti bitcoin konfigūracijos galimybes</translation>
+        <source>Modify configuration options for emercoin</source>
+        <translation>Keisti emercoin konfigūracijos galimybes</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
-        <source>Open &amp;Bitcoin</source>
-        <translation>Atidaryti &amp;Bitcoin</translation>
+        <source>Open &amp;Emercoin</source>
+        <translation>Atidaryti &amp;Emercoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
-        <source>Show the Bitcoin window</source>
-        <translation>Rodyti Bitcoin langą</translation>
+        <source>Show the Emercoin window</source>
+        <translation>Rodyti Emercoin langą</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -491,13 +491,13 @@ Ar jūs tikrai norite užšifruoti savo piniginę?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="407"/>
-        <source>bitcoin-qt</source>
-        <translation>bitcoin-qt</translation>
+        <source>emercoin-qt</source>
+        <translation>emercoin-qt</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="449"/>
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n Bitcoin tinklo aktyvus ryšys</numerusform><numerusform>%n Bitcoin tinklo aktyvūs ryšiai</numerusform><numerusform>%n Bitcoin tinklo aktyvūs ryšiai</numerusform></translation>
+        <source>%n active connection(s) to Emercoin network</source>
+        <translation><numerusform>%n Emercoin tinklo aktyvus ryšys</numerusform><numerusform>%n Emercoin tinklo aktyvūs ryšiai</numerusform><numerusform>%n Emercoin tinklo aktyvūs ryšiai</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="475"/>
@@ -679,7 +679,7 @@ Adresas: %4</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="96"/>
-        <source>The entered address &quot;%1&quot; is not a valid bitcoin address.</source>
+        <source>The entered address &quot;%1&quot; is not a valid emercoin address.</source>
         <translation>Įvestas adresas &quot;%1&quot;nėra galiojantis bitkoinų adresas</translation>
     </message>
     <message>
@@ -697,12 +697,12 @@ Adresas: %4</translation>
     <name>MainOptionsPage</name>
     <message>
         <location filename="../optionsdialog.cpp" line="170"/>
-        <source>&amp;Start Bitcoin on window system startup</source>
-        <translation>&amp;S Paleisti  Bitcoin programą su window sistemos paleidimu</translation>
+        <source>&amp;Start Emercoin on window system startup</source>
+        <translation>&amp;S Paleisti  Emercoin programą su window sistemos paleidimu</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="171"/>
-        <source>Automatically start Bitcoin after the computer is turned on</source>
+        <source>Automatically start Emercoin after the computer is turned on</source>
         <translation>Automatiškai paleisti Bitkoin programą kai yra įjungiamas kompiuteris</translation>
     </message>
     <message>
@@ -722,8 +722,8 @@ Adresas: %4</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="181"/>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatiškai atidaryti Bitcoin kliento maršrutizatoriaus prievadą. Tai veikia tik tada, kai jūsų maršrutizatorius palaiko UPnP ir ji įjungta.</translation>
+        <source>Automatically open the Emercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automatiškai atidaryti Emercoin kliento maršrutizatoriaus prievadą. Tai veikia tik tada, kai jūsų maršrutizatorius palaiko UPnP ir ji įjungta.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="185"/>
@@ -1183,7 +1183,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <source>Enter a Emercoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Įveskite bitkoinų adresą (pvz. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
@@ -1632,11 +1632,11 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>emercoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="3"/>
-        <source>Bitcoin version</source>
-        <translation>Bitcoin versija</translation>
+        <source>Emercoin version</source>
+        <translation>Emercoin versija</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="4"/>
@@ -1645,8 +1645,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="5"/>
-        <source>Send command to -server or bitcoind</source>
-        <translation>Siųsti komandą serveriui arba bitcoind</translation>
+        <source>Send command to -server or emercoind</source>
+        <translation>Siųsti komandą serveriui arba emercoind</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="6"/>
@@ -1670,8 +1670,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Nurodyti pid failą  (pagal nutylėjimą: bitcoind.pid)</translation>
+        <source>Specify pid file (default: emercoind.pid)</source>
+        <translation>Nurodyti pid failą  (pagal nutylėjimą: emercoind.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="11"/>
@@ -1846,8 +1846,8 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>
-SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>SSL opcijos (žr.e Bitcoin Wiki for SSL setup instructions)</translation>
+SSL options: (see the Emercoin Wiki for SSL setup instructions)</source>
+        <translation>SSL opcijos (žr.e Emercoin Wiki for SSL setup instructions)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>
@@ -1876,8 +1876,8 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Cannot obtain a lock on data directory %s.  Bitcoin is probably already running.</source>
-        <translation>Negali gauti duomenų katalogo %s rakto. Bitcoin tikriausiai jau veikia.</translation>
+        <source>Cannot obtain a lock on data directory %s.  Emercoin is probably already running.</source>
+        <translation>Negali gauti duomenų katalogo %s rakto. Emercoin tikriausiai jau veikia.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="60"/>
@@ -1901,13 +1901,13 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation> wallet.dat pakrovimo klaida,  wallet.dat reikalauja naujasnės Bitcoin versijos</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Emercoin</source>
+        <translation> wallet.dat pakrovimo klaida,  wallet.dat reikalauja naujasnės Emercoin versijos</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation>Piniginė turi būti prrašyta: įvykdymui perkraukite Bitcoin</translation>
+        <source>Wallet needed to be rewritten: restart Emercoin to complete</source>
+        <translation>Piniginė turi būti prrašyta: įvykdymui perkraukite Emercoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
@@ -1961,13 +1961,13 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Unable to bind to port %d on this computer.  Bitcoin is probably already running.</source>
-        <translation>Nepavyko susieti šiame kompiuteryje prievado %d. Bitcoin tikriausiai jau veikia.</translation>
+        <source>Unable to bind to port %d on this computer.  Emercoin is probably already running.</source>
+        <translation>Nepavyko susieti šiame kompiuteryje prievado %d. Emercoin tikriausiai jau veikia.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>Įspėjimas: Patikrinkite, kad kompiuterio data ir laikas yra teisingi.Jei Jūsų laikrodis neteisingai nustatytas Bitcoin, veiks netinkamai.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Emercoin will not work properly.</source>
+        <translation>Įspėjimas: Patikrinkite, kad kompiuterio data ir laikas yra teisingi.Jei Jūsų laikrodis neteisingai nustatytas Emercoin, veiks netinkamai.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>

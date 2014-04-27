@@ -760,7 +760,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
             "getreceivedbyaddress <emercoinaddress> [minconf=1]\n"
             "Returns the total amount received by <emercoinaddress> in transactions with at least [minconf] confirmations.");
 
-    // Bitcoin address
+    // Emercoin address
     CBitcoinAddress address = CBitcoinAddress(params[0].get_str());
     CScript scriptPubKey;
     if (!address.IsValid())
@@ -2658,7 +2658,7 @@ bool HTTPAuthorized(map<string, string>& mapHeaders)
 }
 
 //
-// JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,
+// JSON-RPC protocol.  Emercoin speaks version 1.0 for maximum compatibility,
 // but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
 // unspecified (HTTP errors and contents of 'error').
 //

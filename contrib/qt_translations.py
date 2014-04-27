@@ -2,7 +2,7 @@
 
 # Helpful little script that spits out a comma-separated list of
 # language codes for Qt icons that should be included
-# in binary bitcoin distributions
+# in binary emercoin distributions
 
 import glob
 import os
@@ -10,7 +10,7 @@ import re
 import sys
 
 if len(sys.argv) != 3:
-  sys.exit("Usage: %s $QTDIR/translations $BITCOINDIR/src/qt/locale"%sys.argv[0])
+  sys.exit("Usage: %s $QTDIR/translations $EMERCOINDIR/src/qt/locale"%sys.argv[0])
 
 d1 = sys.argv[1]
 d2 = sys.argv[2]

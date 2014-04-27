@@ -1,0 +1,6 @@
+debian/bin/emercoin-qt usr/bin
+emercoin-qt usr/lib/emercoin
+share/pixmaps/bitcoin32.xpm usr/share/pixmaps
+share/pixmaps/bitcoin80.xpm usr/share/pixmaps
+debian/emercoin-qt.desktop usr/share/applications
+debian/emercoin-qt.protocol usr/share/kde4/services/
