@@ -76,7 +76,7 @@ make -f Makefile.mingw
 mkdir miniupnpc
 cp *.h miniupnpc/
 
-Bitcoin
+Emercoin
 -------
 DOS prompt:
 cd \bitcoin\src
