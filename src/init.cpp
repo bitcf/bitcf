@@ -342,7 +342,7 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
-    // Make sure only a single bitcoin process is using the data directory.
+    // Make sure only a single emercoin process is using the data directory.
     boost::filesystem::path pathLockFile = GetDataDir() / ".lock";
     FILE* file = fopen(pathLockFile.string().c_str(), "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
