@@ -1181,7 +1181,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend, CW
 
                     // Fill a vout to ourself
                     // TODO: pass in scriptChange instead of reservekey so
-                    // change transaction isn't always pay-to-bitcoin-address
+                    // change transaction isn't always pay-to-emercoin-address
                     CScript scriptChange;
                     scriptChange.SetDestination(vchPubKey.GetID());;
 
@@ -1527,7 +1527,7 @@ string CWallet::SendMoneyToDestination(const CTxDestination& address, int64 nVal
     if (nValue + nTransactionFee > GetBalance())
         return _("Insufficient funds");
 
-    // Parse bitcoin address
+    // Parse emercoin address
     CScript scriptPubKey;
     scriptPubKey.SetDestination(address);
 

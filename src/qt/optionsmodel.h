@@ -3,7 +3,7 @@
 
 #include <QAbstractListModel>
 
-/** Interface from QT to configuration data structure for bitcoin client.
+/** Interface from QT to configuration data structure for emercoin client.
    To QT, the options are presented as a list with the different options
    laid out vertically.
    This can be changed to a tree once the settings become sufficiently

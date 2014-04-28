@@ -10,9 +10,9 @@ cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 Intro
 -----
-EmerCoin is a free open source project derived from Bitcoin, with
+EmerCoin is a free open source project derived from Emercoin, with
 the goal of providing a long-term energy-efficient crypto-currency.
-Built on the foundation of Bitcoin, innovations such as proof-of-stake
+Built on the foundation of Emercoin, innovations such as proof-of-stake
 help further advance the field of crypto-currency.
 
 

@@ -45,7 +45,7 @@ endif
 LIBS+= \
  -Wl,-B$(LMODE2) \
    -l z \
-   -l dl \
+   -l execinfo \
    -l pthread
 
 
@@ -67,7 +67,7 @@ LIBS+= \
     # Make some important things such as the global offset table read only as soon as
     # the dynamic linker is finished building it. This will prevent overwriting of addresses
     # which would later be jumped to.
-    HARDENING+=-Wl,-z,relro -Wl,-z,now
+    # - removed for FreeBSD HARDENING+=-Wl,-z,relro -Wl,-z,now
 
     # Build position independent code to take advantage of Address Space Layout Randomization
     # offered by some kernels.
@@ -111,8 +111,7 @@ OBJS= \
     obj/wallet.o \
     obj/walletdb.o \
     obj/noui.o \
-    obj/kernel.o \
-    obj/namecoin.o
+    obj/kernel.o
 
 
 all: emercoind
