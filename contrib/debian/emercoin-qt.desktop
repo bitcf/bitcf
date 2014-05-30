@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Emercoin
+Comment=Emercoin P2P Cryptocurrency
+Comment[fr]=Emercoin, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Emercoin, eşten eşe kriptografik sanal para birimi
+Exec=/usr/bin/emercoin-qt
+Terminal=false
+Type=Application
+Icon=/usr/share/pixmaps/bitcoin80.xpm
+MimeType=x-scheme-handler/emercoin;
+Categories=Office;
