@@ -226,7 +226,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/rpcwallet.cpp \
     src/namecoin.cpp \
     src/qt/nametablemodel.cpp \
-    src/qt/managenamespage.cpp \
+    src/qt/managenamespage.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

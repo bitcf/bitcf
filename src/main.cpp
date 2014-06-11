@@ -520,8 +520,9 @@ bool CTransaction::CheckTransaction() const
             if (txin.prevout.IsNull())
                 return DoS(10, error("CTransaction::CheckTransaction() : prevout is null"));
     }
-//    return true;
-    return hooks->CheckTransaction(*this);
+
+    return true;
+//   return hooks->CheckTransaction(*this);
 }
 
 bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
@@ -1077,8 +1078,7 @@ void CBlock::UpdateTime(const CBlockIndex* pindexPrev)
 
 bool CTransaction::DisconnectInputs(CTxDB& txdb, CBlockIndex* pindex)
 {
-    if (!hooks->DisconnectInputs(txdb, *this, pindex))
-        return false;
+    hooks->DisconnectInputs(txdb, *this, pindex);
 
     // Relinquish previous transactions' spent pointers
     if (!IsCoinBase())
@@ -1115,7 +1115,7 @@ bool CTransaction::DisconnectInputs(CTxDB& txdb, CBlockIndex* pindex)
 
 
 bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTestPool,
-                               bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid)
+                               bool fBlock, bool fMiner, MapPrevTx& inputsRet, bool& fInvalid) const
 {
     // FetchInputs can return false either because we just haven't seen some inputs
     // (in which case the transaction should be stored as an orphan)
@@ -1156,7 +1156,7 @@ bool CTransaction::FetchInputs(CTxDB& txdb, const map<uint256, CTxIndex>& mapTes
             {
                 LOCK(mempool.cs);
                 if (!mempool.exists(prevout.hash))
-                    return error("FetchInputs() : %s mempool Tx prev not found %s", GetHash().ToString().substr(0,10).c_str(),  prevout.hash.ToString().substr(0,10).c_str());
+                    return error("FetchInputs() : %s mempool Tx prev not found %s", GetHash().ToString().c_str(),  prevout.hash.ToString().c_str());
                 txPrev = mempool.lookup(prevout.hash);
             }
             if (!fFound)
@@ -1318,9 +1318,6 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             vTxindex.push_back(txindex);
         }
 
-        if (!hooks->ConnectInputs(txdb, mapTestPool, *this, vTxPrev, vTxindex, pindexBlock, posThisTx, fBlock, fMiner))
-            return false;
-
         if (IsCoinStake())
         {
             // ppcoin: coin stake tx earns reward instead of paying fee
@@ -1346,6 +1343,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             nFees += nTxFee;
             if (!MoneyRange(nFees))
                 return DoS(100, error("ConnectInputs() : nFees out of range"));
+            hooks->ConnectInputs(txdb, mapTestPool, *this, vTxPrev, vTxindex, pindexBlock, posThisTx, fBlock, fMiner);
         }
     }
 
@@ -3689,7 +3687,7 @@ int64 nLastCoinStakeSearchInterval = 0;
 //   fProofOfStake: try (best effort) to make a proof-of-stake block
 CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
 {
-    printf("CreateNewBlock\n");
+    if (fDebug) printf("CreateNewBlock\n");
     CReserveKey reservekey(pwallet);
 
     // Create new block

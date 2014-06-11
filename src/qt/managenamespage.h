@@ -72,7 +72,6 @@ private slots:
     void onCopyNameAction();
     void onCopyValueAction();
     void onCopyAddressAction();
-    void on_configureNameButton_clicked();
 };
 
 #endif // MANAGENAMESPAGE_H

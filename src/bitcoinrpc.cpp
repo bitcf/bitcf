@@ -2491,7 +2491,7 @@ static const CRPCCommand vRPCCommands[] =
     { "name_update",            &name_update,            false },
 //    { "sendtoname",             &sendtoname,             false },
     { "name_list",              &name_list,              false },
-    { "name_clean",             &name_clean,             false },
+//    { "name_clean",             &name_clean,             false },
     { "name_scan",              &name_scan,               false },
     { "name_filter",            &name_filter,            false },
 //    { "name_history",           &name_history,           false },
@@ -3139,6 +3139,13 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "createrawtransaction"   && n > 1) ConvertTo<Object>(params[1]);
     if (strMethod == "signrawtransaction"     && n > 1) ConvertTo<Array>(params[1], true);
     if (strMethod == "signrawtransaction"     && n > 2) ConvertTo<Array>(params[2], true);
+
+    //namecoin
+    if (strMethod == "name_new"               && n > 2) ConvertTo<boost::int64_t>(params[2]);
+    if (strMethod == "name_update"            && n > 2) ConvertTo<boost::int64_t>(params[2]);
+    if (strMethod == "name_filter"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "name_filter"            && n > 2) ConvertTo<boost::int64_t>(params[2]);
+    if (strMethod == "name_filter"            && n > 3) ConvertTo<boost::int64_t>(params[3]);
 
     return params;
 }

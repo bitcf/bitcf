@@ -1197,6 +1197,7 @@ void ThreadOpenConnections2(void* parg)
         {
             // use an nUnkBias between 10 (no outgoing connections) and 90 (8 outgoing connections)
             CAddress addr = addrman.Select(10 + min(nOutbound,8)*10);
+            sleep(10000);
 
             // if we selected an invalid address, restart
             if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.GetGroup()) || addr == addrLocalHost)

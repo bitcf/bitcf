@@ -19,8 +19,6 @@
 #include <QMenu>
 #include <QScrollBar>
 
-//extern std::map<std::vector<unsigned char>, PreparedNameFirstUpdate> mapMyNameFirstUpdate;
-
 //
 // NameFilterProxyModel
 //
@@ -50,16 +48,16 @@ void NameFilterProxyModel::setAddressSearch(const QString &search)
 
 bool NameFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
-//    QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
+    QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
-//    QString name = index.sibling(index.row(), NameTableModel::Name).data(Qt::EditRole).toString();
-//    QString value = index.sibling(index.row(), NameTableModel::Value).data(Qt::EditRole).toString();
-//    QString address = index.sibling(index.row(), NameTableModel::Address).data(Qt::EditRole).toString();
+    QString name = index.sibling(index.row(), NameTableModel::Name).data(Qt::EditRole).toString();
+    QString value = index.sibling(index.row(), NameTableModel::Value).data(Qt::EditRole).toString();
+    QString address = index.sibling(index.row(), NameTableModel::Address).data(Qt::EditRole).toString();
 
-//    Qt::CaseSensitivity case_sens = filterCaseSensitivity();
-//    return name.contains(nameSearch, case_sens)
-//        && value.contains(valueSearch, case_sens)
-//        && address.startsWith(addressSearch, Qt::CaseSensitive);   // Address is always case-sensitive
+    Qt::CaseSensitivity case_sens = filterCaseSensitivity();
+    return name.contains(nameSearch, case_sens)
+        && value.contains(valueSearch, case_sens)
+        && address.startsWith(addressSearch, Qt::CaseSensitive);   // Address is always case-sensitive
 }
 
 //
@@ -83,35 +81,32 @@ ManageNamesPage::ManageNamesPage(QWidget *parent) :
     QAction *copyNameAction = new QAction(tr("Copy &Name"), this);
     QAction *copyValueAction = new QAction(tr("Copy &Value"), this);
     QAction *copyAddressAction = new QAction(tr("Copy &Address"), this);
-    QAction *configureNameAction = new QAction(tr("&Configure Name..."), this);
 
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyNameAction);
     contextMenu->addAction(copyValueAction);
     contextMenu->addAction(copyAddressAction);
-    contextMenu->addAction(configureNameAction);
 
     // Connect signals for context menu actions
     connect(copyNameAction, SIGNAL(triggered()), this, SLOT(onCopyNameAction()));
     connect(copyValueAction, SIGNAL(triggered()), this, SLOT(onCopyValueAction()));
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(onCopyAddressAction()));
-    connect(configureNameAction, SIGNAL(triggered()), this, SLOT(on_configureNameButton_clicked()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
-    connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_configureNameButton_clicked()));
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Catch focus changes to make the appropriate button the default one (Submit or Configure)
     ui->registerName->installEventFilter(this);
+    ui->registerValue->installEventFilter(this);
     ui->submitNameButton->installEventFilter(this);
     ui->tableView->installEventFilter(this);
     ui->nameFilter->installEventFilter(this);
     ui->valueFilter->installEventFilter(this);
     ui->addressFilter->installEventFilter(this);
-    ui->configureNameButton->installEventFilter(this);
 
     ui->registerName->setMaxLength(MAX_NAME_LENGTH);
+    ui->registerValue->setMaxLength(MAX_VALUE_LENGTH);
 
     ui->nameFilter->setMaxLength(MAX_NAME_LENGTH);
     ui->valueFilter->setMaxLength(GUI_MAX_VALUE_LENGTH);
@@ -147,38 +142,38 @@ ManageNamesPage::~ManageNamesPage()
 
 void ManageNamesPage::setModel(WalletModel *walletModel)
 {
-//    this->walletModel = walletModel;
-//    model = walletModel->getNameTableModel();
+    this->walletModel = walletModel;
+    model = walletModel->getNameTableModel();
 
-//    proxyModel = new NameFilterProxyModel(this);
-//    proxyModel->setSourceModel(model);
-//    proxyModel->setDynamicSortFilter(true);
-//    proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-//    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    proxyModel = new NameFilterProxyModel(this);
+    proxyModel->setSourceModel(model);
+    proxyModel->setDynamicSortFilter(true);
+    proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
-//    ui->tableView->setModel(proxyModel);
-//    ui->tableView->sortByColumn(0, Qt::AscendingOrder);
+    ui->tableView->setModel(proxyModel);
+    ui->tableView->sortByColumn(0, Qt::AscendingOrder);
 
-//    ui->tableView->horizontalHeader()->setHighlightSections(false);
+    ui->tableView->horizontalHeader()->setHighlightSections(false);
 
-//    // Set column widths
-//    ui->tableView->horizontalHeader()->resizeSection(
-//            NameTableModel::Name, COLUMN_WIDTH_NAME);
-//    ui->tableView->horizontalHeader()->setResizeMode(
-//            NameTableModel::Value, QHeaderView::Stretch);
-//    ui->tableView->horizontalHeader()->resizeSection(
-//            NameTableModel::Address, COLUMN_WIDTH_ADDRESS);
-//    ui->tableView->horizontalHeader()->resizeSection(
-//            NameTableModel::ExpiresIn, COLUMN_WIDTH_EXPIRES_IN);
+    // Set column widths
+    ui->tableView->horizontalHeader()->resizeSection(
+            NameTableModel::Name, COLUMN_WIDTH_NAME);
+    ui->tableView->horizontalHeader()->setResizeMode(
+            NameTableModel::Value, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->resizeSection(
+            NameTableModel::Address, COLUMN_WIDTH_ADDRESS);
+    ui->tableView->horizontalHeader()->resizeSection(
+            NameTableModel::ExpiresIn, COLUMN_WIDTH_EXPIRES_IN);
 
-//    connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
-//            this, SLOT(selectionChanged()));
+    connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            this, SLOT(selectionChanged()));
 
-//    connect(ui->nameFilter, SIGNAL(textChanged(QString)), this, SLOT(changedNameFilter(QString)));
-//    connect(ui->valueFilter, SIGNAL(textChanged(QString)), this, SLOT(changedValueFilter(QString)));
-//    connect(ui->addressFilter, SIGNAL(textChanged(QString)), this, SLOT(changedAddressFilter(QString)));
+    connect(ui->nameFilter, SIGNAL(textChanged(QString)), this, SLOT(changedNameFilter(QString)));
+    connect(ui->valueFilter, SIGNAL(textChanged(QString)), this, SLOT(changedValueFilter(QString)));
+    connect(ui->addressFilter, SIGNAL(textChanged(QString)), this, SLOT(changedAddressFilter(QString)));
 
-//    selectionChanged();
+    selectionChanged();
 }
 
 void ManageNamesPage::changedNameFilter(const QString &filter)
@@ -202,79 +197,66 @@ void ManageNamesPage::changedAddressFilter(const QString &filter)
     proxyModel->setAddressSearch(filter);
 }
 
+//TODO finish this
 void ManageNamesPage::on_submitNameButton_clicked()
 {
-//    if (!walletModel)
-//        return;
+    if (!walletModel)
+        return;
 
-//    QString name = ui->registerName->text();
+    QString name = ui->registerName->text();
+    QString value = ui->registerValue->text();
+    int days = ui->registerValue->text().toInt();
 
-//    if (!walletModel->nameAvailable(name))
-//    {
-//        QMessageBox::warning(this, tr("Name registration"), tr("Name not available"));
-//        ui->registerName->setFocus();
-//        return;
-//    }
+    if (!walletModel->nameAvailable(name))
+    {
+        QMessageBox::warning(this, tr("Name registration"), tr("Name not available"));
+        ui->registerName->setFocus();
+        return;
+    }
 
-//    // TODO: name needs more exhaustive syntax checking, Unicode characters etc.
-//    // TODO: maybe it should be done while the user is typing (e.g. show/hide a red notice below the input box)
-//    if (name != name.simplified() || name.contains(" "))
-//    {
-//        if (QMessageBox::Yes != QMessageBox::warning(this, tr("Name registration warning"),
-//              tr("The name you entered contains whitespace characters. It is probably invalid. Are you sure you want to use this name?"),
-//              QMessageBox::Yes | QMessageBox::Cancel,
-//              QMessageBox::Cancel))
-//        {
-//            return;
-//        }
-//    }
-//    if (!name.contains("/") || name.startsWith("/"))
-//    {
-//        if (QMessageBox::Yes != QMessageBox::warning(this, tr("Name registration warning"),
-//              tr("The name you entered does not start with prefix (such as \"d/\"). It may be invalid for certain tasks. Are you sure you want to use this name?"),
-//              QMessageBox::Yes | QMessageBox::Cancel,
-//              QMessageBox::Cancel))
-//        {
-//            return;
-//        }
-//    }
+    // TODO: name needs more exhaustive syntax checking, Unicode characters etc.
+    // TODO: maybe it should be done while the user is typing (e.g. show/hide a red notice below the input box)
+    if (name != name.simplified() || name.contains(" "))
+    {
+        if (QMessageBox::Yes != QMessageBox::warning(this, tr("Name registration warning"),
+              tr("The name you entered contains whitespace characters. It is probably invalid. Are you sure you want to use this name?"),
+              QMessageBox::Yes | QMessageBox::Cancel,
+              QMessageBox::Cancel))
+        {
+            return;
+        }
+    }
 
-//    QString msg;
-//    if (name.startsWith("d/"))
-//        msg = tr("Are you sure you want to register domain name %1, which corresponds to domain %2?").arg(GUIUtil::HtmlEscape(name)).arg(GUIUtil::HtmlEscape(name.mid(2) + ".bit"));
-//    else
-//        msg = tr("Are you sure you want to register non-domain name %1?").arg(GUIUtil::HtmlEscape(name));
-//    msg += "<br><br>" + tr("This will issue both a name_new and a postponed name_firstupdate. Let the program run for three hours to make sure the process can finish.");
+    if (QMessageBox::Yes != QMessageBox::question(this, tr("Confirm name registration"),
+          tr("This will issue a name_new."),
+          QMessageBox::Yes | QMessageBox::Cancel,
+          QMessageBox::Cancel))
+    {
+        return;
+    }
 
-//    if (QMessageBox::Yes != QMessageBox::question(this, tr("Confirm name registration"),
-//          msg,
-//          QMessageBox::Yes | QMessageBox::Cancel,
-//          QMessageBox::Cancel))
-//    {
-//        return;
-//    }
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if (!ctx.isValid())
+        return;
 
-//    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-//    if (!ctx.isValid())
-//        return;
+    QString err_msg;
 
-//    QString err_msg;
+    try
+    {
+        WalletModel::NameNewReturn res = walletModel->nameNew(name, value, days);
 
-//    try
-//    {
-//        WalletModel::NameNewReturn res = walletModel->nameNew(name);
+        if (res.ok)
+        {
+            ui->registerName->setText("");
+            ui->registerValue->setText("");
+            ui->submitNameButton->setDefault(true);
 
-//        if (res.ok)
-//        {
-//            ui->registerName->setText("d/");
-//            ui->submitNameButton->setDefault(true);
-
-//            int newRowIndex;
-//            // FIXME: CT_NEW may have been sent from nameNew (via transaction).
-//            // Currently updateEntry is modified so it does not complain
-//            model->updateEntry(name, "", res.address, NameTableEntry::NAME_NEW, CT_NEW, &newRowIndex);
-//            ui->tableView->selectRow(newRowIndex);
-//            ui->tableView->setFocus();
+            int newRowIndex;
+            // FIXME: CT_NEW may have been sent from nameNew (via transaction).
+            // Currently updateEntry is modified so it does not complain
+            model->updateEntry(name, "", res.address, NameTableEntry::NAME_NEW, CT_NEW, &newRowIndex);
+            ui->tableView->selectRow(newRowIndex);
+            ui->tableView->setFocus();
 
 //            ConfigureNameDialog dlg(name, "", res.address, true, this);
 //            dlg.setModel(walletModel);
@@ -291,19 +273,19 @@ void ManageNamesPage::on_submitNameButton_clicked()
 //            }
 
 //            return;
-//        }
+        }
 
-//        err_msg = res.err_msg;
-//    }
-//    catch (std::exception& e)
-//    {
-//        err_msg = e.what();
-//    }
+        err_msg = res.err_msg;
+    }
+    catch (std::exception& e)
+    {
+        err_msg = e.what();
+    }
 
-//    if (err_msg == "ABORTED")
-//        return;
+    if (err_msg == "ABORTED")
+        return;
 
-//    QMessageBox::warning(this, tr("Name registration failed"), err_msg);
+    QMessageBox::warning(this, tr("Name registration failed"), err_msg);
 }
 
 bool ManageNamesPage::eventFilter(QObject *object, QEvent *event)
@@ -313,12 +295,10 @@ bool ManageNamesPage::eventFilter(QObject *object, QEvent *event)
         if (object == ui->registerName || object == ui->submitNameButton)
         {
             ui->submitNameButton->setDefault(true);
-            ui->configureNameButton->setDefault(false);
         }
         else if (object == ui->tableView)
         {
             ui->submitNameButton->setDefault(false);
-            ui->configureNameButton->setDefault(true);
         }
     }
     return QDialog::eventFilter(object, event);
@@ -327,18 +307,9 @@ bool ManageNamesPage::eventFilter(QObject *object, QEvent *event)
 void ManageNamesPage::selectionChanged()
 {
     // Set button states based on selected tab and selection
-    QTableView *table = ui->tableView;
-    if(!table->selectionModel())
-        return;
-
-    if(table->selectionModel()->hasSelection())
-    {
-        ui->configureNameButton->setEnabled(true);
-    }
-    else
-    {
-        ui->configureNameButton->setEnabled(false);
-    }
+//    QTableView *table = ui->tableView;
+//    if(!table->selectionModel())
+//        return;
 }
 
 void ManageNamesPage::contextualMenu(const QPoint &point)
@@ -350,70 +321,41 @@ void ManageNamesPage::contextualMenu(const QPoint &point)
 
 void ManageNamesPage::onCopyNameAction()
 {
-    //GUIUtil::copyEntryData(ui->tableView, NameTableModel::Name);
+    GUIUtil::copyEntryData(ui->tableView, NameTableModel::Name);
 }
 
 void ManageNamesPage::onCopyValueAction()
 {
-    //GUIUtil::copyEntryData(ui->tableView, NameTableModel::Value);
+    GUIUtil::copyEntryData(ui->tableView, NameTableModel::Value);
 }
 
 void ManageNamesPage::onCopyAddressAction()
 {
-    //GUIUtil::copyEntryData(ui->tableView, NameTableModel::Address);
-}
-
-void ManageNamesPage::on_configureNameButton_clicked()
-{
-//    if(!ui->tableView->selectionModel())
-//        return;
-//    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows(NameTableModel::Name);
-//    if(indexes.isEmpty())
-//        return;
-
-//    QModelIndex index = indexes.at(0);
-
-//    QString name = index.data(Qt::EditRole).toString();
-//    QString value = index.sibling(index.row(), NameTableModel::Value).data(Qt::EditRole).toString();
-//    QString address = index.sibling(index.row(), NameTableModel::Address).data(Qt::EditRole).toString();
-
-//    std::vector<unsigned char> vchName = vchFromString(name.toStdString());
-//    bool fFirstUpdate = mapMyNameFirstUpdate.count(vchName) != 0;
-
-//    ConfigureNameDialog dlg(name, value, address, fFirstUpdate, this);
-//    dlg.setModel(walletModel);
-//    if (dlg.exec() == QDialog::Accepted && fFirstUpdate)
-//    {
-//        LOCK(cs_main);
-//        // name_firstupdate could have been sent, while the user was editing the value
-//        if (mapMyNameFirstUpdate.count(vchName) != 0)
-//            model->updateEntry(name, dlg.getReturnData(), address, NameTableEntry::NAME_NEW, CT_UPDATED);
-//    }
+    GUIUtil::copyEntryData(ui->tableView, NameTableModel::Address);
 }
 
 void ManageNamesPage::exportClicked()
 {
-//    // CSV is currently the only supported format
-//    QString filename = GUIUtil::getSaveFileName(
-//            this,
-//            tr("Export Registered Names Data"), QString(),
-//            tr("Comma separated file (*.csv)"));
+    // CSV is currently the only supported format
+    QString filename = GUIUtil::getSaveFileName(
+            this,
+            tr("Export Registered Names Data"), QString(),
+            tr("Comma separated file (*.csv)"));
 
-//    if (filename.isNull())
-//        return;
+    if (filename.isNull())
+        return;
 
-//    CSVModelWriter writer(filename);
+    CSVModelWriter writer(filename);
+    writer.setModel(proxyModel);
+    // name, column, role
+    writer.addColumn("Name", NameTableModel::Name, Qt::EditRole);
+    writer.addColumn("Value", NameTableModel::Value, Qt::EditRole);
+    writer.addColumn("Address", NameTableModel::Address, Qt::EditRole);
+    writer.addColumn("Expires In", NameTableModel::ExpiresIn, Qt::EditRole);
 
-//    writer.setModel(proxyModel);
-//    // name, column, role
-//    writer.addColumn("Name", NameTableModel::Name, Qt::EditRole);
-//    writer.addColumn("Value", NameTableModel::Value, Qt::EditRole);
-//    writer.addColumn("Address", NameTableModel::Address, Qt::EditRole);
-//    writer.addColumn("Expires In", NameTableModel::ExpiresIn, Qt::EditRole);
-
-//    if(!writer.write())
-//    {
-//        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
-//                              QMessageBox::Abort, QMessageBox::Abort);
-//    }
+    if(!writer.write())
+    {
+        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+                              QMessageBox::Abort, QMessageBox::Abort);
+    }
 }

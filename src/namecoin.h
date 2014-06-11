@@ -79,10 +79,10 @@ public:
     bool ReconstructNameIndex();
 };
 
-static const int NAMECOIN_TX_VERSION = 0x7100;
-static const int64 MIN_AMOUNT = CENT;
-static const int MAX_NAME_LENGTH = 255;
-static const int MAX_VALUE_LENGTH = 1023;
+static const int NAMECOIN_TX_VERSION = 0x7100; //0x7100 is initial version
+static const int MAX_NAME_LENGTH = 512;
+static const int MAX_VALUE_LENGTH = 20*1024;
+static const int MAX_RENTAL_DAYS = 100*365; //100 years
 static const int OP_NAME_NEW = 0x01;
 static const int OP_NAME_UPDATE = 0x02;
 static const int MIN_FIRSTUPDATE_DEPTH = 12;
@@ -95,3 +95,12 @@ int IndexOfNameOutput(const CTransaction& tx);
 bool GetNameOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
 bool GetValueOfNameTx(const CTransaction& tx, std::vector<unsigned char>& value);
 bool DecodeNameTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
+bool GetRentalDaysOfNameTx(const CTransaction& tx, int &nRentalDays);
+bool GetValueOfTxPos(const CDiskTxPos& txPos, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
+bool GetNameTotalLifeTime(const std::vector<unsigned char> &vchName, int &nTotalLifeTime);
+bool GetExpirationData(const std::vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight);
+int GetTxPosHeight(const CDiskTxPos& txPos);
+bool GetNameAddress(const CTransaction& tx, std::string& strAddress);
+std::string stringFromVch(const std::vector<unsigned char> &vch);
+int GetNameHeight(CNameDB& dbName, std::vector<unsigned char> vchName);
+std::vector<unsigned char> vchFromString(const std::string &str);
