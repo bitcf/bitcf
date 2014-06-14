@@ -9,7 +9,6 @@
 #include "../main.h"
 //#include "../hook.h"
 #include "../wallet.h"
-#include "../namecoin.h"
 #include "guiconstants.h"
 #include "ui_interface.h"
 //#include "configurenamedialog.h"
@@ -99,6 +98,7 @@ ManageNamesPage::ManageNamesPage(QWidget *parent) :
     // Catch focus changes to make the appropriate button the default one (Submit or Configure)
     ui->registerName->installEventFilter(this);
     ui->registerValue->installEventFilter(this);
+    ui->txTypeSelector->installEventFilter(this);
     ui->submitNameButton->installEventFilter(this);
     ui->tableView->installEventFilter(this);
     ui->nameFilter->installEventFilter(this);
@@ -206,6 +206,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
     QString name = ui->registerName->text();
     QString value = ui->registerValue->text();
     int days = ui->registerValue->text().toInt();
+    QString txType = ui->txTypeSelector->currentText();
 
     if (!walletModel->nameAvailable(name))
     {
@@ -243,7 +244,12 @@ void ManageNamesPage::on_submitNameButton_clicked()
 
     try
     {
-        WalletModel::NameNewReturn res = walletModel->nameNew(name, value, days);
+        QMessageBox::warning(this, tr("info"), name + value);
+        NameNewReturn res;
+        if (txType == "NAME_NEW")
+            res = walletModel->nameNew(name, value, days);
+        if (txType == "NAME_UPDATE")
+            res = walletModel->nameUpdate(name, value, days);
 
         if (res.ok)
         {
@@ -254,28 +260,13 @@ void ManageNamesPage::on_submitNameButton_clicked()
             int newRowIndex;
             // FIXME: CT_NEW may have been sent from nameNew (via transaction).
             // Currently updateEntry is modified so it does not complain
-            model->updateEntry(name, "", res.address, NameTableEntry::NAME_NEW, CT_NEW, &newRowIndex);
+            model->updateEntry(name, "", QString::fromStdString(res.address), NameTableEntry::NAME_NEW, CT_NEW, &newRowIndex);
             ui->tableView->selectRow(newRowIndex);
             ui->tableView->setFocus();
-
-//            ConfigureNameDialog dlg(name, "", res.address, true, this);
-//            dlg.setModel(walletModel);
-//            if (dlg.exec() == QDialog::Accepted)
-//            {
-//                LOCK(cs_main);
-//                if (mapMyNameFirstUpdate.count(vchFromString(name.toStdString())) != 0)
-//                    model->updateEntry(name, dlg.getReturnData(), res.address, NameTableEntry::NAME_NEW, CT_UPDATED);
-//                else
-//                {
-//                    // name_firstupdate could have been sent, while the user was editing the value
-//                    // Do nothing
-//                }
-//            }
-
-//            return;
+            return;
         }
 
-        err_msg = res.err_msg;
+        err_msg = QString::fromStdString(res.err_msg);
     }
     catch (std::exception& e)
     {

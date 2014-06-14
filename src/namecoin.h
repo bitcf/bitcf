@@ -1,4 +1,5 @@
 #include "db.h"
+#include "bitcoinrpc.h"
 
 class CNameIndex
 {
@@ -104,3 +105,20 @@ bool GetNameAddress(const CTransaction& tx, std::string& strAddress);
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 int GetNameHeight(CNameDB& dbName, std::vector<unsigned char> vchName);
 std::vector<unsigned char> vchFromString(const std::string &str);
+
+
+
+struct NameNewReturn
+{
+     bool ok;
+     std::string err_msg;
+     RPCErrorCode err_code;
+     std::string address;
+     uint256 hex;   // Transaction hash in hex
+};
+NameNewReturn name_new(const std::vector<unsigned char> &vchName,
+              const std::vector<unsigned char> &vchValue,
+              const int nRentalDays);
+NameNewReturn name_update(const std::vector<unsigned char> &vchName,
+              const std::vector<unsigned char> &vchValue,
+              const int nRentalDays, std::string strAddress = "");

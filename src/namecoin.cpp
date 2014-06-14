@@ -1,7 +1,6 @@
 #include <vector>
 using namespace std;
 
-#include "bitcoinrpc.h"
 #include "script.h"
 #include "wallet.h"
 #include "base58.h"
@@ -1196,47 +1195,71 @@ Value name_new(const Array& params, bool fHelp)
     vector<unsigned char> vchName = vchFromValue(params[0]);
     vector<unsigned char> vchValue = vchFromValue(params[1]);
     int nRentalDays = params[2].get_int();
-    if (nRentalDays < 1) throw runtime_error("<days> value must be greater than 0.");
-    if (nRentalDays > MAX_RENTAL_DAYS) throw runtime_error("<days> value is too large");
+
+
+    NameNewReturn ret = name_new(vchName, vchValue, nRentalDays);
+    if (!ret.ok)
+        throw JSONRPCError(ret.err_code, ret.err_msg);
+    return ret.hex.GetHex();
+}
+
+NameNewReturn name_new(const vector<unsigned char> &vchName,
+              const vector<unsigned char> &vchValue,
+              const int nRentalDays)
+{
+    NameNewReturn ret;
+    ret.err_code = RPC_INTERNAL_ERROR; //default value
+    ret.ok = false;
+    if (nRentalDays < 1)
+    {
+        ret.err_msg = "<days> value must be greater than 0.";
+        return ret;
+    }
+    if (nRentalDays > MAX_RENTAL_DAYS)
+    {
+        ret.err_msg = "<days> value is too large.";
+        return ret;
+    }
     vector<unsigned char> vchRentalDays = CBigNum(nRentalDays).getvch();
+
 
     CWalletTx wtx;
     wtx.nVersion = NAMECOIN_TX_VERSION;
+    stringstream ss;
+    CScript scriptPubKeyOrig;
 
     {
         LOCK(cs_main);
+
         if (mapNamePending.count(vchName) && mapNamePending[vchName].size())
         {
-
-            error("name_new() : there are %d pending operations on that name, including %s",
-                    mapNamePending[vchName].size(),
-                    mapNamePending[vchName].begin()->GetHex().c_str());
-            throw runtime_error("there are pending operations on that name");
+            ss << "there are " << mapNamePending[vchName].size() <<
+                  " pending operations on that name, including " <<
+                  mapNamePending[vchName].begin()->GetHex().c_str();
+            ret.err_msg = ss.str();
+            return ret;
         }
-    }
 
-    {
         CNameDB dbName("r");
         CTransaction tx;
         if (GetTxOfName(dbName, vchName, tx))
         {
-            error("name_new() : this name is already active with tx %s",
-                    tx.GetHash().GetHex().c_str());
-            throw runtime_error("this name is already active");
+            ss << "this name is already active with tx " << mapNamePending[vchName].begin()->GetHex().c_str();
+            ret.err_msg = ss.str();
+            return ret;
         }
-    }
 
-    {
-        LOCK(cs_main);
         EnsureWalletIsUnlocked();
 
         CPubKey vchPubKey;
-        if(!pwalletMain->GetKeyFromPool(vchPubKey, true))
+        if (!pwalletMain->GetKeyFromPool(vchPubKey, true))
         {
-            //TODO add actions on failure
+            ret.err_msg = "failed to get key from pool";
+            return ret;
         }
-        CScript scriptPubKeyOrig;
         scriptPubKeyOrig.SetDestination(vchPubKey.GetID());
+
+
         CScript scriptPubKey;
         scriptPubKey << OP_NAME_NEW << vchName << vchValue << vchRentalDays << OP_2DROP << OP_2DROP;
         scriptPubKey += scriptPubKeyOrig;
@@ -1246,9 +1269,22 @@ Value name_new(const Array& params, bool fHelp)
         string strError = pwalletMain->SendMoney(scriptPubKey, CENT, wtx, false);
         nTransactionFee = prevFee;
         if (strError != "")
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
+        {
+            ret.err_code = RPC_WALLET_ERROR;
+            ret.err_msg = strError;
+            return ret;
+        }
     }
-    return wtx.GetHash().GetHex();
+
+    //success! collect info and return
+    CTxDestination address;
+    if (ExtractDestination(scriptPubKeyOrig, address))
+    {
+        ret.address = CBitcoinAddress(address).ToString();
+    }
+    ret.hex = wtx.GetHash();
+    ret.ok = true;
+    return ret;
 }
 
 Value name_update(const Array& params, bool fHelp)
@@ -1260,65 +1296,99 @@ Value name_update(const Array& params, bool fHelp)
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
     vector<unsigned char> vchValue = vchFromValue(params[1]);
+    int nRentalDays = params[2].get_int();
+    string strAddress = "";
+    if (params.size() == 4)
+        strAddress = params[3].get_str();
+
+    NameNewReturn ret = name_update(vchName, vchValue, nRentalDays, strAddress);
+    if (!ret.ok)
+        throw JSONRPCError(ret.err_code, ret.err_msg);
+    return ret.hex.GetHex();
+}
+
+NameNewReturn name_update(const vector<unsigned char> &vchName,
+              const vector<unsigned char> &vchValue,
+              const int nRentalDays,
+              string strAddress)
+{
+    NameNewReturn ret;
+    ret.err_code = RPC_INTERNAL_ERROR; //default value
+    ret.ok = false;
+    if (nRentalDays <= 0)
+    {
+        ret.err_msg = "<days> value must be greater or equal than 0.";
+        return ret;
+    }
+    if (nRentalDays > MAX_RENTAL_DAYS)
+    {
+        ret.err_msg = "<days> value is too large.";
+        return ret;
+    }
+    vector<unsigned char> vchRentalDays = CBigNum(nRentalDays).getvch();
 
     CWalletTx wtx;
     wtx.nVersion = NAMECOIN_TX_VERSION;
+    stringstream ss;
     CScript scriptPubKeyOrig;
 
-    int nRentalDays = params[2].get_int();
-    if (nRentalDays < 0) throw runtime_error("<days> value must be greater or equal than 0.");
-    if (nRentalDays > MAX_RENTAL_DAYS) throw runtime_error("<days> value is too large");
-    vector<unsigned char> vchRentalDays = CBigNum(nRentalDays).getvch();
-
-    if (params.size() == 4)
     {
-        string strAddress = params[3].get_str();
-        CBitcoinAddress address(strAddress);
-        if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid namecoin address");
-        scriptPubKeyOrig.SetDestination(address.Get());
-    }
-    else
-    {
-        CPubKey vchPubKey;
-        if(!pwalletMain->GetKeyFromPool(vchPubKey, true))
-        {
-            //TODO add actions on failure
-        }
-        scriptPubKeyOrig.SetDestination(vchPubKey.GetID());
-    }
-
-    CScript scriptPubKey;
-    scriptPubKey << OP_NAME_UPDATE << vchName << vchValue << vchRentalDays << OP_2DROP << OP_2DROP;
-    scriptPubKey += scriptPubKeyOrig;
-
-    {
+    //3 checks - pending operations, name exist, name is yours
         LOCK2(cs_main, pwalletMain->cs_wallet);
+
         if (mapNamePending.count(vchName) && mapNamePending[vchName].size())
         {
-            error("name_update() : there are %d pending operations on that name, including %s",
-                    mapNamePending[vchName].size(),
-                    mapNamePending[vchName].begin()->GetHex().c_str());
-            throw runtime_error("there are pending operations on that name");
+            ss << "there are " << mapNamePending[vchName].size() <<
+                  " pending operations on that name, including " <<
+                  mapNamePending[vchName].begin()->GetHex().c_str();
+            ret.err_msg = ss.str();
+            return ret;
         }
-
-        EnsureWalletIsUnlocked();
 
         CNameDB dbName("r");
         CTransaction tx;
         if (!GetTxOfName(dbName, vchName, tx))
         {
-            throw runtime_error("could not find a coin with this name");
+            ret.err_msg = "could not find a coin with this name";
+            return ret;
         }
 
         uint256 wtxInHash = tx.GetHash();
-
         if (!pwalletMain->mapWallet.count(wtxInHash))
         {
-            error("name_update() : this coin is not in your wallet %s",
-                    wtxInHash.GetHex().c_str());
-            throw runtime_error("this coin is not in your wallet");
+            ss << "this coin is not in your wallet " << wtxInHash.GetHex().c_str();
+            ret.err_msg = ss.str();
+            return ret;
         }
+
+    //form script and send
+        if (strAddress != "")
+        {
+            CBitcoinAddress address(strAddress);
+            if (!address.IsValid())
+            {
+                ret.err_code = RPC_INVALID_ADDRESS_OR_KEY;
+                ret.err_msg = "could not find a coin with this name";
+                return ret;
+            }
+            scriptPubKeyOrig.SetDestination(address.Get());
+        }
+        else
+        {
+            CPubKey vchPubKey;
+            if(!pwalletMain->GetKeyFromPool(vchPubKey, true))
+            {
+                ret.err_msg = "failed to get key from pool";
+                return ret;
+            }
+            scriptPubKeyOrig.SetDestination(vchPubKey.GetID());
+        }
+
+        CScript scriptPubKey;
+        scriptPubKey << OP_NAME_UPDATE << vchName << vchValue << vchRentalDays << OP_2DROP << OP_2DROP;
+        scriptPubKey += scriptPubKeyOrig;
+
+        EnsureWalletIsUnlocked();
 
         CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 
@@ -1328,8 +1398,25 @@ Value name_update(const Array& params, bool fHelp)
         nTransactionFee = prevFee;
         if (strError != "")
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+        if (strError != "")
+        {
+            ret.err_code = RPC_WALLET_ERROR;
+            ret.err_msg = strError;
+            return ret;
+        }
     }
-    return wtx.GetHash().GetHex();
+
+    //success! collect info and return
+    CTxDestination address;
+    ret.address = "";
+    if (ExtractDestination(scriptPubKeyOrig, address))
+    {
+        ret.address = CBitcoinAddress(address).ToString();
+    }
+    ret.hex = wtx.GetHash();
+    ret.ok = true;
+    return ret;
 }
 
 void UnspendInputs(CWalletTx& wtx)

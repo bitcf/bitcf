@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "uint256.h"
+#include "namecoin.h"
 
 #include "allocators.h" /* for SecureString */
 
@@ -78,20 +79,10 @@ public:
 
     bool nameAvailable(const QString &name);
 
-    struct NameNewReturn
-    {
-         bool ok;
-         QString err_msg;
-         QString address;
-         std::vector<unsigned char> vchName;
-         uint256 hex;   // Transaction hash in hex
-         uint64 rand;   // Secret number in hex
-         uint160 hash;  // Hash of rand+name
-    };
-
-    // Register new name
+    // Register new name or update it
     // Requires unlocked wallet; can throw exception instead of returning error
     NameNewReturn nameNew(const QString &name, const QString &value, int days);
+    NameNewReturn nameUpdate(const QString &name, const QString &value, int days);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
