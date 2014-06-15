@@ -1,0 +1,10 @@
+DBFlush(false) db not started
+StopNode()
+DBFlush(true) db not started
+EmerCoin exiting
+
+DBFlush(false) db not started
+StopNode()
+DBFlush(true) db not started
+EmerCoin exiting
+

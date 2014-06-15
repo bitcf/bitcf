@@ -24,7 +24,7 @@ using namespace std;
 class CHooks
 {
 public:
-    virtual bool IsStandard(const CScript& scriptPubKey) = 0;
+    virtual bool IsStandard(const CTransaction& tx) = 0;
     virtual void AddToWallet(CWalletTx& tx) = 0;
     virtual bool CheckTransaction(const CTransaction& tx) = 0;
     virtual bool ConnectInputs(CTxDB& txdb,

@@ -36,7 +36,7 @@ const int NAME_COIN_GENESIS_EXTRA = 521;
 class CNamecoinHooks : public CHooks
 {
 public:
-    virtual bool IsStandard(const CScript& scriptPubKey);
+    virtual bool IsStandard(const CTransaction &tx);
     virtual void AddToWallet(CWalletTx& tx);
     virtual bool CheckTransaction(const CTransaction& tx);
     virtual bool ConnectInputs(CTxDB& txdb,
@@ -444,7 +444,7 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, C
 #endif
 
     if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
-        return _("Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+        return _("SendMoneyWithInputTx(): The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 
     return "";
 }
@@ -581,8 +581,13 @@ CHooks* InitHook()
     return new CNamecoinHooks();
 }
 
-bool CNamecoinHooks::IsStandard(const CScript& scriptPubKey)
+bool CNamecoinHooks::IsStandard(const CTransaction &tx)
 {
+    int op;
+    int nOut;
+    vector<vector<unsigned char> > vvch;
+    if (!DecodeNameTx(tx, op, nOut, vvch))
+        return false;
     return true;
 }
 
@@ -1649,7 +1654,7 @@ bool GetTxFee(const CTransaction& tx, bool fBlock, bool fMiner, int64& txFee)
     if (!tx.FetchInputs(txdb, mapUnused, fBlock, fMiner, mapInputs, fInvalid))
         return false;
     txFee = tx.GetValueIn(mapInputs) - tx.GetValueOut();
-    //printf("GetTxFee fee, fBlock = %d, fMiner = %d\n", txFee, fBlock, fMiner);
+    printf("GetTxFee fee = %d\n", txFee, fBlock, fMiner);
     return true;
 }
 
@@ -1881,6 +1886,16 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
     if (nRentalDays < 1)
         return error("ConnectInputsHook() : tx rental days is lower than 1, ignoring this tx");
 
+    {
+        //removeme
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << tx;
+        string strHex = HexStr(ssTx.begin(), ssTx.end());
+
+        printf("name = %s, value = %s, hex = %s, fBlock = %d, fMiner = %d, rawtx = %s\n",
+               stringFromVch(vvchArgs[0]).c_str(), stringFromVch(vvchArgs[1]).c_str(), tx.GetHash().GetHex().c_str(), fBlock, fMiner, strHex.c_str());
+    }
+
     switch (op)
     {
         case OP_NAME_NEW:
@@ -1890,8 +1905,15 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
                 const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
                 bool txFeePass = false;
                 int64 txFee;
-                if(!GetTxFee(tx, fBlock, fMiner, txFee))
-                    return error("ConnectInputsHook() : could not read fee from database");
+                if (!GetTxFee(tx, fBlock, fMiner, txFee) && fMiner)
+                {
+                    if (fMiner)
+                    { //when generating new block remove namecoin tx with invalid inputs
+                        pwalletMain->EraseFromWallet(tx.GetHash());
+                        mempool.remove(tx);
+                    }
+                    return error("ConnectInputsHook() : could not read fee from database. Removing tx from mempool.");
+                }
 
                 for (int i = 1; i <= 10; i++)
                 {
@@ -1939,8 +1961,15 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
                 const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
                 bool txFeePass = false;
                 int64 txFee;
-                if(!GetTxFee(tx, fBlock, fMiner, txFee))
-                    return error("ConnectInputsHook() : could not read fee from database");
+                if (!GetTxFee(tx, fBlock, fMiner, txFee) && fMiner)
+                {
+                    if (fMiner)
+                    { //when generating new block remove namecoin tx with invalid inputs
+                        pwalletMain->EraseFromWallet(tx.GetHash());
+                        mempool.remove(tx);
+                    }
+                    return error("ConnectInputsHook() : could not read fee from database. Removing tx from mempool.");
+                }
 
                 for (int i = 1; i <= 10; i++)
                 {
