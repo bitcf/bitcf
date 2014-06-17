@@ -48,6 +48,8 @@ public:
      * whether to spend a coin. */
     virtual bool IsMine(const CTransaction& tx) = 0;
     virtual bool IsMine(const CTransaction& tx, const CTxOut& txout, bool ignore_name_new = false) = 0;
+    virtual bool SelectCoinsMinConf(const CWalletTx *pcoin, int nVersion) = 0;
+    virtual bool listunspent(int nVersion) = 0;
 };
 
 extern CHooks* InitHook();

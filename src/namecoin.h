@@ -80,7 +80,7 @@ public:
     bool ReconstructNameIndex();
 };
 
-static const int NAMECOIN_TX_VERSION = 0x7100; //0x7100 is initial version
+static const int NAMECOIN_TX_VERSION = 0x0666; //0x7100 is initial version
 static const int MAX_NAME_LENGTH = 512;
 static const int MAX_VALUE_LENGTH = 20*1024;
 static const int MAX_RENTAL_DAYS = 100*365; //100 years

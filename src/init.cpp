@@ -478,6 +478,13 @@ bool AppInit2(int argc, char* argv[])
         return false;
     }
 
+//  recreate namecoin index - this must happen before ReacceptWalletTransactions())
+    filesystem::path nameindexfile = filesystem::path(GetDataDir()) / "nameindex.dat";
+    extern void rescanfornames();
+    if (!filesystem::exists(nameindexfile))
+        rescanfornames();
+//  recreate namecoin index end
+
     // Add wallet transactions that aren't already in a block to mapTransactions
     pwalletMain->ReacceptWalletTransactions();
 
@@ -612,11 +619,6 @@ bool AppInit2(int argc, char* argv[])
         return false;
 
     RandAddSeedPerfmon();
-
-    filesystem::path nameindexfile = filesystem::path(GetDataDir()) / "nameindex.dat";
-    extern void rescanfornames(); //in namecoin.cpp
-    if (!filesystem::exists(nameindexfile))
-        rescanfornames();
 
     if (!CreateThread(StartNode, NULL))
         ThreadSafeMessageBox(_("Error: CreateThread(StartNode) failed"), _("EmerCoin"), wxOK | wxMODAL);
