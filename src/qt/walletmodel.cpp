@@ -215,9 +215,9 @@ bool WalletModel::nameAvailable(const QString &name)
     return false;
 }
 
-NameNewReturn WalletModel::nameNew(const QString &name, const QString &value, int nRentalDays)
+NameTxReturn WalletModel::nameNew(const QString &name, const QString &value, int nRentalDays)
 {
-    NameNewReturn ret;
+    NameTxReturn ret;
     ret.ok = false;
     string strName = name.toStdString();
     vector<unsigned char> vchName(strName.begin(), strName.end());
@@ -227,9 +227,9 @@ NameNewReturn WalletModel::nameNew(const QString &name, const QString &value, in
     return name_new(vchName, vchValue, nRentalDays);
 }
 
-NameNewReturn WalletModel::nameUpdate(const QString &name, const QString &value, int nRentalDays)
+NameTxReturn WalletModel::nameUpdate(const QString &name, const QString &value, int nRentalDays)
 {
-    NameNewReturn ret;
+    NameTxReturn ret;
     ret.ok = false;
     string strName = name.toStdString();
     vector<unsigned char> vchName(strName.begin(), strName.end());

@@ -81,8 +81,8 @@ public:
 
     // Register new name or update it
     // Requires unlocked wallet; can throw exception instead of returning error
-    NameNewReturn nameNew(const QString &name, const QString &value, int days);
-    NameNewReturn nameUpdate(const QString &name, const QString &value, int days);
+    NameTxReturn nameNew(const QString &name, const QString &value, int days);
+    NameTxReturn nameUpdate(const QString &name, const QString &value, int days);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);

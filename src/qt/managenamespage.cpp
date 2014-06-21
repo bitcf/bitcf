@@ -245,7 +245,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
     try
     {
         QMessageBox::warning(this, tr("info"), name + value);
-        NameNewReturn res;
+        NameTxReturn res;
         if (txType == "NAME_NEW")
             res = walletModel->nameNew(name, value, days);
         if (txType == "NAME_UPDATE")

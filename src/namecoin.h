@@ -80,7 +80,7 @@ public:
     bool ReconstructNameIndex();
 };
 
-static const int NAMECOIN_TX_VERSION = 0x0666; //0x7100 is initial version
+static const int NAMECOIN_TX_VERSION = 0x0666; //0x0666 is initial version
 static const int MAX_NAME_LENGTH = 512;
 static const int MAX_VALUE_LENGTH = 20*1024;
 static const int MAX_RENTAL_DAYS = 100*365; //100 years
@@ -95,20 +95,44 @@ int IndexOfNameOutput(const CTransaction& tx);
 
 bool GetNameOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
 bool GetValueOfNameTx(const CTransaction& tx, std::vector<unsigned char>& value);
-bool DecodeNameTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool GetRentalDaysOfNameTx(const CTransaction& tx, int &nRentalDays);
 bool GetValueOfTxPos(const CDiskTxPos& txPos, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 bool GetNameTotalLifeTime(const std::vector<unsigned char> &vchName, int &nTotalLifeTime);
 bool GetExpirationData(const std::vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight);
 int GetTxPosHeight(const CDiskTxPos& txPos);
-bool GetNameAddress(const CTransaction& tx, std::string& strAddress);
+bool GetNameTxAddress(const CTransaction& tx, std::string& strAddress);
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 int GetNameHeight(CNameDB& dbName, std::vector<unsigned char> vchName);
 std::vector<unsigned char> vchFromString(const std::string &str);
 
+struct NameTxInfo
+{
+    std::vector<unsigned char> vchName;
+    std::vector<unsigned char> vchValue;
+    int nRentalDays;
+    int op;
+    int nOut;
+    std::string err_msg; //in case function that takes this as argument have something to say about it
 
+    //used only by DecodeNameScript()
+    std::string strAddress;
+    int nIsMine;  //  -1 - unknown,   0 - not mine,   1 - is mine
 
-struct NameNewReturn
+    //used only by GetNameList()
+    int nTimeLeft;
+
+    NameTxInfo(): nRentalDays(-1), op(-1), nOut(-1), nIsMine(-1), nTimeLeft(-1) {}
+    NameTxInfo(std::vector<unsigned char> vchName1, std::vector<unsigned char> vchValue1, int nRentalDays1, int op1, int nOut1, std::string err_msg1):
+        vchName(vchName1), vchValue(vchValue1), nRentalDays(nRentalDays1), op(op1), nOut(nOut1), err_msg(err_msg1), nIsMine(-1), nTimeLeft(-1) {}
+};
+
+bool DecodeNameScript(const CScript& script, NameTxInfo& ret, bool checkValuesCorrectness = true, bool checkAddressAndIfIsMine = false);
+bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_iterator& pc, bool checkValuesCorrectness = true, bool checkAddressAndIfIsMine = false);
+bool DecodeNameTx(const CTransaction& tx, NameTxInfo& nti, bool checkValuesCorrectness = true, bool checkAddressAndIfIsMine = false);
+
+std::map<std::vector<unsigned char>, NameTxInfo> GetNameList(const std::vector<unsigned char> &vchNameUniq = std::vector<unsigned char>());
+
+struct NameTxReturn
 {
      bool ok;
      std::string err_msg;
@@ -116,9 +140,9 @@ struct NameNewReturn
      std::string address;
      uint256 hex;   // Transaction hash in hex
 };
-NameNewReturn name_new(const std::vector<unsigned char> &vchName,
+NameTxReturn name_new(const std::vector<unsigned char> &vchName,
               const std::vector<unsigned char> &vchValue,
               const int nRentalDays);
-NameNewReturn name_update(const std::vector<unsigned char> &vchName,
+NameTxReturn name_update(const std::vector<unsigned char> &vchName,
               const std::vector<unsigned char> &vchValue,
               const int nRentalDays, std::string strAddress = "");

@@ -49,83 +49,14 @@ public:
     {
         cachedNameTable.clear();
 
-        std::map< std::vector<unsigned char>, NameTableEntry > vNamesO;
+        map<vector<unsigned char>, NameTxInfo> scannedNames = GetNameList();
 
+        BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, scannedNames)
         {
-            LOCK2(cs_main, wallet->cs_wallet);
-            CTxIndex txindex;
-            uint256 hash;
-            CTxDB txdb("r");
-            CTransaction tx;
-
-            std::vector<unsigned char> vchName;
-            std::vector<unsigned char> vchValue;
-            std::vector<unsigned char> vchPrevValue;
-            int nHeight;
-
-            BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, wallet->mapWallet)
-            {
-                hash = item.second.GetHash();
-                bool fConfirmed;
-                bool fTransferred = false;
-                // TODO: Maybe CMerkleTx::GetDepthInMainChain() would be faster?
-                if (!txdb.ReadDiskTx(hash, tx, txindex))
-                {
-                    tx = item.second;
-                    fConfirmed = false;
-                }
-                else
-                    fConfirmed = true;
-
-                if (tx.nVersion != NAMECOIN_TX_VERSION)
-                    continue;
-
-                // name
-                if (!GetNameOfTx(tx, vchName))
-                    continue;
-
-                // value
-                if (!GetValueOfNameTx(tx, vchValue))
-                    continue;
-
-                // scan further only if value changed
-                if (vchPrevValue == vchValue)
-                    continue;
-                vchPrevValue = vchValue;
-
-                if (!hooks->IsMine(wallet->mapWallet[tx.GetHash()]))
-                    fTransferred = true;
-
-                // height
-                if (fConfirmed)
-                {
-
-                    int nTotalLifeTime;
-                    if (!GetExpirationData(vchName, nTotalLifeTime, nHeight))
-                        continue;
-
-                    if (nHeight + nTotalLifeTime - pindexBest->nHeight <= 0)
-                        continue;  // Expired
-                }
-                else
-                    nHeight = NameTableEntry::NAME_UNCONFIRMED;
-
-                // get only first tx of this name
-                if (vNamesO.find(vchName) != vNamesO.end())
-                    continue;
-
-                std::string strAddress = "";
-                GetNameAddress(tx, strAddress);
-
-                vNamesO[vchName] = NameTableEntry(stringFromVch(vchName), stringFromVch(vchValue), strAddress, nHeight, fTransferred);
-            }
+            NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, 0 /*TODO: add proper nHeight*/, item.second.nIsMine);
+            if (item.second.nIsMine == 1)
+                cachedNameTable.append(nte);
         }
-
-        // Add existing names
-        BOOST_FOREACH(const PAIRTYPE(std::vector<unsigned char>, NameTableEntry)& item, vNamesO)
-            if (!item.second.transferred)
-                cachedNameTable.append(item.second);
-
         // qLowerBound() and qUpperBound() require our cachedNameTable list to be sorted in asc order
         qSort(cachedNameTable.begin(), cachedNameTable.end(), NameTableEntryLessThan());
     }
