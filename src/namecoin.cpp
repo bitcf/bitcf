@@ -14,8 +14,6 @@ extern std::map<uint256, CTransaction> mapTransactions;
 
 using namespace json_spirit;
 
-static const bool NAME_DEBUG = false;
-
 template<typename T> void ConvertTo(Value& value, bool fAllowNull=false);
 
 map<vector<unsigned char>, uint256> mapMyNames;
@@ -496,11 +494,13 @@ bool GetNameValue(CNameDB& dbName, const vector<unsigned char>& vchName, vector<
 }
 
 bool CNameDB::ScanNames(
-        const vector<unsigned char>& vchName,
+        vector<unsigned char> vchName,
         int nMax,
         vector<pair<vector<unsigned char>, CNameIndex> >& nameScan)
-        //vector<pair<vector<unsigned char>, CDiskTxPos> >& nameScan)
 {
+    //encode name before scanning
+    encodeOrDecode(vchName);
+
     Dbc* pcursor = GetCursor();
     if (!pcursor)
         return false;
@@ -534,6 +534,11 @@ bool CNameDB::ScanNames(
             {
                 txPos = vtxPos.back();
             }
+
+            //decode returned data
+            encodeOrDecode(vchName);
+            encodeOrDecode(txPos.vValue);
+
             nameScan.push_back(make_pair(vchName, txPos));
         }
 
@@ -718,7 +723,13 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
     if (valueSize != delimiterSize)
         return false;
 
-    ret.err_msg = "";     //sucess! we have read name script structure without errors!
+    //decode xored data
+    encodeOrDecode(ret.vchName);
+    encodeOrDecode(ret.vchValue);
+
+    //sucess! we have read name script structure without errors!
+    ret.err_msg = "";
+
     if (checkValuesCorrectness)
     {
         if (!checkNameValues(ret))
@@ -732,7 +743,7 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
         CScript scriptPubKey(pc, script.end());
         if (!ExtractDestination(scriptPubKey, address))
             ret.strAddress = "";
-        ret.strAddress = CBitcoinAddress(address).ToString();
+        else ret.strAddress = CBitcoinAddress(address).ToString();
 
         // check if this is mine
         CScript scriptSig;
@@ -1224,10 +1235,6 @@ Value name_filter(const Array& params, bool fHelp)
             break;
     }
 
-    if (NAME_DEBUG) {
-        dbName.test();
-    }
-
     if (fStat)
     {
         Object oStat;
@@ -1307,14 +1314,25 @@ Value name_scan(const Array& params, bool fHelp)
         }
         oRes.push_back(oName);
     }
-
-    if (NAME_DEBUG) {
-        dbName.test();
-    }
     return oRes;
 }
 
-bool createNameScript(CScript& nameScript, const vector<unsigned char> &vchName, const vector<unsigned char> &vchValue, int nRentalDays, int op, string& err_msg)
+//xor data, so that antivirus will not complain about database files (if there is a virus)
+void encodeOrDecode(vector<unsigned char> &vchData)
+{
+    if (vchData.size() == 0)
+        return;
+
+    vector<unsigned char> vchKey = vchFromString("Emergence is inevitable!");
+
+    for (int i = 0, j = 0; i < vchData.size(); i++, j++)
+    {
+        j %= vchKey.size();   //reset key iterator if it is out of bounds
+        vchData[i] ^= vchKey[j];
+    }
+}
+
+bool createNameScript(CScript& nameScript, vector<unsigned char> vchName, vector<unsigned char> vchValue, int nRentalDays, int op, string& err_msg)
 {
     {
         NameTxInfo nti(vchName, vchValue, nRentalDays, op, -1, err_msg);
@@ -1324,6 +1342,10 @@ bool createNameScript(CScript& nameScript, const vector<unsigned char> &vchName,
             return false;
         }
     }
+
+    //encode data, so that antivirus will complain less (if it contains virus)
+    encodeOrDecode(vchName);
+    encodeOrDecode(vchValue);
 
     vector<unsigned char> vchRentalDays = CBigNum(nRentalDays).getvch();
 
@@ -1809,7 +1831,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
         bool fBlock,
         bool fMiner)
 {
-    // find prev name tx
+    // find prev name tx, if it exists
     int nInput = 0;
     bool found = false;
     NameTxInfo prev_nti;
@@ -1858,7 +1880,8 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 //        ssTx << tx;
 //        string strHex = HexStr(ssTx.begin(), ssTx.end());
 
-        printf("name = %s, value = %s, fBlock = %d, fMiner = %d, hex = %s\n",
+        if (GetBoolArg("-printNamecoinConnectInputs"))
+            printf("name = %s, value = %s, fBlock = %d, fMiner = %d, hex = %s\n",
                stringFromVch(vchName).c_str(), stringFromVch(vchValue).c_str(), fBlock, fMiner, tx.GetHash().GetHex().c_str());
     }
 
