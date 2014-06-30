@@ -59,20 +59,20 @@ struct NameTableEntry
     QString name;
     QString value;
     QString address;
-    int nHeight;
+    int nExpiresAt;
     bool transferred;
 
     static const int NAME_NEW = -1;             // Dummy nHeight value for not-yet-created names
     static const int NAME_NON_EXISTING = -2;    // Dummy nHeight value for unitinialized entries
     static const int NAME_UNCONFIRMED = -3;     // Dummy nHeight value for unconfirmed name transactions
 
-    bool HeightValid() { return nHeight >= 0; }
+    bool HeightValid() { return nExpiresAt >= 0; }
 
-    NameTableEntry() : nHeight(NAME_NON_EXISTING), transferred(false) {}
-    NameTableEntry(const QString &name, const QString &value, const QString &address, int nHeight, bool transferred = false) :
-        name(name), value(value), address(address), nHeight(nHeight), transferred(transferred) {}
-    NameTableEntry(const std::string &name, const std::string &value, const std::string &address, int nHeight, bool transferred = false) :
-        name(QString::fromStdString(name)), value(QString::fromStdString(value)), address(QString::fromStdString(address)), nHeight(nHeight), transferred(transferred) {}
+    NameTableEntry() : nExpiresAt(NAME_NON_EXISTING), transferred(false) {}
+    NameTableEntry(const QString &name, const QString &value, const QString &address, int nExpiresAt, bool transferred = false) :
+        name(name), value(value), address(address), nExpiresAt(nExpiresAt), transferred(transferred) {}
+    NameTableEntry(const std::string &name, const std::string &value, const std::string &address, int nExpiresAt, bool transferred = false) :
+        name(QString::fromStdString(name)), value(QString::fromStdString(value)), address(QString::fromStdString(address)), nExpiresAt(nExpiresAt), transferred(transferred) {}
 };
 
 /** General change type (added, updated, removed). This should be in ui_interface.h in namecoin*/

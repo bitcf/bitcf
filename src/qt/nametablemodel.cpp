@@ -53,7 +53,11 @@ public:
 
         BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, scannedNames)
         {
-            NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, 0 /*TODO: add proper nHeight*/, item.second.nIsMine);
+            int nTotalLifeTime, nNameHeight;
+            if (!GetExpirationData(item.second.vchName, nTotalLifeTime, nNameHeight))
+                continue;
+
+            NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, nTotalLifeTime + nNameHeight, item.second.nIsMine);
             if (item.second.nIsMine == 1)
                 cachedNameTable.append(nte);
         }
@@ -160,10 +164,10 @@ public:
 
     void updateEntry(const NameTableEntry &nameObj, int status, int *outNewRowIndex = NULL)
     {
-        updateEntry(nameObj.name, nameObj.value, nameObj.address, nameObj.nHeight, status, outNewRowIndex);
+        updateEntry(nameObj.name, nameObj.value, nameObj.address, nameObj.nExpiresAt, status, outNewRowIndex);
     }
 
-    void updateEntry(const QString &name, const QString &value, const QString &address, int nHeight, int status, int *outNewRowIndex = NULL)
+    void updateEntry(const QString &name, const QString &value, const QString &address, int nExpiresAt, int status, int *outNewRowIndex = NULL)
     {
         // Find name in model
         QList<NameTableEntry>::iterator lower = qLowerBound(
@@ -190,7 +194,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedNameTable.insert(lowerIndex, NameTableEntry(name, value, address, nHeight));
+            cachedNameTable.insert(lowerIndex, NameTableEntry(name, value, address, nExpiresAt));
             parent->endInsertRows();
             if (outNewRowIndex)
                 *outNewRowIndex = parent->index(lowerIndex, 0).row();
@@ -204,7 +208,7 @@ public:
             lower->name = name;
             lower->value = value;
             lower->address = address;
-            lower->nHeight = nHeight;
+            lower->nExpiresAt = nExpiresAt;
             parent->emitDataChanged(lowerIndex);
             break;
         case CT_DELETED:
@@ -270,17 +274,10 @@ void NameTableModel::updateExpiration()
             NameTableEntry *item = priv->index(i);
             if (!item->HeightValid())
                 continue;       // Currently, unconfirmed names do not expire in the table
-            int nHeight = item->nHeight;
 
-            std::string strName = item->name.toStdString();
-            std::vector<unsigned char> vchName(strName.begin(), strName.end());
-            int nTotalLifeTime;
-            if (!GetNameTotalLifeTime(vchName, nTotalLifeTime))
-                continue;
-
-            if (nHeight + nTotalLifeTime - pindexBest->nHeight <= 0)
+            if (item->nExpiresAt - pindexBest->nHeight <= 0)
             {
-                priv->updateEntry(item->name, item->value, item->address, item->nHeight, CT_DELETED);
+                priv->updateEntry(item->name, item->value, item->address, item->nExpiresAt, CT_DELETED);
                 // Data array changed - restart scan
                 n = priv->size();
                 i = -1;
@@ -349,18 +346,13 @@ QVariant NameTableModel::data(const QModelIndex &index, int role) const
         case ExpiresIn:
             if (!rec->HeightValid())
             {
-                if (rec->nHeight == NameTableEntry::NAME_NEW)
+                if (rec->nExpiresAt == NameTableEntry::NAME_NEW)
                     return QString("pending (new)");
                 return QString("pending (update)");
             }
             else
             {
-                std::string strName = rec->name.toStdString();
-                std::vector<unsigned char> vchName(strName.begin(), strName.end());
-                int nTotalLifeTime;
-                if (!GetNameTotalLifeTime(vchName, nTotalLifeTime))
-                    return QVariant();
-                return rec->nHeight + nTotalLifeTime - pindexBest->nHeight;
+                return rec->nExpiresAt - pindexBest->nHeight;
             }
         }
     }
