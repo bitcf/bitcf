@@ -27,12 +27,6 @@ public:
     )
 };
 
-void encodeOrDecode(std::vector<unsigned char> &vchData);
-
-//NOTE: CNameDB stores data in xor-encoded form to prevent antivirus from complaining about nameindex.dat.
-//      All access to CNameDB should be done in pure un-encoded form.
-//      And you should NOT attempt to read/write to CNameDB with CDB functions - use CNameDB public functions instead!
-//      TODO: reimplement this class to have CDB as a private member or as a private inheritance, so that users of this class cannot directly invoke CDB functions.
 class CNameDB : public CDB
 {
 protected:
@@ -53,50 +47,35 @@ public:
             vTxn.erase(vTxn.begin());
     }
 
-    bool WriteName(std::vector<unsigned char> name, std::vector<CNameIndex> vtxPos)
+    //bool WriteName(std::vector<unsigned char>& name, std::vector<CDiskTxPos> vtxPos)
+    bool WriteName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos)
     {
-        //encode before writing
-        encodeOrDecode(name);
-        BOOST_FOREACH(CNameIndex& ind, vtxPos)
-            encodeOrDecode(ind.vValue);
-
         return Write(make_pair(std::string("namei"), name), vtxPos);
     }
 
-    bool ReadName(std::vector<unsigned char> name, std::vector<CNameIndex>& vtxPos)
+    //bool ReadName(std::vector<unsigned char>& name, std::vector<CDiskTxPos>& vtxPos)
+    bool ReadName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos)
     {
-        //encode name before reading data
-        encodeOrDecode(name);
-        if (!Read(make_pair(std::string("namei"), name), vtxPos))
-            return false;
-
-        //decode returned data
-        BOOST_FOREACH(CNameIndex& ind, vtxPos)
-            encodeOrDecode(ind.vValue);
-
-        return true;
+        return Read(make_pair(std::string("namei"), name), vtxPos);
     }
 
-    bool ExistsName(std::vector<unsigned char> name)
+    bool ExistsName(const std::vector<unsigned char>& name)
     {
-        //encode name before doing check
-        encodeOrDecode(name);
-
         return Exists(make_pair(std::string("namei"), name));
     }
 
-    bool EraseName(std::vector<unsigned char> name)
+    bool EraseName(const std::vector<unsigned char>& name)
     {
-        //encode name before erasing
-        encodeOrDecode(name);
-
         return Erase(make_pair(std::string("namei"), name));
     }
 
     bool ScanNames(
-            std::vector<unsigned char> vchName,
+            const std::vector<unsigned char>& vchName,
             int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CNameIndex> >& nameScan);
+            //std::vector<std::pair<std::vector<unsigned char>, CDiskTxPos> >& nameScan);
+
+    bool test();
 
     bool ReconstructNameIndex();
 };
