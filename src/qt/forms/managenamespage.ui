@@ -37,12 +37,12 @@
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
        <property name="buddy">
-        <cstring>registerName</cstring>
+        <cstring>registerValue</cstring>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QValidatedLineEdit" name="registerValue">
+      <widget class="QValidatedLineEdit" name="registerName">
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -60,7 +60,7 @@
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
        <property name="buddy">
-        <cstring>registerName</cstring>
+        <cstring>registerValue</cstring>
        </property>
       </widget>
      </item>
@@ -113,12 +113,12 @@
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
        <property name="buddy">
-        <cstring>registerName</cstring>
+        <cstring>registerValue</cstring>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QValidatedLineEdit" name="registerName">
+      <widget class="QValidatedLineEdit" name="registerValue">
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter value that will be associated with above name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -306,7 +306,7 @@
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>../../src/qt/qvalidatedlineedit.h</header>
+   <header>qvalidatedlineedit.h</header>
   </customwidget>
  </customwidgets>
  <resources>
