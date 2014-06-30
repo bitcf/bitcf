@@ -1512,7 +1512,7 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
         uint256 wtxInHash = tx.GetHash();
         if (!pwalletMain->mapWallet.count(wtxInHash))
         {
-            ss << "this coin is not in your wallet " << wtxInHash.GetHex().c_str();
+            ss << "this coin is not in your wallet: " << wtxInHash.GetHex().c_str();
             ret.err_msg = ss.str();
             return ret;
         }
@@ -1520,6 +1520,15 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
         {
             CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
             int nTxOut = IndexOfNameOutput(wtxIn);
+
+            if (!IsMyName(wtxIn.vout[nTxOut]))
+            {
+                ss << "this name is not yours: " << wtxInHash.GetHex().c_str();
+                ret.err_msg = ss.str();
+                return ret;
+
+            }
+
             if (wtxIn.IsSpent(nTxOut))
             {
                 ret.err_msg = "Last tx of this name was spent by non-namecoin tx. This means that this name cannot be updated anymore - you will have to wait until it expires.";
@@ -1534,7 +1543,7 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
             if (!address.IsValid())
             {
                 ret.err_code = RPC_INVALID_ADDRESS_OR_KEY;
-                ret.err_msg = "could not find a coin with this name";
+                ret.err_msg = "emercoin address is invalid";
                 return ret;
             }
             scriptPubKey.SetDestination(address.Get());
