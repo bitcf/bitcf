@@ -72,6 +72,8 @@ private slots:
     void onCopyNameAction();
     void onCopyValueAction();
     void onCopyAddressAction();
+
+    void onTxTypeChanged(const QString &txType);
 };
 
 #endif // MANAGENAMESPAGE_H

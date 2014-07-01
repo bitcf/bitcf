@@ -77,12 +77,10 @@ public:
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(const QList<SendCoinsRecipient> &recipients);
 
-    bool nameAvailable(const QString &name);
-
     // Register new name or update it
     // Requires unlocked wallet; can throw exception instead of returning error
     NameTxReturn nameNew(const QString &name, const QString &value, int days);
-    NameTxReturn nameUpdate(const QString &name, const QString &value, int days);
+    NameTxReturn nameUpdate(const QString &name, const QString &value, int days, QString newAddress = "");
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);

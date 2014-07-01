@@ -180,41 +180,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     return SendCoinsReturn(OK, 0, hex);
 }
 
-bool WalletModel::nameAvailable(const QString &name)
-{
-    std::string strName = name.toStdString();
-    std::vector<unsigned char> vchName(strName.begin(), strName.end());
-
-    std::vector<CNameIndex> vtxPos;
-    CNameDB dbName("r");
-    if (!dbName.ReadName(vchName, vtxPos))
-        return true;
-
-    if (vtxPos.size() < 1)
-        return true;
-
-    CDiskTxPos txPos = vtxPos[vtxPos.size() - 1].txPos;
-    CTransaction tx;
-    if (!tx.ReadFromDisk(txPos))
-        return true;     // This may indicate error, rather than name availability
-
-    std::vector<unsigned char> vchValue;
-    int nHeight;
-    uint256 hash;
-    if (txPos.IsNull() || !GetValueOfTxPos(txPos, vchValue, hash, nHeight))
-        return true;
-
-    int nTotalLifeTime;
-    if (!GetExpirationData(vchName, nTotalLifeTime, nHeight))
-        return true;        // This also may indicate error, rather than name availability
-
-    // TODO: should we subtract MIN_FIRSTUPDATE_DEPTH blocks? I think name_new may be possible when the previous registration is just about to expire
-    if(nHeight + nTotalLifeTime - pindexBest->nHeight <= 0)
-        return true;    // Expired
-
-    return false;
-}
-
 NameTxReturn WalletModel::nameNew(const QString &name, const QString &value, int nRentalDays)
 {
     NameTxReturn ret;
@@ -227,7 +192,7 @@ NameTxReturn WalletModel::nameNew(const QString &name, const QString &value, int
     return name_new(vchName, vchValue, nRentalDays);
 }
 
-NameTxReturn WalletModel::nameUpdate(const QString &name, const QString &value, int nRentalDays)
+NameTxReturn WalletModel::nameUpdate(const QString &name, const QString &value, int nRentalDays, QString newAddress)
 {
     NameTxReturn ret;
     ret.ok = false;
@@ -236,7 +201,7 @@ NameTxReturn WalletModel::nameUpdate(const QString &name, const QString &value, 
     string strValue = value.toStdString();
     vector<unsigned char> vchValue(strValue.begin(), strValue.end());
 
-    return name_update(vchName, vchValue, nRentalDays);
+    return name_update(vchName, vchValue, nRentalDays, newAddress.toStdString());
 }
 
 OptionsModel *WalletModel::getOptionsModel()

@@ -95,6 +95,12 @@ ManageNamesPage::ManageNamesPage(QWidget *parent) :
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
+    // Connect signal for QComboBox wich select tx type
+    connect(ui->txTypeSelector, SIGNAL(currentIndexChanged(QString)), this, SLOT(onTxTypeChanged(QString)));
+
+    // Reset gui sizes and visibility (for name new)
+    ui->registerAddress->setDisabled(true);
+
     // Catch focus changes to make the appropriate button the default one (Submit or Configure)
     ui->registerName->installEventFilter(this);
     ui->registerValue->installEventFilter(this);
@@ -207,11 +213,19 @@ void ManageNamesPage::on_submitNameButton_clicked()
     QString value = ui->registerValue->text();
     int days = ui->registerValue->text().toInt();
     QString txType = ui->txTypeSelector->currentText();
+    QString newAddress = "";
+    if (txType == "NAME_UPDATE")
+        newAddress = ui->registerAddress->text();
 
-    if (!walletModel->nameAvailable(name))
+    if (name == "")
     {
-        QMessageBox::warning(this, tr("Name registration"), tr("Name not available"));
-        ui->registerName->setFocus();
+        QMessageBox::critical(this, tr("Name is empty"), tr("Enter name please"));
+        return;
+    }
+
+    if (value == "")
+    {
+        QMessageBox::critical(this, tr("Value is empty"), tr("Enter value please"));
         return;
     }
 
@@ -229,7 +243,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
     }
 
     if (QMessageBox::Yes != QMessageBox::question(this, tr("Confirm name registration"),
-          tr("This will issue a name_new."),
+          tr("This will issue a %1.").arg(txType),
           QMessageBox::Yes | QMessageBox::Cancel,
           QMessageBox::Cancel))
     {
@@ -244,12 +258,11 @@ void ManageNamesPage::on_submitNameButton_clicked()
 
     try
     {
-        QMessageBox::warning(this, tr("info"), name + value);
         NameTxReturn res;
         if (txType == "NAME_NEW")
             res = walletModel->nameNew(name, value, days);
         if (txType == "NAME_UPDATE")
-            res = walletModel->nameUpdate(name, value, days);
+            res = walletModel->nameUpdate(name, value, days, newAddress);
 
         if (res.ok)
         {
@@ -323,6 +336,19 @@ void ManageNamesPage::onCopyValueAction()
 void ManageNamesPage::onCopyAddressAction()
 {
     GUIUtil::copyEntryData(ui->tableView, NameTableModel::Address);
+}
+
+void ManageNamesPage::onTxTypeChanged(const QString &txType)
+{
+    if (txType == "NAME_NEW")
+    {
+        ui->registerAddress->setDisabled(true);
+    }
+    if (txType == "NAME_UPDATE")
+    {
+        ui->registerAddress->setEnabled(true);
+    }
+    return;
 }
 
 void ManageNamesPage::exportClicked()
