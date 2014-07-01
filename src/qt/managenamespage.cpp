@@ -211,7 +211,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
 
     QString name = ui->registerName->text();
     QString value = ui->registerValue->text();
-    int days = ui->registerValue->text().toInt();
+    int days = ui->registerDays->text().toInt();
     QString txType = ui->txTypeSelector->currentText();
     QString newAddress = "";
     if (txType == "NAME_UPDATE")
