@@ -190,8 +190,8 @@ bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const cha
 bool GetMyExternalIP(CNetAddr& ipRet)
 {
     CService addrConnect;
-    const char* pszGet;
-    const char* pszKeyword;
+    const char* pszGet = NULL;
+    const char* pszKeyword = NULL;
 
     if (fNoListen||fUseProxy)
         return false;

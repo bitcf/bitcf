@@ -641,7 +641,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!tx.ConnectInputs(txdb, mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, false, false))
+        if (!tx.ConnectInputs(txdb, mapInputs, mapUnused, CDiskTxPos(1,1,1), pindexBest, 0, false, false))
         {
             return error("CTxMemPool::accept() : ConnectInputs failed %s", hash.ToString().substr(0,10).c_str());
         }
@@ -1226,12 +1226,13 @@ unsigned int CTransaction::GetP2SHSigOpCount(const MapPrevTx& inputs) const
 
 bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
                                  map<uint256, CTxIndex>& mapTestPool, const CDiskTxPos& posThisTx,
-                                 const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash)
+                                 const CBlockIndex* pindexBlock, int64 allowance, bool fBlock, bool fMiner, bool fStrictPayToScriptHash)
 {
     // Take over previous transactions' spent pointers
     // fBlock is true when this is called from AcceptBlock when a new best-block is added to the blockchain
     // fMiner is true when called from the internal bitcoin miner
     // ... both are false when called from CTransaction::AcceptToMemoryPool
+    // allowance applied to coinstake transaction only, ignored for all another
     if (!IsCoinBase())
     {
         int64 nValueIn = 0;
@@ -1312,7 +1313,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             if (!GetCoinAge(txdb, nCoinAge))
                 return error("ConnectInputs() : %s unable to get coin age for coinstake", GetHash().ToString().substr(0,10).c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
-            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee() + MIN_TX_FEE)
+            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee() + MIN_TX_FEE + allowance)
                 return DoS(100, error("ConnectInputs() : %s stake reward exceeded", GetHash().ToString().substr(0,10).c_str()));
         }
         else
@@ -1359,14 +1360,14 @@ bool CTransaction::ClientConnectInputs()
 
             // Verify signature
             if (!VerifySignature(txPrev, *this, i, true, 0))
-                return error("ConnectInputs() : VerifySignature failed");
+                return error("ClientConnectInputs() : VerifySignature failed");
 
             ///// this is redundant with the mempool.mapNextTx stuff,
             ///// not sure which I want to get rid of
             ///// this has to go away now that posNext is gone
             // // Check for conflicts
             // if (!txPrev.vout[prevout.n].posNext.IsNull())
-            //     return error("ConnectInputs() : prev tx already used");
+            //     return error("ClientConnectInputs() : prev tx already used");
             //
             // // Flag outpoints as used
             // txPrev.vout[prevout.n].posNext = posThisTx;
@@ -1452,7 +1453,9 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     int64 nValueIn = 0;
     int64 nValueOut = 0;
     unsigned int nSigOps = 0;
-    BOOST_FOREACH(CTransaction& tx, vtx)
+
+    // reverse order is needed for CheckInputs for coinstake, because of nFees already computed before
+    BOOST_REVERSE_FOREACH(CTransaction& tx, vtx)
     {
         nSigOps += tx.GetLegacySigOpCount();
         if (nSigOps > MAX_BLOCK_SIGOPS)
@@ -1487,12 +1490,12 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             if (!tx.IsCoinStake())
                 nFees += nTxValueIn - nTxValueOut;
 
-            if (!tx.ConnectInputs(txdb, mapInputs, mapQueuedChanges, posThisTx, pindex, true, false, fStrictPayToScriptHash))
-                return false;
+            if (!tx.ConnectInputs(txdb, mapInputs, mapQueuedChanges, posThisTx, pindex, nFees >> 1, true, false, fStrictPayToScriptHash))
+              return false;
         }
 
         mapQueuedChanges[tx.GetHash()] = CTxIndex(posThisTx, tx.vout.size());
-    }
+    } // foreach TXes
 
     // ppcoin: track money supply and mint amount info
     pindex->nMint = nValueOut - nValueIn + nFees;
@@ -3827,7 +3830,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
-            if (!tx.ConnectInputs(txdb, mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, false, true))
+            if (!tx.ConnectInputs(txdb, mapInputs, mapTestPoolTmp, CDiskTxPos(1,1,1), pindexPrev, 0, false, true))
                 continue;
             mapTestPoolTmp[tx.GetHash()] = CTxIndex(CDiskTxPos(1,1,1), tx.vout.size());
             swap(mapTestPool, mapTestPoolTmp);
@@ -3863,6 +3866,10 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     }
     if (pblock->IsProofOfWork())
         pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pblock->nBits);
+
+    // Adjust coinstake TX - add to stake 1/2 TxFees
+    if(fProofOfStake)
+       pblock->vtx[1].vout[0].nValue += nFees >> 1;
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
