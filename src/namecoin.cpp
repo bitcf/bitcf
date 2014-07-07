@@ -1867,8 +1867,8 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 //        ssTx << tx;
 //        string strHex = HexStr(ssTx.begin(), ssTx.end());
 
-        printf("name = %s, value = %s, fBlock = %d, fMiner = %d, hex = %s\n",
-               stringFromVch(vchName).c_str(), stringFromVch(vchValue).c_str(), fBlock, fMiner, tx.GetHash().GetHex().c_str());
+        if (GetBoolArg("-printNamecoinConnectInputs"))
+            printf("name = %s, value = %s, fBlock = %d, fMiner = %d, hex = %s\n", stringFromVch(vchName).c_str(), stringFromVch(vchValue).c_str(), fBlock, fMiner, tx.GetHash().GetHex().c_str());
     }
 
     CNameDB dbName("cr+", txdb);
@@ -1963,7 +1963,6 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
                     return error("ConnectInputsHook() : got tx %s with fee too low %d", tx.GetHash().GetHex().c_str(), txFee);
             }
 
-
             if (!found || (prev_nti.op != OP_NAME_NEW && prev_nti.op != OP_NAME_UPDATE))
                 return error("name_update tx without previous new or update tx");
 
@@ -1974,10 +1973,15 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
             //check if name has expired
             int nTotalLifeTime, nPrevHeight;
             if (!GetExpirationData(vchName, nTotalLifeTime, nPrevHeight))
-                return error("ConnectInputsHook() : failed to get expiration data");;
+                return error("ConnectInputsHook() : failed to get expiration data");
 
             if (pindexBlock->nHeight - nPrevHeight >= nTotalLifeTime)
+            {
+                //TODO: move this elsewhere. Idealy this tx should fail to get into memory pool in the first place.
+                pwalletMain->EraseFromWallet(tx.GetHash());
+                mempool.remove(tx);
                 return error("ConnectInputsHook() : name_update on expired name");
+            }
             break;
         }
         default:
