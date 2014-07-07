@@ -510,7 +510,6 @@ Value signrawtransaction(const Array& params, bool fHelp)
             fComplete = false;
     }
 
-#if 0 // Disabled by maxihatop - don't check whole TX, this is useless
     // Check if we if this transaction exists in memory pool or block.
     CTransaction existingTx;
     uint256 hashBlock = 0;
@@ -525,7 +524,6 @@ Value signrawtransaction(const Array& params, bool fHelp)
         if (!mergedTx.AcceptToMemoryPool(txdb, true, NULL, true))
             fComplete = false;
     }
-#endif
 
     Object result;
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
