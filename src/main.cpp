@@ -3867,9 +3867,11 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     if (pblock->IsProofOfWork())
         pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pblock->nBits);
 
+#if 0
     // Adjust coinstake TX - add to stake 1/2 TxFees
     if(fProofOfStake)
        pblock->vtx[1].vout[0].nValue += nFees >> 1;
+#endif
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
