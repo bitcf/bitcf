@@ -86,7 +86,6 @@ void CNode::PushGetBlocks(CBlockIndex* pindexBegin, uint256 hashEnd)
 }
 
 
-
 bool RecvLine(SOCKET hSocket, string& strLine)
 {
     strLine = "";
@@ -139,6 +138,7 @@ bool RecvLine(SOCKET hSocket, string& strLine)
 }
 
 
+#if 0
 
 bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const char* pszKeyword, CNetAddr& ipRet)
 {
@@ -190,8 +190,8 @@ bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const cha
 bool GetMyExternalIP(CNetAddr& ipRet)
 {
     CService addrConnect;
-    const char* pszGet;
-    const char* pszKeyword;
+    const char* pszGet = NULL;
+    const char* pszKeyword = NULL;
 
     if (fNoListen||fUseProxy)
         return false;
@@ -248,9 +248,29 @@ bool GetMyExternalIP(CNetAddr& ipRet)
 
     return false;
 }
+#endif
 
+/*--------------------------------------------------------------------------*/
+// from file stun.cpp
+int GetExternalIPbySTUN(uint32_t rnd, struct sockaddr_in *mapped);
+
+/*--------------------------------------------------------------------------*/
+bool GetMyExternalIP_STUN(CNetAddr& ipRet) {
+  struct sockaddr_in mapped;
+  int rc = GetExternalIPbySTUN(GetRand(0xffffffff), &mapped);
+  if(rc >= 0) {
+    ipRet = CNetAddr(mapped.sin_addr);
+    printf("GetExternalIPbySTUN() returned %s in attempt %d\n", addrLocalHost.ToStringIP().c_str(), rc);
+    return true;
+  }
+  return false;
+} // GetMyExternalIP_STUN
+
+/*--------------------------------------------------------------------------*/
 void ThreadGetMyExternalIP(void* parg)
 {
+
+#if 0
     // Wait for IRC to get it first - disabled with ppcoin
     if (false && GetBoolArg("-irc", false))
     {
@@ -261,11 +281,11 @@ void ThreadGetMyExternalIP(void* parg)
                 return;
         }
     }
-
+#endif
     // Fallback in case IRC fails to get it
-    if (GetMyExternalIP(addrLocalHost))
+    if (GetMyExternalIP_STUN(addrLocalHost))
     {
-        printf("GetMyExternalIP() returned %s\n", addrLocalHost.ToStringIP().c_str());
+        // printf("GetMyExternalIP() returned %s\n", addrLocalHost.ToStringIP().c_str());
         if (addrLocalHost.IsRoutable())
         {
             // If we already connected to a few before we had our IP, go back and addr them.
