@@ -2489,18 +2489,15 @@ static const CRPCCommand vRPCCommands[] =
     // namecoin commands below:
     { "name_new",               &name_new,               false },
     { "name_update",            &name_update,            false },
+//    { "name_delete",            &name_delete,            false },
 //    { "sendtoname",             &sendtoname,             false },
     { "name_list",              &name_list,              false },
-//    { "name_clean",             &name_clean,             false },
     { "name_scan",              &name_scan,               false },
     { "name_filter",            &name_filter,            false },
-//    { "name_history",           &name_history,           false },
-//    { "name_show",              &name_show,              false },
+    { "name_show",              &name_show,              false },
     { "name_debug",             &name_debug,             false },
-    { "name_debug1",            &name_debug1,            false },
-//    { "deletetransaction",      &deletetransaction,      false },
-    { "name_encrypt",           &name_encrypt,           false },
-    { "name_decrypt",           &name_decrypt,           false },
+//    { "name_encrypt",           &name_encrypt,           false },
+//    { "name_decrypt",           &name_decrypt,           false },
 
 };
 

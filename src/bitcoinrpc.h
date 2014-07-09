@@ -183,18 +183,15 @@ extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, b
 
 extern json_spirit::Value name_new(const json_spirit::Array& params, bool fHelp); // in namecoin.cpp
 extern json_spirit::Value name_update(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value name_delete(const json_spirit::Array& params, bool fHelp);
 //extern json_spirit::Value sendtoname(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_list(const json_spirit::Array& params, bool fHelp);
-//extern json_spirit::Value name_clean(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_scan(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_filter(const json_spirit::Array& params, bool fHelp);
-//extern json_spirit::Value name_history(const json_spirit::Array& params, bool fHelp);
-//extern json_spirit::Value name_show(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value name_debug1(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value name_show(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_debug(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value deletetransaction(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value name_encrypt(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value name_decrypt(const json_spirit::Array& params, bool fHelp);
+//extern json_spirit::Value name_encrypt(const json_spirit::Array& params, bool fHelp);
+//extern json_spirit::Value name_decrypt(const json_spirit::Array& params, bool fHelp);
 
 
 #endif

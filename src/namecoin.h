@@ -75,8 +75,6 @@ public:
             std::vector<std::pair<std::vector<unsigned char>, CNameIndex> >& nameScan);
             //std::vector<std::pair<std::vector<unsigned char>, CDiskTxPos> >& nameScan);
 
-    bool test();
-
     bool ReconstructNameIndex();
 };
 
@@ -86,6 +84,7 @@ static const int MAX_VALUE_LENGTH = 20*1024;
 static const int MAX_RENTAL_DAYS = 100*365; //100 years
 static const int OP_NAME_NEW = 0x01;
 static const int OP_NAME_UPDATE = 0x02;
+static const int OP_NAME_DELETE = 0x03;
 static const int MIN_FIRSTUPDATE_DEPTH = 12;
 
 extern std::map<std::vector<unsigned char>, uint256> mapMyNames;
@@ -96,13 +95,12 @@ int IndexOfNameOutput(const CTransaction& tx);
 bool GetNameOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
 bool GetValueOfNameTx(const CTransaction& tx, std::vector<unsigned char>& value);
 bool GetRentalDaysOfNameTx(const CTransaction& tx, int &nRentalDays);
-bool GetValueOfTxPos(const CDiskTxPos& txPos, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 bool GetNameTotalLifeTime(const std::vector<unsigned char> &vchName, int &nTotalLifeTime);
 bool GetExpirationData(const std::vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight);
-int GetTxPosHeight(const CDiskTxPos& txPos);
+bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight);
 bool GetNameTxAddress(const CTransaction& tx, std::string& strAddress);
 std::string stringFromVch(const std::vector<unsigned char> &vch);
-int GetNameHeight(CNameDB& dbName, std::vector<unsigned char> vchName);
+bool GetNameHeight(CNameDB& dbName, std::vector<unsigned char> vchName, int& nHeight);
 std::vector<unsigned char> vchFromString(const std::string &str);
 
 struct NameTxInfo
@@ -146,3 +144,4 @@ NameTxReturn name_new(const std::vector<unsigned char> &vchName,
 NameTxReturn name_update(const std::vector<unsigned char> &vchName,
               const std::vector<unsigned char> &vchValue,
               const int nRentalDays, std::string strAddress = "");
+NameTxReturn name_delete(const std::vector<unsigned char> &vchName);
