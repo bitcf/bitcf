@@ -102,12 +102,14 @@ static int stun_send(int s, struct sockaddr_in *dst, struct stun_header *resp)
 }
 
 /* helper function to generate a random request id */
-static int randfiller;
+static uint32_t randfiller;
 static void stun_req_id(struct stun_header *req)
 {
   register int x;
-  for (x = 0; x < 4; x++)
-    req->id.id[x] = ++randfiller;
+  for (x = 0; x < 4; x++) {
+    randfiller ^= (randfiller << 1) | (randfiller >> 31);
+    req->id.id[x] = randfiller + (randfiller >> 1);
+  }
 }
 
 /* callback type to be invoked on stun responses. */
@@ -203,16 +205,12 @@ static int StunRequest2(int sock, struct sockaddr_in *server, struct sockaddr_in
 
   struct stun_header *req;
   unsigned char reqdata[1024];
-  int reqlen, reqleft;
-  struct stun_attr *attr;
 
   req = (struct stun_header *)reqdata;
   stun_req_id(req);
-  reqlen = 0;
-  reqleft = sizeof(reqdata) - sizeof(struct stun_header);
+  int reqlen = 0;
   req->msgtype = 0;
   req->msglen = 0;
-  attr = (struct stun_attr *)req->ies;
   req->msglen = htons(reqlen);
   req->msgtype = htons(STUN_BINDREQ);
 
