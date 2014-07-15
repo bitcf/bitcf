@@ -219,7 +219,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/kernel.cpp \
     src/qt/rpcconsole.cpp \
     src/rpcrawtransaction.cpp \
-    src/rpcwallet.cpp
+    src/rpcwallet.cpp \
+    src/stun.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
