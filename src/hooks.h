@@ -47,7 +47,7 @@ public:
     virtual bool IsMine(const CTransaction& tx, const CTxOut& txout) = 0;
 
     virtual bool SelectCoinsMinConf(const CWalletTx *pcoin, int nVersion) = 0;
-    virtual bool listunspent(int nVersion) = 0;
+    virtual bool IsNameTx(int nVersion) = 0;
 };
 
 extern CHooks* InitHook();

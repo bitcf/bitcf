@@ -211,7 +211,7 @@ Value listunspent(const Array& params, bool fHelp)
     pwalletMain->AvailableCoins(vecOutputs, false);
     BOOST_FOREACH(const COutput& out, vecOutputs)
     {
-        if (hooks->listunspent(out.tx->nVersion)) //ignore namecoin tx
+        if (hooks->IsNameTx(out.tx->nVersion)) //ignore namecoin tx
             continue;
 
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)

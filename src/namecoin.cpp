@@ -56,7 +56,7 @@ public:
     virtual bool IsMine(const CTransaction& tx, const CTxOut& txout);
 
     virtual bool SelectCoinsMinConf(const CWalletTx *pcoin, int nVersion);
-    virtual bool listunspent(int nVersion);
+    virtual bool IsNameTx(int nVersion);
 };
 
 vector<unsigned char> vchFromValue(const Value& value) {
@@ -1917,7 +1917,7 @@ bool CNamecoinHooks::SelectCoinsMinConf(const CWalletTx* pcoin, int nVersion)
         return true;
 }
 
-bool CNamecoinHooks::listunspent(int nVersion)
+bool CNamecoinHooks::IsNameTx(int nVersion)
 {
     return nVersion == NAMECOIN_TX_VERSION;
 }
