@@ -28,8 +28,6 @@ extern void rescanfornames();
 extern std::string _(const char* psz);
 extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption);
 
-const int NAME_COIN_GENESIS_EXTRA = 521;
-
 class CNamecoinHooks : public CHooks
 {
 public:
@@ -51,11 +49,8 @@ public:
     virtual bool DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex);
     virtual bool ExtractAddress(const CScript& script, string& address);
     virtual void AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx);
-
     virtual bool IsMine(const CTransaction& tx);
     virtual bool IsMine(const CTransaction& tx, const CTxOut& txout);
-
-    virtual bool SelectCoinsMinConf(const CWalletTx *pcoin, int nVersion);
     virtual bool IsNameTx(int nVersion);
 };
 
@@ -296,7 +291,7 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend, 
                 printf("CreateTransactionWithInputTx: SelectCoins(%s), nTotalValue = %s, nWtxinCredit = %s\n", FormatMoney(nTotalValue - nWtxinCredit).c_str(), FormatMoney(nTotalValue).c_str(), FormatMoney(nWtxinCredit).c_str());
                 if (nTotalValue - nWtxinCredit > 0)
                 {
-                    if (!pwalletMain->SelectCoins(nTotalValue - nWtxinCredit, wtxNew.nTime, wtxNew.nVersion, setCoins, nValueIn))
+                    if (!pwalletMain->SelectCoins(nTotalValue - nWtxinCredit, wtxNew.nTime, setCoins, nValueIn))
                         return false;
                 }
 
@@ -1905,16 +1900,6 @@ bool CNamecoinHooks::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pinde
 bool CNamecoinHooks::DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
 {
     return true;
-}
-
-// if target is not a namecoin transaction, then we should not allow it to spend namecoin inputs
-// returns true if coin can be spend
-bool CNamecoinHooks::SelectCoinsMinConf(const CWalletTx* pcoin, int nVersion)
-{
-    if (nVersion != NAMECOIN_TX_VERSION && pcoin->nVersion == NAMECOIN_TX_VERSION)
-        return false;
-    else
-        return true;
 }
 
 bool CNamecoinHooks::IsNameTx(int nVersion)
