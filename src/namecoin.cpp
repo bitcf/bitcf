@@ -1978,6 +1978,8 @@ static string nameFromOp(int op)
             return "name_update";
         case OP_NAME_NEW:
             return "name_new";
+        case OP_NAME_DELETE:
+            return "name_delete";
         default:
             return "<unknown name op>";
     }

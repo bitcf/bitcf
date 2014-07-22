@@ -85,7 +85,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         else
         {
             bool fAllFromMe = true;
-            int64 nCarriedOverCoin = 0;
             BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 //fAllFromMe = fAllFromMe && wallet->IsMine(txin);
             {
@@ -99,11 +98,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                             txin.prevout.n < txPrev.vout.size() &&
                             hooks->ExtractAddress(txPrev.vout[txin.prevout.n].scriptPubKey, address)
                        )
-                    {
-                        // This is our name transaction
-                        // Accumulate the coin carried from name_new, because it is not actually spent
-                        nCarriedOverCoin += txPrev.vout[txin.prevout.n].nValue;
-                    }
+                    {}
                     else
                     {
                         fAllFromMe = false;
@@ -145,11 +140,17 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     }
 
                     CTxDestination address;
+                    string address2; // for namecoin use
                     if (ExtractDestination(txout.scriptPubKey, address))
                     {
                         // Sent to Emercoin Address
                         sub.type = TransactionRecord::SendToAddress;
                         sub.address = CBitcoinAddress(address).ToString();
+                    }
+                    else if (hooks->ExtractAddress(txout.scriptPubKey, address2))
+                    {
+                        sub.type = TransactionRecord::NameOp;
+                        sub.address = address2;
                     }
                     else
                     {
@@ -187,7 +188,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 //
                 // Mixed debit transaction, can't break down payees
                 //
-                parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+                if (parts.empty() || nNet != 0)
+                    parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
             }
         }
     }
