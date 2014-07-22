@@ -200,10 +200,8 @@ public:
     bool IsMine(const CTransaction& tx) const
     {
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
-            if (IsMine(txout))
+            if (IsMine(txout) || hooks->IsMine(txout))
                 return true;
-        if (hooks->IsMine(tx))
-            return true;
         return false;
     }
     bool IsFromMe(const CTransaction& tx) const
@@ -542,6 +540,11 @@ public:
             if (!IsSpent(i))
             {
                 const CTxOut &txout = vout[i];
+
+                // ignore namecoin TxOut
+                if (hooks->IsNameTx(nVersion) && hooks->IsNameScript(txout.scriptPubKey))
+                    continue;
+
                 nCredit += pwallet->GetCredit(txout);
                 if (!MoneyRange(nCredit))
                     throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
@@ -564,7 +567,7 @@ public:
     }
 
     void GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, std::list<std::pair<CTxDestination, int64> >& listReceived,
-                    std::list<std::pair<CTxDestination, int64> >& listSent, int64& nFee, std::string& strSentAccount) const;
+                    std::list<std::pair<CTxDestination, int64> >& listSent, int64& nFee, std::string& strSentAccount, bool ignoreNameTx = true) const;
 
     void GetAccountAmounts(const std::string& strAccount, int64& nGenerated, int64& nReceived, 
                            int64& nSent, int64& nFee) const;

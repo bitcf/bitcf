@@ -49,9 +49,9 @@ public:
     virtual bool DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex);
     virtual bool ExtractAddress(const CScript& script, string& address);
     virtual void AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx);
-    virtual bool IsMine(const CTransaction& tx);
-    virtual bool IsMine(const CTransaction& tx, const CTxOut& txout);
+    virtual bool IsMine(const CTxOut& txout);
     virtual bool IsNameTx(int nVersion);
+    virtual bool IsNameScript(CScript scr);
 };
 
 vector<unsigned char> vchFromValue(const Value& value) {
@@ -108,7 +108,7 @@ bool GetNameTotalLifeTime(const vector<unsigned char> &vchName, int& nTotalLifeT
 }
 
 //name total lifetime (nTotalLifeTime) and block number at which name was registered (nHeight)
-bool GetExpirationData(CNameDB& dbName,const vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight)
+bool GetExpirationData(CNameDB& dbName, const vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight)
 {
     if (!GetNameTotalLifeTime(dbName, vchName, nTotalLifeTime))
         return false;
@@ -123,6 +123,30 @@ bool GetExpirationData(const vector<unsigned char> &vchName, int& nTotalLifeTime
 {
     CNameDB dbName("r");
     return GetExpirationData(dbName, vchName, nTotalLifeTime, nHeight);
+}
+
+// Tests if name is active. You can optionaly specify at which height it is/was active.
+bool NameActive(CNameDB& dbName, const vector<unsigned char> &vchName, int currentBlockHeight = -1)
+{
+    if (dbName.ExistsName(vchName))
+    {
+        int nTotalLifeTime, nHeight;
+        if (!GetExpirationData(vchName, nTotalLifeTime, nHeight))
+            return error("NameActive(): failed to get expiration data");
+
+        if (currentBlockHeight < 0)
+            currentBlockHeight = pindexBest->nHeight;
+
+        if (currentBlockHeight - nHeight < nTotalLifeTime)
+            return true;
+    }
+    return false;
+}
+
+bool NameActive(const vector<unsigned char> &vchName, int currentBlockHeight = -1)
+{
+    CNameDB dbName("r");
+    return NameActive(dbName, vchName, currentBlockHeight);
 }
 
 //returns minimum name_new fee rounded down to cents
@@ -204,14 +228,16 @@ bool GetNameHeight(CNameDB& dbName, vector<unsigned char> vchName, int& nHeight)
     return false;
 }
 
-CScript RemoveNameScriptPrefix(const CScript& scriptIn)
+bool RemoveNameScriptPrefix(const CScript& scriptIn, CScript& scriptOut)
 {
     NameTxInfo nti;
     CScript::const_iterator pc = scriptIn.begin();
 
     if (!DecodeNameScript(scriptIn, nti, pc))
-        throw runtime_error(nti.err_msg);
-    return CScript(pc, scriptIn.end());
+        return false;
+
+    scriptOut = CScript(pc, scriptIn.end());
+    return true;
 }
 
 bool SignNameSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL, CScript scriptPrereq=CScript())
@@ -233,7 +259,10 @@ bool SignNameSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
 
-    const CScript& scriptPubKey = RemoveNameScriptPrefix(txout.scriptPubKey);
+    CScript scriptPubKey;
+    if (!RemoveNameScriptPrefix(txout.scriptPubKey, scriptPubKey))
+        return error("SignNameSignature(): failed to remove name script prefix");
+
     uint256 hash = SignatureHash(scriptPrereq + txout.scriptPubKey, txTo, nIn, nHashType);
 
     txnouttype whichType;
@@ -598,7 +627,7 @@ bool DecodeNameScript(const CScript& script, NameTxInfo &ret, bool checkValuesCo
 bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_iterator& pc, bool checkValuesCorrectness, bool checkAddressAndIfIsMine)
 {
     // script structure:
-    // (name_new || name_update) << name << days << OP_2DROP << OP_DROP << val1 << val2 << .. << valn << OP_DROP2 << OP_DROP2 << ..<< OP_DROP2|OP_DROP << paytoscripthash
+    // (name_new | name_update) << name << days << OP_2DROP << OP_DROP << val1 << val2 << .. << valn << OP_DROP2 << OP_DROP2 << ..<< (OP_DROP2 | OP_DROP) << paytoscripthash
 
     // or
 
@@ -752,17 +781,6 @@ bool GetLastTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTra
     if (!dbName.ReadName(vchName, vtxPos) || vtxPos.empty())
         return false;
     CNameIndex& txPos = vtxPos.back();
-    int nHeight = txPos.nHeight;
-
-    int nTotalLifeTime;
-    if (!GetNameTotalLifeTime(vchName, nTotalLifeTime))
-        return false;
-
-    if (nHeight + nTotalLifeTime < pindexBest->nHeight)
-    {
-        printf("GetFirstTxOfName(%s) : expired", stringFromVch(vchName).c_str());
-        return false;
-    }
 
     if (!tx.ReadFromDisk(txPos.txPos))
         return error("GetFirstTxOfName() : could not read tx from disk");
@@ -814,35 +832,18 @@ bool GetLastTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTra
 //    return wtx.GetHash().GetHex();
 //}
 
-bool IsMyName(const CTxOut& txout)
+bool CNamecoinHooks::IsMine(const CTxOut& txout)
 {
-    CScript scriptPubKey = RemoveNameScriptPrefix(txout.scriptPubKey);
+    CScript scriptPubKey;
+    if (!RemoveNameScriptPrefix(txout.scriptPubKey, scriptPubKey))
+        return false;
+
     CScript scriptSig;
     txnouttype whichType;
     if (!Solver(*pwalletMain, scriptPubKey, 0, 0, scriptSig, whichType))
         return false;
     return true;
 }
-
-bool CNamecoinHooks::IsMine(const CTransaction& tx)
-{
-    NameTxInfo nti;
-    if (!DecodeNameTx(tx, nti))
-        return false;
-
-    return IsMyName(tx.vout[nti.nOut]);
-}
-
-bool CNamecoinHooks::IsMine(const CTransaction& tx, const CTxOut& txout)
-{
-    //check given txout only if this a valid namecoin tx
-    NameTxInfo nti;
-    if (!DecodeNameTx(tx, nti))
-        return false;
-
-    return IsMyName(txout);
-}
-
 
 Value name_list(const Array& params, bool fHelp)
 {
@@ -1199,6 +1200,13 @@ Value name_scan(const Array& params, bool fHelp)
 
 bool createNameScript(CScript& nameScript, const vector<unsigned char> &vchName, const vector<unsigned char> &vchValue, int nRentalDays, int op, string& err_msg)
 {
+    if (op == OP_NAME_DELETE)
+    {
+        nameScript << op << vchName << OP_2DROP;
+        return true;
+    }
+
+
     {
         NameTxInfo nti(vchName, vchValue, nRentalDays, op, -1, err_msg);
         if (!checkNameValues(nti))
@@ -1277,12 +1285,9 @@ NameTxReturn name_new(const vector<unsigned char> &vchName,
             return ret;
         }
 
-        CNameDB dbName("r");
-        CTransaction tx;
-        if (GetFirstTxOfName(dbName, vchName, tx))
+        if (NameActive(vchName))
         {
-            ss << "this name is already active with tx " << mapNamePending[vchName].begin()->GetHex().c_str();
-            ret.err_msg = ss.str();
+            ret.err_msg = "name_new on an unexpired name";
             return ret;
         }
 
@@ -1306,6 +1311,7 @@ NameTxReturn name_new(const vector<unsigned char> &vchName,
         nTransactionFee = GetNameNewFee(pindexBest, nRentalDays);
         string strError = pwalletMain->SendMoney(nameScript, CENT, wtx, false);
         nTransactionFee = prevFee;
+
         if (strError != "")
         {
             ret.err_code = RPC_WALLET_ERROR;
@@ -1361,7 +1367,7 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
     CScript scriptPubKey;
 
     {
-    //3 checks - pending operations, name exist?, name is yours?
+    //4 checks - pending operations, name exist?, name is yours?, name expired?
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
         if (mapNamePending.count(vchName) && mapNamePending[vchName].size())
@@ -1393,17 +1399,22 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
             CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
             int nTxOut = IndexOfNameOutput(wtxIn);
 
-            if (!IsMyName(wtxIn.vout[nTxOut]))
+            if (!hooks->IsMine(wtxIn.vout[nTxOut]))
             {
                 ss << "this name is not yours: " << wtxInHash.GetHex().c_str();
                 ret.err_msg = ss.str();
                 return ret;
-
             }
 
             if (wtxIn.IsSpent(nTxOut))
             {
                 ret.err_msg = "Last tx of this name was spent by non-namecoin tx. This means that this name cannot be updated anymore - you will have to wait until it expires.";
+                return ret;
+            }
+
+            if (!NameActive(dbName, vchName))
+            {
+                ret.err_msg = "name_update on an expired name";
                 return ret;
             }
         }
@@ -1445,8 +1456,6 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
         nTransactionFee = GetNameUpdateFee(pindexBest, nRentalDays);
         string strError = SendMoneyWithInputTx(nameScript, CENT, 0, wtxIn, wtx, false);
         nTransactionFee = prevFee;
-        if (strError != "")
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
         if (strError != "")
         {
@@ -1488,6 +1497,108 @@ Value name_delete(const Array& params, bool fHelp)
 NameTxReturn name_delete(const vector<unsigned char> &vchName)
 {
     NameTxReturn ret;
+    ret.err_code = RPC_INTERNAL_ERROR; //default value
+    ret.ok = false;
+
+    CWalletTx wtx;
+    wtx.nVersion = NAMECOIN_TX_VERSION;
+    stringstream ss;
+    CScript scriptPubKey;
+
+    {
+    //4 checks - pending operations, name exist?, name is yours?, name expired?
+        LOCK2(cs_main, pwalletMain->cs_wallet);
+
+        if (mapNamePending.count(vchName) && mapNamePending[vchName].size())
+        {
+            ss << "there are " << mapNamePending[vchName].size() <<
+                  " pending operations on that name, including " <<
+                  mapNamePending[vchName].begin()->GetHex().c_str();
+            ret.err_msg = ss.str();
+            return ret;
+        }
+
+        CNameDB dbName("r");
+        CTransaction tx; //we need to select last input
+        if (!GetLastTxOfName(dbName, vchName, tx))
+        {
+            ret.err_msg = "could not find a coin with this name";
+            return ret;
+        }
+
+        uint256 wtxInHash = tx.GetHash();
+        if (!pwalletMain->mapWallet.count(wtxInHash))
+        {
+            ss << "this coin is not in your wallet: " << wtxInHash.GetHex().c_str();
+            ret.err_msg = ss.str();
+            return ret;
+        }
+        else
+        {
+            CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+            int nTxOut = IndexOfNameOutput(wtxIn);
+
+            if (!hooks->IsMine(wtxIn.vout[nTxOut]))
+            {
+                ss << "this name is not yours: " << wtxInHash.GetHex().c_str();
+                ret.err_msg = ss.str();
+                return ret;
+            }
+
+            if (wtxIn.IsSpent(nTxOut))
+            {
+                ret.err_msg = "Last tx of this name was spent by non-namecoin tx. This means that this name cannot be updated anymore - you will have to wait until it expires.";
+                return ret;
+            }
+
+            if (!NameActive(dbName, vchName))
+            {
+                ret.err_msg = "name_delete on an expired name";
+                return ret;
+            }
+        }
+
+    //form script and send
+        CPubKey vchPubKey;
+        if(!pwalletMain->GetKeyFromPool(vchPubKey, true))
+        {
+            ret.err_msg = "failed to get key from pool";
+            return ret;
+        }
+        scriptPubKey.SetDestination(vchPubKey.GetID());
+
+        CScript nameScript;
+        {
+            vector<unsigned char> vchValue;
+            int nDays = 0;
+            createNameScript(nameScript, vchName, vchValue, nDays, OP_NAME_DELETE, ret.err_msg); //this should never fail for name_delete
+        }
+
+        nameScript += scriptPubKey;
+
+        EnsureWalletIsUnlocked();
+
+        CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+
+        string strError = SendMoneyWithInputTx(nameScript, CENT, 0, wtxIn, wtx, false);
+
+        if (strError != "")
+        {
+            ret.err_code = RPC_WALLET_ERROR;
+            ret.err_msg = strError;
+            return ret;
+        }
+    }
+
+    //success! collect info and return
+    CTxDestination address;
+    ret.address = "";
+    if (ExtractDestination(scriptPubKey, address))
+    {
+        ret.address = CBitcoinAddress(address).ToString();
+    }
+    ret.hex = wtx.GetHash();
+    ret.ok = true;
     return ret;
 }
 
@@ -1635,7 +1746,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 bool txFeePass = false;
                 int64 txFee;
                 if (!GetTxFee(tx, fBlock, fMiner, txFee) && fMiner)
-                    return error("ConnectInputsHook() : could not read fee from database. Removing tx from mempool.");
+                    return error("ConnectInputsHook() : could not read fee from database.");
 
                 for (int i = 1; i <= 10; i++)
                 {
@@ -1652,15 +1763,8 @@ bool ConnectInputsInner(CTxDB& txdb,
                     return error("ConnectInputsHook() : got tx %s with fee too low %d.", tx.GetHash().GetHex().c_str(), txFee);
             }
 
-            if (dbName.ExistsName(vchName))
-            {
-                int nTotalLifeTime, nPrevHeight;
-                if (!GetExpirationData(vchName, nTotalLifeTime, nPrevHeight))
-                    return error("ConnectInputsHook() : failed to get expiration data");;
-
-                if (pindexBlock->nHeight - nPrevHeight < nTotalLifeTime)
-                    return error("ConnectInputsHook() : name_new on an unexpired name");
-            }
+            if (NameActive(vchName, pindexBlock->nHeight))
+                return error("ConnectInputsHook() : name_new on an unexpired name");
 
             if (fMiner)
             {
@@ -1682,7 +1786,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 bool txFeePass = false;
                 int64 txFee;
                 if (!GetTxFee(tx, fBlock, fMiner, txFee) && fMiner)
-                    return error("ConnectInputsHook() : could not read fee from database. Removing tx from mempool.");
+                    return error("ConnectInputsHook() : could not read fee from database.");
 
                 for (int i = 1; i <= 10; i++)
                 {
@@ -1702,16 +1806,10 @@ bool ConnectInputsInner(CTxDB& txdb,
             if (!found || (prev_nti.op != OP_NAME_NEW && prev_nti.op != OP_NAME_UPDATE))
                 return error("name_update tx without previous new or update tx");
 
-            // Check name
             if (prev_nti.vchName != vchName)
                 return error("ConnectInputsHook() : name_update name mismatch");
 
-            //check if name has expired
-            int nTotalLifeTime, nPrevHeight;
-            if (!GetExpirationData(vchName, nTotalLifeTime, nPrevHeight))
-                return error("ConnectInputsHook() : failed to get expiration data");
-
-            if (pindexBlock->nHeight - nPrevHeight >= nTotalLifeTime)
+            if (!NameActive(vchName, pindexBlock->nHeight))
                 return error("ConnectInputsHook() : name_update on expired name");
             break;
         }
@@ -1720,16 +1818,10 @@ bool ConnectInputsInner(CTxDB& txdb,
             if (!found || (prev_nti.op != OP_NAME_NEW && prev_nti.op != OP_NAME_UPDATE))
                 return error("name_delete tx without previous new or update tx");
 
-            // Check name
             if (prev_nti.vchName != vchName)
                 return error("ConnectInputsHook() : name_delete name mismatch");
 
-            // check if name has expired
-            int nTotalLifeTime, nPrevHeight;
-            if (!GetExpirationData(vchName, nTotalLifeTime, nPrevHeight))
-                return error("ConnectInputsHook() : failed to get expiration data");
-
-            if (pindexBlock->nHeight - nPrevHeight >= nTotalLifeTime)
+            if (!NameActive(vchName, pindexBlock->nHeight))
                 return error("ConnectInputsHook() : name_delete on expired name");
             break;
         }
@@ -1804,8 +1896,18 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 
     if (!ConnectInputsInner(txdb, mapTestPool, tx, vTxPrev, vTxindex, pindexBlock, txPos, fBlock, fMiner))
     {
+        //name TX is invalid - remove it.
+        LOCK2(cs_main, pwalletMain->cs_wallet);
         pwalletMain->EraseFromWallet(tx.GetHash());
         mempool.remove(tx);
+
+        NameTxInfo nti;
+        if (DecodeNameTx(tx, nti, false))
+        {
+            std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapNamePending.find(nti.vchName);
+            if (mi != mapNamePending.end())
+                mi->second.erase(tx.GetHash());
+        }
         return false;
     }
 
@@ -1907,7 +2009,11 @@ bool CNamecoinHooks::IsNameTx(int nVersion)
     return nVersion == NAMECOIN_TX_VERSION;
 }
 
-
+bool CNamecoinHooks::IsNameScript(CScript scr)
+{
+    NameTxInfo nti;
+    return DecodeNameScript(scr, nti, false);
+}
 
 #include <boost/assign/list_of.hpp>
 using namespace boost::assign;

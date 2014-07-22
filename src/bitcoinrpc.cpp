@@ -834,7 +834,13 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwalletMain, address) && setAddress.count(address))
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
+                {
+                    // ignore namecoin TxOut
+                    if (hooks->IsNameTx(wtx.nVersion) && hooks->IsNameScript(txout.scriptPubKey))
+                        continue; //note: this will never execute, because ExtractDestination will not exctract nameTx address. Maybe fix this?
+
                     nAmount += txout.nValue;
+                }
         }
     }
 
@@ -1484,7 +1490,7 @@ Value listaccounts(const Array& params, bool fHelp)
         string strSentAccount;
         list<pair<CTxDestination, int64> > listReceived;
         list<pair<CTxDestination, int64> > listSent;
-        wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount);
+        wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount, true);
         mapAccountBalances[strSentAccount] -= nFee;
         BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64)& s, listSent)
             mapAccountBalances[strSentAccount] -= s.second;
@@ -2489,7 +2495,7 @@ static const CRPCCommand vRPCCommands[] =
     // namecoin commands below:
     { "name_new",               &name_new,               false },
     { "name_update",            &name_update,            false },
-//    { "name_delete",            &name_delete,            false },
+    { "name_delete",            &name_delete,            false },
 //    { "sendtoname",             &sendtoname,             false },
     { "name_list",              &name_list,              false },
     { "name_scan",              &name_scan,               false },

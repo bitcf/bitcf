@@ -211,9 +211,6 @@ Value listunspent(const Array& params, bool fHelp)
     pwalletMain->AvailableCoins(vecOutputs, false);
     BOOST_FOREACH(const COutput& out, vecOutputs)
     {
-        if (hooks->IsNameTx(out.tx->nVersion)) //ignore namecoin tx
-            continue;
-
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
             continue;
 
@@ -226,6 +223,10 @@ Value listunspent(const Array& params, bool fHelp)
             if (!setAddress.count(address))
                 continue;
         }
+
+        // ignore namecoin TxOut
+        if (hooks->IsNameTx(out.tx->nVersion) && hooks->IsNameScript(out.tx->vout[out.i].scriptPubKey))
+            continue;
 
         int64 nValue = out.tx->vout[out.i].nValue;
         const CScript& pk = out.tx->vout[out.i].scriptPubKey;

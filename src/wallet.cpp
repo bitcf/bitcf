@@ -526,7 +526,7 @@ int CWalletTx::GetRequestCount() const
 }
 
 void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, list<pair<CTxDestination, int64> >& listReceived,
-                           list<pair<CTxDestination, int64> >& listSent, int64& nFee, string& strSentAccount) const
+                           list<pair<CTxDestination, int64> >& listSent, int64& nFee, string& strSentAccount, bool ignoreNameTx) const
 {
     nGeneratedImmature = nGeneratedMature = nFee = 0;
     listReceived.clear();
@@ -568,8 +568,7 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
         if (nDebit > 0)
             listSent.push_back(make_pair(address, txout.nValue));
 
-//        if (pwallet->IsMine(txout))
-        if (pwallet->IsMine(txout) || hooks->IsMine(*this, txout))
+        if (pwallet->IsMine(txout) || (!ignoreNameTx && hooks->IsMine(txout)))
             listReceived.push_back(make_pair(address, txout.nValue));
     }
 
@@ -723,15 +722,6 @@ void CWallet::ReacceptWalletTransactions()
         vector<CDiskTxPos> vMissingTx;
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
         {
-
-            //REMOVEME
-//            if (item.second.GetHash().ToString() == "368f7e0e930b7010af1dfcc55ab1fa35e6b5113347b7c611a0cfeb3fd826cab7")
-//            {
-//                EraseFromWallet(item.second.GetHash());
-//                mempool.remove(item.second);
-//            }
-
-
             CWalletTx& wtx = item.second;
             if ((wtx.IsCoinBase() && wtx.IsSpent(0)) || (wtx.IsCoinStake() && wtx.IsSpent(1)))
                 continue;
@@ -871,7 +861,7 @@ int64 CWallet::GetBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if (!pcoin->IsFinal() || !pcoin->IsConfirmed() || hooks->IsNameTx(pcoin->nVersion))
+            if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
                 continue;
             nTotal += pcoin->GetAvailableCredit();
         }
@@ -888,7 +878,7 @@ int64 CWallet::GetUnconfirmedBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            if ((pcoin->IsFinal() && pcoin->IsConfirmed()) || hooks->IsNameTx(pcoin->nVersion))
+            if ((pcoin->IsFinal() && pcoin->IsConfirmed())/* || hooks->IsNameTx(pcoin->nVersion)*/)
                 continue;
             nTotal += pcoin->GetAvailableCredit();
         }
@@ -975,10 +965,6 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, in
 
        BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
        {
-            // ignore namecoin tx
-            if (hooks->IsNameTx(pcoin->nVersion))
-                continue;
-
             if (!pcoin->IsFinal() || !pcoin->IsConfirmed())
                 continue;
 
@@ -1000,6 +986,10 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, in
                 int64 n = pcoin->vout[i].nValue;
 
                 if (n <= 0)
+                    continue;
+
+                // ignore namecoin TxOut
+                if (hooks->IsNameTx(pcoin->nVersion) && hooks->IsNameScript(pcoin->vout[i].scriptPubKey))
                     continue;
 
                 pair<int64,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin,i));
