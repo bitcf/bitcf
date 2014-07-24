@@ -273,7 +273,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
             int newRowIndex;
             // FIXME: CT_NEW may have been sent from nameNew (via transaction).
             // Currently updateEntry is modified so it does not complain
-            model->updateEntry(name, "", QString::fromStdString(res.address), NameTableEntry::NAME_NEW, CT_NEW, &newRowIndex);
+            model->updateEntry(name, value, QString::fromStdString(res.address), NameTableEntry::NAME_NEW, CT_NEW, &newRowIndex);
             ui->tableView->selectRow(newRowIndex);
             ui->tableView->setFocus();
             return;
