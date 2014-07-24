@@ -627,11 +627,9 @@ bool DecodeNameScript(const CScript& script, NameTxInfo &ret, bool checkValuesCo
 bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_iterator& pc, bool checkValuesCorrectness, bool checkAddressAndIfIsMine)
 {
     // script structure:
-    // (name_new | name_update) << name << days << OP_2DROP << OP_DROP << val1 << val2 << .. << valn << OP_DROP2 << OP_DROP2 << ..<< (OP_DROP2 | OP_DROP) << paytoscripthash
-
+    // (name_new | name_update) << OP_DROP << name << days << OP_2DROP << val1 << val2 << .. << valn << OP_DROP2 << OP_DROP2 << ..<< (OP_DROP2 | OP_DROP) << paytoscripthash
     // or
-
-    // name_delete << name << OP_2DROP << paytoscripthash
+    // name_delete << OP_DROP << name << OP_DROP << paytoscripthash
 
     // NOTE: script structure is strict - it must not contain anything else in the midle of it to be a valid name script. It can, however, contain anything else after the correct structure have been read.
 
@@ -649,6 +647,12 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
     if (ret.op != OP_NAME_NEW && ret.op != OP_NAME_UPDATE && ret.op != OP_NAME_DELETE)
         return false;
 
+    ret.err_msg = "failed to read OP_DROP after op_type";
+    if (!script.GetOp(pc, opcode))
+        return false;
+    if (opcode != OP_DROP)
+        return false;
+
     vector<unsigned char> vch;
 
     // read name
@@ -659,13 +663,13 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
         return false;
     ret.vchName = vch;
 
-    // if name_delete - read OP_2DROP and exit
+    // if name_delete - read OP_DROP after name and exit.
     if (ret.op == OP_NAME_DELETE)
     {
         ret.err_msg = "failed to read OP2_DROP in name_delete";
-        if (!script.GetOp(pc, opcode, vch))
+        if (!script.GetOp(pc, opcode))
             return false;
-        if (opcode != OP_2DROP)
+        if (opcode != OP_DROP)
             return false;
         ret.err_msg = "";
         return true;
@@ -679,15 +683,11 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
         return false;
     ret.nRentalDays = CBigNum(vch).getint();
 
-    // read two delimiters -  OP_2DROP, OP_DROP
+    // read OP_2DROP after name and rentalDays
     ret.err_msg = "failed to read delimeter d in: name << rental << d << value";
-    if (!script.GetOp(pc, opcode, vch))
+    if (!script.GetOp(pc, opcode))
         return false;
     if (opcode != OP_2DROP)
-        return false;
-    if (!script.GetOp(pc, opcode, vch))
-        return false;
-    if (opcode != OP_DROP)
         return false;
 
     // read value
@@ -1202,7 +1202,7 @@ bool createNameScript(CScript& nameScript, const vector<unsigned char> &vchName,
 {
     if (op == OP_NAME_DELETE)
     {
-        nameScript << op << vchName << OP_2DROP;
+        nameScript << op << OP_DROP << vchName << OP_DROP;
         return true;
     }
 
@@ -1219,7 +1219,7 @@ bool createNameScript(CScript& nameScript, const vector<unsigned char> &vchName,
     vector<unsigned char> vchRentalDays = CBigNum(nRentalDays).getvch();
 
     //add name and rental days
-    nameScript << op << vchName << vchRentalDays << OP_2DROP << OP_DROP;
+    nameScript << op << OP_DROP << vchName << vchRentalDays << OP_2DROP;
 
     // split value in 520 bytes chunks and add it to script
     {
@@ -1894,7 +1894,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
     if (tx.nVersion != NAMECOIN_TX_VERSION)
         return false;
 
-    if (!ConnectInputsInner(txdb, mapTestPool, tx, vTxPrev, vTxindex, pindexBlock, txPos, fBlock, fMiner))
+    if (!ConnectInputsInner(txdb, mapTestPool, tx, vTxPrev, vTxindex, pindexBlock, txPos, fBlock, fMiner) && fMiner == true)
     {
         //name TX is invalid - remove it.
         LOCK2(cs_main, pwalletMain->cs_wallet);
