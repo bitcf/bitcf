@@ -213,7 +213,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
     QString value = ui->registerValue->text();
     int days = ui->registerDays->text().toInt();
     QString txType = ui->txTypeSelector->currentText();
-    QString newAddress = "";
+    QString newAddress = ui->registerAddress->text();
     if (txType == "NAME_UPDATE")
         newAddress = ui->registerAddress->text();
 
@@ -223,7 +223,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
         return;
     }
 
-    if (value == "")
+    if (value == "" && (txType == "NAME_NEW" || txType == "NAME_UPDATE"))
     {
         QMessageBox::critical(this, tr("Value is empty"), tr("Enter value please"));
         return;
@@ -259,10 +259,26 @@ void ManageNamesPage::on_submitNameButton_clicked()
     try
     {
         NameTxReturn res;
+        int nHeight;
+        ChangeType status;
         if (txType == "NAME_NEW")
+        {
+            nHeight = NameTableEntry::NAME_NEW;
+            status = CT_NEW;
             res = walletModel->nameNew(name, value, days);
-        if (txType == "NAME_UPDATE")
+        }
+        else if (txType == "NAME_UPDATE")
+        {
+            nHeight = NameTableEntry::NAME_NEW;
+            status = CT_UPDATED;
             res = walletModel->nameUpdate(name, value, days, newAddress);
+        }
+        else if (txType == "NAME_DELETE")
+        {
+            nHeight = NameTableEntry::NAME_NEW;
+            status = CT_DELETED;
+            res = walletModel->nameDelete(name);
+        }
 
         if (res.ok)
         {
@@ -273,7 +289,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
             int newRowIndex;
             // FIXME: CT_NEW may have been sent from nameNew (via transaction).
             // Currently updateEntry is modified so it does not complain
-            model->updateEntry(name, value, QString::fromStdString(res.address), NameTableEntry::NAME_NEW, CT_NEW, &newRowIndex);
+            model->updateEntry(name, value, QString::fromStdString(res.address), nHeight, status, &newRowIndex);
             ui->tableView->selectRow(newRowIndex);
             ui->tableView->setFocus();
             return;
@@ -343,10 +359,17 @@ void ManageNamesPage::onTxTypeChanged(const QString &txType)
     if (txType == "NAME_NEW")
     {
         ui->registerAddress->setDisabled(true);
+        ui->registerValue->setEnabled(true);
     }
-    if (txType == "NAME_UPDATE")
+    else if (txType == "NAME_UPDATE")
     {
         ui->registerAddress->setEnabled(true);
+        ui->registerValue->setEnabled(true);
+    }
+    else if (txType == "NAME_DELETE")
+    {
+        ui->registerAddress->setDisabled(true);
+        ui->registerValue->setDisabled(true);
     }
     return;
 }

@@ -81,6 +81,7 @@ public:
     // Requires unlocked wallet; can throw exception instead of returning error
     NameTxReturn nameNew(const QString &name, const QString &value, int days);
     NameTxReturn nameUpdate(const QString &name, const QString &value, int days, QString newAddress = "");
+    NameTxReturn nameDelete(const QString &name);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);

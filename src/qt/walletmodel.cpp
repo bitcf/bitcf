@@ -182,8 +182,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
 
 NameTxReturn WalletModel::nameNew(const QString &name, const QString &value, int nRentalDays)
 {
-    NameTxReturn ret;
-    ret.ok = false;
     string strName = name.toStdString();
     vector<unsigned char> vchName(strName.begin(), strName.end());
     string strValue = value.toStdString();
@@ -194,14 +192,20 @@ NameTxReturn WalletModel::nameNew(const QString &name, const QString &value, int
 
 NameTxReturn WalletModel::nameUpdate(const QString &name, const QString &value, int nRentalDays, QString newAddress)
 {
-    NameTxReturn ret;
-    ret.ok = false;
     string strName = name.toStdString();
     vector<unsigned char> vchName(strName.begin(), strName.end());
     string strValue = value.toStdString();
     vector<unsigned char> vchValue(strValue.begin(), strValue.end());
 
     return name_update(vchName, vchValue, nRentalDays, newAddress.toStdString());
+}
+
+NameTxReturn WalletModel::nameDelete(const QString &name)
+{
+    string strName = name.toStdString();
+    vector<unsigned char> vchName(strName.begin(), strName.end());
+
+    return name_delete(vchName);
 }
 
 OptionsModel *WalletModel::getOptionsModel()

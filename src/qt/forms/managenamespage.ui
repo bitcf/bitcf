@@ -92,6 +92,11 @@
          <string>NAME_UPDATE</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>NAME_DELETE</string>
+        </property>
+       </item>
       </widget>
      </item>
     </layout>

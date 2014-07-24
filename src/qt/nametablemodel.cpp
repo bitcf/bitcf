@@ -4,8 +4,6 @@
 #include "walletmodel.h"
 #include "guiconstants.h"
 
-//#include "ui_interface.h"
-
 #include <QTimer>
 
 #include "wallet.h"
@@ -64,103 +62,6 @@ public:
         // qLowerBound() and qUpperBound() require our cachedNameTable list to be sorted in asc order
         qSort(cachedNameTable.begin(), cachedNameTable.end(), NameTableEntryLessThan());
     }
-
-//    void refreshName(const std::vector<unsigned char> &inName)
-//    {
-//        NameTableEntry nameObj(stringFromVch(inName), std::string(), std::string(), NameTableEntry::NAME_NON_EXISTING);
-
-//        CRITICAL_BLOCK(cs_main)
-//        CRITICAL_BLOCK(wallet->cs_mapWallet)
-//        {
-//            CTxIndex txindex;
-//            uint256 hash;
-//            CTxDB txdb("r");
-//            CTransaction tx;
-
-//            std::vector<unsigned char> vchName;
-//            std::vector<unsigned char> vchValue;
-//            int nHeight;
-
-//            BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, wallet->mapWallet)
-//            {
-//                hash = item.second.GetHash();
-//                bool fConfirmed;
-//                bool fTransferred = false;
-
-//                if (!txdb.ReadDiskTx(hash, tx, txindex))
-//                {
-//                    tx = item.second;
-//                    fConfirmed = false;
-//                }
-//                else
-//                    fConfirmed = true;
-
-//                if (tx.nVersion != NAMECOIN_TX_VERSION)
-//                    continue;
-
-//                // name
-//                if (!GetNameOfTx(tx, vchName) || vchName != inName)
-//                    continue;
-
-//                // value
-//                if (!GetValueOfNameTx(tx, vchValue))
-//                    continue;
-
-//                if (!hooks->IsMine(wallet->mapWallet[tx.GetHash()]))
-//                    fTransferred = true;
-
-//                // height
-//                if (fConfirmed)
-//                {
-//                    nHeight = GetTxPosHeight(txindex.pos);
-//                    if (nHeight + GetDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
-//                        continue;  // Expired
-//                }
-//                else
-//                    nHeight = NameTableEntry::NAME_UNCONFIRMED;
-
-//                // get last active name only
-//                if (!NameTableEntry::CompareHeight(nameObj.nHeight, nHeight))
-//                    continue;
-
-//                std::string strAddress = "";
-//                GetNameAddress(tx, strAddress);
-
-//                nameObj.value = QString::fromStdString(stringFromVch(vchValue));
-//                nameObj.address = QString::fromStdString(strAddress);
-//                nameObj.nHeight = nHeight;
-//                nameObj.transferred = fTransferred;
-//            }
-//        }
-
-//        // Transferred name is not ours anymore - remove it from the table
-//        if (nameObj.transferred)
-//            nameObj.nHeight = NameTableEntry::NAME_NON_EXISTING;
-
-//        // Find name in model
-//        QList<NameTableEntry>::iterator lower = qLowerBound(
-//            cachedNameTable.begin(), cachedNameTable.end(), nameObj.name, NameTableEntryLessThan());
-//        QList<NameTableEntry>::iterator upper = qUpperBound(
-//            cachedNameTable.begin(), cachedNameTable.end(), nameObj.name, NameTableEntryLessThan());
-//        bool inModel = (lower != upper);
-
-//        if (inModel)
-//        {
-//            // In model - update or delete
-
-//            if (nameObj.nHeight != NameTableEntry::NAME_NON_EXISTING)
-//                updateEntry(nameObj, CT_UPDATED);
-//            else
-//                updateEntry(nameObj, CT_DELETED);
-//        }
-//        else
-//        {
-//            // Not in model - add or do nothing
-
-//            if (nameObj.nHeight != NameTableEntry::NAME_NON_EXISTING)
-//                updateEntry(nameObj, CT_NEW);
-//        }
-//    }
 
     void updateEntry(const NameTableEntry &nameObj, int status, int *outNewRowIndex = NULL)
     {
@@ -289,30 +190,6 @@ void NameTableModel::updateExpiration()
         emit dataChanged(index(0, ExpiresIn), index(priv->size()-1, ExpiresIn));
     }
 }
-
-//void NameTableModel::updateTransaction(const QString &hash, int status)
-//{
-//    uint256 hash256;
-//    hash256.SetHex(hash.toStdString());
-
-//    CTransaction tx;
-
-//    {
-//        LOCK(wallet->cs_wallet);
-
-//        // Find transaction in wallet
-//        std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash256);
-//        if (mi == wallet->mapWallet.end())
-//            return;    // Not our transaction
-//        tx = mi->second;
-//    }
-
-//    std::vector<unsigned char> vchName;
-//    if (!GetNameOfTx(tx, vchName))
-//        return;   // Non-name transaction
-
-//    priv->refreshName(vchName);
-//}
 
 int NameTableModel::rowCount(const QModelIndex &parent /* = QModelIndex()*/) const
 {
