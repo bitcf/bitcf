@@ -32,10 +32,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#ifdef WIN32
+#include <winsock2.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
@@ -97,7 +101,7 @@ static struct StunSrv StunSrvList[] = {
 /* wrapper to send an STUN message */
 static int stun_send(int s, struct sockaddr_in *dst, struct stun_header *resp)
 {
-	return sendto(s, resp, ntohs(resp->msglen) + sizeof(*resp), 0,
+    return sendto(s, (const char *)resp, ntohs(resp->msglen) + sizeof(*resp), 0,
 		      (struct sockaddr *)dst, sizeof(*dst));
 }
 
@@ -218,7 +222,11 @@ static int StunRequest2(int sock, struct sockaddr_in *server, struct sockaddr_in
   fd_set rfds;
   struct timeval to = { STUN_TIMEOUT, 0 };
   struct sockaddr_in src;
+#ifdef WIN32
+  int srclen;
+#else
   socklen_t srclen;
+#endif
 
   int res = stun_send(sock, server, req);
   if(res < 0)
@@ -228,16 +236,16 @@ static int StunRequest2(int sock, struct sockaddr_in *server, struct sockaddr_in
   res = select(sock + 1, &rfds, NULL, NULL, &to);
   if (res <= 0) 	/* timeout or error */
     return -11;
-  bzero(&src, sizeof(src));
+  memset(&src, 0, sizeof(src));
   srclen = sizeof(src);
   /* XXX pass -1 in the size, because stun_handle_packet might
    * write past the end of the buffer.
    */
-  res = recvfrom(sock, reply_buf, sizeof(reply_buf) - 1,
+  res = recvfrom(sock, (char *)reply_buf, sizeof(reply_buf) - 1,
 		0, (struct sockaddr *)&src, &srclen);
   if (res <= 0)
     return -12;
-  bzero(mapped, sizeof(struct sockaddr_in));
+  memset(mapped, 0, sizeof(struct sockaddr_in));
   return stun_handle_packet(sock, &src, reply_buf, res, stun_get_mapped, mapped);
 } // StunRequest2
 
@@ -248,8 +256,8 @@ static int StunRequest(const char *host, uint16_t port, struct sockaddr_in *mapp
       return -1;
 
   struct sockaddr_in server, client;
-  bzero(&server, sizeof(server));
-  bzero(&client, sizeof(client));
+  memset(&server, 0, sizeof(server));
+  memset(&client, 0, sizeof(client));
   server.sin_family = client.sin_family = AF_INET;
 
   server.sin_addr = *(struct in_addr*) hostinfo->h_addr;
