@@ -50,20 +50,22 @@
 /*---------------------------------------------------------------------*/
 
 struct StunSrv {
-  char     name[30];
+  char     name[24];
   uint16_t port;
 };
 
 /*---------------------------------------------------------------------*/
-static const int StunSrvListQty = 43; // Must be PRIME!!!!!
+static const int StunSrvListQty = 47; // Must be PRIME!!!!!
 
 static struct StunSrv StunSrvList[] = {
 {"numb.viagenie.ca",	3478},
 {"s1.taraba.net",	3478},
 {"s2.taraba.net",	3478},
+{"stun.12voip.com",	3478},
 {"stun.1und1.de",	3478},
 {"stun.bluesip.net",	3478},
 {"stun.callwithus.com",	3478},
+{"stun.counterpath.com",	3478},
 {"stun.counterpath.net",	3478},
 {"stun.e-fon.ch",	3478},
 {"stun.ekiga.net",	3478},
@@ -78,8 +80,10 @@ static struct StunSrv StunSrvList[] = {
 {"stun.phoneserve.com",	3478},
 {"stun.rixtelecom.se",	3478},
 {"stun.schlund.de",	3478},
+{"stun.sigmavoip.com",	3478},
 {"stun.sipdiscount.com",	3478},
 {"stun.sipgate.net",	10000},
+{"stun.sipgate.net",	3478},
 {"stun.sipnet.ru",	3478},
 {"stun.softjoys.com",	3478},
 {"stun.stunprotocol.org",	3478},
@@ -100,9 +104,7 @@ static struct StunSrv StunSrvList[] = {
 {"stun2.l.google.com",	19302},
 {"stun3.l.google.com",	19302},
 {"stun4.l.google.com",	19302},
-{"stunserver.org",	3478},
-{"stun.counterpath.com",	3478},	// Spare server
-{"stun.sipgate.net",	3478}		// Spare server
+{"stunserver.org",	3478}
 };
 
 /* wrapper to send an STUN message */
