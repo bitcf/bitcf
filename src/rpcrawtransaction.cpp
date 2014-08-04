@@ -454,6 +454,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         EnsureWalletIsUnlocked();
 
     // Add previous txouts given in the RPC call:
+    set<COutPoint> sGivenInputs;
     if (params.size() > 1 && params[1].type() != null_type)
     {
         Array prevTxs = params[1].get_array();
@@ -476,6 +477,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
             COutPoint outpoint(txid, nOut);
+            sGivenInputs.insert(outpoint);
             if (mapPrevOut.count(outpoint))
             {
                 // Complain if scriptPubKey doesn't match
@@ -503,6 +505,24 @@ Value signrawtransaction(const Array& params, bool fHelp)
                     CScript redeemScript(rsData.begin(), rsData.end());
                     tempKeystore.AddCScript(redeemScript);
                 }
+            }
+        }
+    }
+
+    // last check
+    if (params.size() > 2 && params[2].get_array().empty())
+    {
+        CTxDB txdb("r");
+        for (unsigned int i = 0; i < mergedTx.vin.size(); i++)
+        {
+            CTxIn& txin = mergedTx.vin[i];
+            CTxIndex txindex;
+            if (sGivenInputs.count(txin.prevout) == 0)
+            {
+                // check if transaction is spent
+                if (!txdb.ReadTxIndex(txin.prevout.hash, txindex) ||
+                    !txindex.vSpent[txin.prevout.n].IsNull())
+                    throw JSONRPCError(RPC_MISC_ERROR,"Input is already spent");
             }
         }
     }
