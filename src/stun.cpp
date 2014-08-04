@@ -55,10 +55,12 @@ struct StunSrv {
 };
 
 /*---------------------------------------------------------------------*/
-static const int StunSrvListQty = 37; // Must be PRIME!!!!!
+static const int StunSrvListQty = 43; // Must be PRIME!!!!!
 
 static struct StunSrv StunSrvList[] = {
 {"numb.viagenie.ca",	3478},
+{"s1.taraba.net",	3478},
+{"s2.taraba.net",	3478},
 {"stun.1und1.de",	3478},
 {"stun.bluesip.net",	3478},
 {"stun.callwithus.com",	3478},
@@ -79,7 +81,10 @@ static struct StunSrv StunSrvList[] = {
 {"stun.sipdiscount.com",	3478},
 {"stun.sipgate.net",	10000},
 {"stun.sipnet.ru",	3478},
+{"stun.softjoys.com",	3478},
+{"stun.stunprotocol.org",	3478},
 {"stun.t-online.de",	3478},
+{"stun.telbo.com",	3478},
 {"stun.voip.aebc.com",	3478},
 {"stun.voiparound.com",	3478},
 {"stun.voipbuster.com",	3478},
@@ -89,13 +94,15 @@ static struct StunSrv StunSrvList[] = {
 {"stun.voipraider.com",	3478},
 {"stun.voipstunt.com",	3478},
 {"stun.voxgratia.org",	3478},
+{"stun.zadarma.com",	3478},
 {"stun1.l.google.com",	19302},
 {"stun1.voiceeclipse.net",	3478},
 {"stun2.l.google.com",	19302},
 {"stun3.l.google.com",	19302},
 {"stun4.l.google.com",	19302},
 {"stunserver.org",	3478},
-{"stun.sipgate.net",	3478} // Spare server
+{"stun.counterpath.com",	3478},	// Spare server
+{"stun.sipgate.net",	3478}		// Spare server
 };
 
 /* wrapper to send an STUN message */
@@ -109,11 +116,18 @@ static int stun_send(int s, struct sockaddr_in *dst, struct stun_header *resp)
 static uint32_t randfiller;
 static void stun_req_id(struct stun_header *req)
 {
-  register int x;
-  for (x = 0; x < 4; x++) {
+  const uint32_t *S_block = (const uint32_t *)StunSrvList;
+  req->id.id[0] |= 0x55555555;
+  req->id.id[1] &= 0x55555555;
+  req->id.id[2] |= 0x55555555;
+  req->id.id[3] &= 0x55555555;
+  register char x = 20;
+  do {
+    uint32_t s_elm = S_block[(uint8_t)randfiller];
     randfiller ^= (randfiller << 1) | (randfiller >> 31);
-    req->id.id[x] = randfiller + (randfiller >> 1);
-  }
+    randfiller += s_elm ^ x;
+    req->id.id[x & 3] ^= randfiller + (randfiller >> 1);
+  } while(--x);
 }
 
 /* callback type to be invoked on stun responses. */
