@@ -112,8 +112,8 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o \
     obj/kernel.o \
+    obj/stun.o \
     obj/namecoin.o
-
 
 all: emercoind
 
