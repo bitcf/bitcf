@@ -213,7 +213,7 @@ void EmercoinGUI::createActions()
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
 
-    manageNamesAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Manage Names"), this);
+    manageNamesAction = new QAction(QIcon(":/icons/emercoin"), tr("&Manage Names"), this);
     manageNamesAction->setStatusTip(tr("Manage values registered via Emercoin"));
     manageNamesAction->setToolTip(manageNamesAction->statusTip());
     manageNamesAction->setCheckable(true);
