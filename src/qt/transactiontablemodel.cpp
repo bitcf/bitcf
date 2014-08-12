@@ -225,6 +225,8 @@ TransactionTableModel::~TransactionTableModel()
     delete priv;
 }
 
+#include "nametablemodel.h"
+
 void TransactionTableModel::update()
 {
     QList<uint256> updated;
@@ -237,6 +239,7 @@ void TransactionTableModel::update()
             BOOST_FOREACH(uint256 hash, wallet->vWalletUpdated)
             {
                 updated.append(hash);
+                wallet->vCheckNewNames.push_back(hash); // to check for name ops updates
             }
             wallet->vWalletUpdated.clear();
         }
@@ -251,6 +254,7 @@ void TransactionTableModel::update()
         emit dataChanged(index(0, Status), index(priv->size()-1, Status));
         emit dataChanged(index(0, ToAddress), index(priv->size()-1, ToAddress));
     }
+
 }
 
 int TransactionTableModel::rowCount(const QModelIndex &parent) const

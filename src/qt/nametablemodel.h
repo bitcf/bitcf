@@ -8,6 +8,9 @@ class NameTablePriv;
 class CWallet;
 class WalletModel;
 
+#include <vector>
+#include "uint256.h"
+
 /**
    Qt model for "Manage Names" page.
  */
@@ -48,8 +51,7 @@ private:
 
 public slots:
     void updateEntry(const QString &name, const QString &value, const QString &address, int nHeight, int status, int *outNewRowIndex = NULL);
-    void updateExpiration();
-//    void updateTransaction(const QString &hash, int status);
+    void update();
 
     friend class NameTablePriv;
 };
@@ -62,9 +64,11 @@ struct NameTableEntry
     int nExpiresAt;
     bool transferred;
 
-    static const int NAME_NEW = -1;             // Dummy nHeight value for not-yet-created names
-    static const int NAME_NON_EXISTING = -2;    // Dummy nHeight value for unitinialized entries
-    static const int NAME_UNCONFIRMED = -3;     // Dummy nHeight value for unconfirmed name transactions
+    // for pending (not yet in a block) name operations
+    static const int NAME_NEW = -1;
+    static const int NAME_UPDATE = -2;
+    static const int NAME_DELETE = -3;
+    static const int NAME_NON_EXISTING = -4; //no pending operation, just a blank
 
     bool HeightValid() { return nExpiresAt >= 0; }
 

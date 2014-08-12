@@ -112,6 +112,7 @@ public:
 
     std::map<uint256, CWalletTx> mapWallet;
     std::vector<uint256> vWalletUpdated;
+    std::vector<uint256> vCheckNewNames; //for name ops. TODO: reimplement this to use vWalletUpdated instead.
 
     std::map<uint256, int> mapRequestCount;
 

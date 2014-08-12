@@ -269,14 +269,14 @@ void ManageNamesPage::on_submitNameButton_clicked()
         }
         else if (txType == "NAME_UPDATE")
         {
-            nHeight = NameTableEntry::NAME_NEW;
+            nHeight = NameTableEntry::NAME_UPDATE;
             status = CT_UPDATED;
             res = walletModel->nameUpdate(name, value, days, newAddress);
         }
         else if (txType == "NAME_DELETE")
         {
-            nHeight = NameTableEntry::NAME_NEW;
-            status = CT_DELETED;
+            nHeight = NameTableEntry::NAME_DELETE;
+            status = CT_UPDATED; //we still want to display this name until it is delited
             res = walletModel->nameDelete(name);
         }
 
