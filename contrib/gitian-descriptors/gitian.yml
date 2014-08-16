@@ -6,7 +6,6 @@ architectures:
 - "i386"
 - "amd64"
 packages:
-- "libdb4.8++-dev"
 - "qt4-qmake"
 - "libqt4-dev"
 - "libboost-system-dev"
@@ -25,6 +24,7 @@ files:
 - "miniupnpc-1.6.tar.gz"
 - "qrencode-3.2.0.tar.bz2"
 - "openssl-1.0.1g.tar.gz"
+- "db-4.8.30.NC.tar.gz"
 script: |
   INSTDIR="$HOME/install"
   export LIBRARY_PATH="$INSTDIR/lib"
@@ -48,6 +48,13 @@ script: |
   make
   make install_sw
   cd ..
+  #
+  tar xzf db-4.8.30.NC.tar.gz
+  cd db-4.8.30.NC/build_unix
+  ../dist/configure --prefix=$INSTDIR --enable-cxx --disable-shared --with-pic
+  make $MAKEOPTS library_build
+  make install_lib install_include
+  cd ../..
   #
   cd emercoin
   mkdir -p $OUTDIR/src
