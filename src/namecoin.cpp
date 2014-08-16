@@ -885,9 +885,9 @@ map<vector<unsigned char>, NameTxInfo> GetNameList(const vector<unsigned char> &
 {
     map<vector<unsigned char>, NameTxInfo> scannedNames;
     {
-        LOCK(pwalletMain->cs_wallet);
         CTxDB txdb("r");
         CNameDB dbName("r");
+        LOCK(pwalletMain->cs_wallet);
 
         //add all names from wallet tx
         map< vector<unsigned char>, int > mapHeight;
@@ -1784,7 +1784,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                     return error("ConnectInputsHook() : got tx %s with fee too low %d.", tx.GetHash().GetHex().c_str(), txFee);
             }
 
-            if (NameActive(vchName, pindexBlock->nHeight))
+            if (NameActive(dbName, vchName, pindexBlock->nHeight))
                 return error("ConnectInputsHook() : name_new on an unexpired name");
 
             if (fMiner)
