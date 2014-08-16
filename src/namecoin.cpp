@@ -294,126 +294,129 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend, 
     wtxNew.BindWallet(pwalletMain);
 
     {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
-        // txdb must be opened before the mapWallet lock
+        LOCK(cs_main);
+        // txdb must be opened before the mapWallet lock. EvgenijM86: WHY?
         CTxDB txdb("r");
         {
-            nFeeRet = nTransactionFee;
-            loop
+            LOCK(pwalletMain->cs_wallet);
             {
-                wtxNew.vin.clear();
-                wtxNew.vout.clear();
-                wtxNew.fFromMe = true;
-
-                int64 nTotalValue = nValue + nFeeRet;
-                printf("CreateTransactionWithInputTx: total value = %d\n", nTotalValue);
-                double dPriority = 0;
-                // vouts to the payees
-                BOOST_FOREACH(const PAIRTYPE(CScript, int64)& s, vecSend)
-                    wtxNew.vout.push_back(CTxOut(s.second, s.first));
-
-                int64 nWtxinCredit = wtxIn.vout[nTxOut].nValue;
-
-                // Choose coins to use
-                set<pair<const CWalletTx*, unsigned int> > setCoins;
-                int64 nValueIn = 0;
-                printf("CreateTransactionWithInputTx: SelectCoins(%s), nTotalValue = %s, nWtxinCredit = %s\n", FormatMoney(nTotalValue - nWtxinCredit).c_str(), FormatMoney(nTotalValue).c_str(), FormatMoney(nWtxinCredit).c_str());
-                if (nTotalValue - nWtxinCredit > 0)
+                nFeeRet = nTransactionFee;
+                loop
                 {
-                    if (!pwalletMain->SelectCoins(nTotalValue - nWtxinCredit, wtxNew.nTime, setCoins, nValueIn))
-                        return false;
-                }
+                    wtxNew.vin.clear();
+                    wtxNew.vout.clear();
+                    wtxNew.fFromMe = true;
 
-                printf("CreateTransactionWithInputTx: selected %d tx outs, nValueIn = %s\n", setCoins.size(), FormatMoney(nValueIn).c_str());
+                    int64 nTotalValue = nValue + nFeeRet;
+                    printf("CreateTransactionWithInputTx: total value = %d\n", nTotalValue);
+                    double dPriority = 0;
+                    // vouts to the payees
+                    BOOST_FOREACH(const PAIRTYPE(CScript, int64)& s, vecSend)
+                        wtxNew.vout.push_back(CTxOut(s.second, s.first));
 
-                vector<pair<const CWalletTx*, unsigned int> > vecCoins(setCoins.begin(), setCoins.end());
+                    int64 nWtxinCredit = wtxIn.vout[nTxOut].nValue;
 
-                BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
-                {
-                    int64 nCredit = coin.first->vout[coin.second].nValue;
-                    dPriority += (double)nCredit * coin.first->GetDepthInMainChain();
-                }
-
-                // Input tx always at first position
-                vecCoins.insert(vecCoins.begin(), make_pair(&wtxIn, nTxOut));
-
-                nValueIn += nWtxinCredit;
-                dPriority += (double)nWtxinCredit * wtxIn.GetDepthInMainChain();
-
-                // Fill a vout back to self with any change
-                int64 nChange = nValueIn - nTotalValue;
-                if (nChange >= CENT)
-                {
-                    // Note: We use a new key here to keep it from being obvious which side is the change.
-                    //  The drawback is that by not reusing a previous key, the change may be lost if a
-                    //  backup is restored, if the backup doesn't have the new private key for the change.
-                    //  If we reused the old key, it would be possible to add code to look for and
-                    //  rediscover unknown transactions that were written with keys of ours to recover
-                    //  post-backup change.
-
-                    // Reserve a new key pair from key pool
-                    CPubKey vchPubKey = reservekey.GetReservedKey();
-                    assert(pwalletMain->HaveKey(vchPubKey.GetID()));
-
-                    // -------------- Fill a vout to ourself, using same address type as the payment
-                    // Now sending always to hash160 (GetBitcoinAddressHash160 will return hash160, even if pubkey is used)
-                    CScript scriptChange;
-                    //NOTE: look at bf798734db4539a39edd6badf54a1c3aecf193e5 commit in src/wallet.cpp
-                    //if (vecSend[0].first.GetBitcoinAddressHash160() != 0)
-                    //    scriptChange.SetBitcoinAddress(vchPubKey);
-                    //else
-                     //   scriptChange << vchPubKey << OP_CHECKSIG;
-                    scriptChange.SetDestination(vchPubKey.GetID());
-
-                    // Insert change txn at random position:
-                    vector<CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size());
-                    wtxNew.vout.insert(position, CTxOut(nChange, scriptChange));
-                }
-                else
-                    reservekey.ReturnKey();
-
-                // Fill vin
-                BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
-                    wtxNew.vin.push_back(CTxIn(coin.first->GetHash(), coin.second));
-
-                // Sign
-                int nIn = 0;
-                BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
-                {
-                    if (coin.first == &wtxIn && coin.second == nTxOut)
+                    // Choose coins to use
+                    set<pair<const CWalletTx*, unsigned int> > setCoins;
+                    int64 nValueIn = 0;
+                    printf("CreateTransactionWithInputTx: SelectCoins(%s), nTotalValue = %s, nWtxinCredit = %s\n", FormatMoney(nTotalValue - nWtxinCredit).c_str(), FormatMoney(nTotalValue).c_str(), FormatMoney(nWtxinCredit).c_str());
+                    if (nTotalValue - nWtxinCredit > 0)
                     {
-                        if (!SignNameSignature(*coin.first, wtxNew, nIn++))
-                            throw runtime_error("could not sign name coin output");
-                    }
-                    else
-                    {
-                        if (!SignSignature(*pwalletMain, *coin.first, wtxNew, nIn++))
+                        if (!pwalletMain->SelectCoins(nTotalValue - nWtxinCredit, wtxNew.nTime, setCoins, nValueIn))
                             return false;
                     }
+
+                    printf("CreateTransactionWithInputTx: selected %d tx outs, nValueIn = %s\n", setCoins.size(), FormatMoney(nValueIn).c_str());
+
+                    vector<pair<const CWalletTx*, unsigned int> > vecCoins(setCoins.begin(), setCoins.end());
+
+                    BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
+                    {
+                        int64 nCredit = coin.first->vout[coin.second].nValue;
+                        dPriority += (double)nCredit * coin.first->GetDepthInMainChain();
+                    }
+
+                    // Input tx always at first position
+                    vecCoins.insert(vecCoins.begin(), make_pair(&wtxIn, nTxOut));
+
+                    nValueIn += nWtxinCredit;
+                    dPriority += (double)nWtxinCredit * wtxIn.GetDepthInMainChain();
+
+                    // Fill a vout back to self with any change
+                    int64 nChange = nValueIn - nTotalValue;
+                    if (nChange >= CENT)
+                    {
+                        // Note: We use a new key here to keep it from being obvious which side is the change.
+                        //  The drawback is that by not reusing a previous key, the change may be lost if a
+                        //  backup is restored, if the backup doesn't have the new private key for the change.
+                        //  If we reused the old key, it would be possible to add code to look for and
+                        //  rediscover unknown transactions that were written with keys of ours to recover
+                        //  post-backup change.
+
+                        // Reserve a new key pair from key pool
+                        CPubKey vchPubKey = reservekey.GetReservedKey();
+                        assert(pwalletMain->HaveKey(vchPubKey.GetID()));
+
+                        // -------------- Fill a vout to ourself, using same address type as the payment
+                        // Now sending always to hash160 (GetBitcoinAddressHash160 will return hash160, even if pubkey is used)
+                        CScript scriptChange;
+                        //NOTE: look at bf798734db4539a39edd6badf54a1c3aecf193e5 commit in src/wallet.cpp
+                        //if (vecSend[0].first.GetBitcoinAddressHash160() != 0)
+                        //    scriptChange.SetBitcoinAddress(vchPubKey);
+                        //else
+                         //   scriptChange << vchPubKey << OP_CHECKSIG;
+                        scriptChange.SetDestination(vchPubKey.GetID());
+
+                        // Insert change txn at random position:
+                        vector<CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size());
+                        wtxNew.vout.insert(position, CTxOut(nChange, scriptChange));
+                    }
+                    else
+                        reservekey.ReturnKey();
+
+                    // Fill vin
+                    BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
+                        wtxNew.vin.push_back(CTxIn(coin.first->GetHash(), coin.second));
+
+                    // Sign
+                    int nIn = 0;
+                    BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
+                    {
+                        if (coin.first == &wtxIn && coin.second == nTxOut)
+                        {
+                            if (!SignNameSignature(*coin.first, wtxNew, nIn++))
+                                throw runtime_error("could not sign name coin output");
+                        }
+                        else
+                        {
+                            if (!SignSignature(*pwalletMain, *coin.first, wtxNew, nIn++))
+                                return false;
+                        }
+                    }
+
+                    // Limit size
+                    unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK, PROTOCOL_VERSION);
+                    if (nBytes >= MAX_BLOCK_SIZE_GEN/5)
+                        return false;
+                    dPriority /= nBytes;
+
+                    // Check that enough fee is included
+                    int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+                    bool fAllowFree = CTransaction::AllowFree(dPriority);
+                    int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+                    if (nFeeRet < max(nPayFee, nMinFee))
+                    {
+                        nFeeRet = max(nPayFee, nMinFee);
+                        printf("CreateTransactionWithInputTx: re-iterating (nFreeRet = %s)\n", FormatMoney(nFeeRet).c_str());
+                        continue;
+                    }
+
+                    // Fill vtxPrev by copying from previous transactions vtxPrev
+                    wtxNew.AddSupportingTransactions(txdb);
+                    wtxNew.fTimeReceivedIsTxTime = true;
+
+                    break;
                 }
-
-                // Limit size
-                unsigned int nBytes = ::GetSerializeSize(*(CTransaction*)&wtxNew, SER_NETWORK, PROTOCOL_VERSION);
-                if (nBytes >= MAX_BLOCK_SIZE_GEN/5)
-                    return false;
-                dPriority /= nBytes;
-
-                // Check that enough fee is included
-                int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-                bool fAllowFree = CTransaction::AllowFree(dPriority);
-                int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
-                if (nFeeRet < max(nPayFee, nMinFee))
-                {
-                    nFeeRet = max(nPayFee, nMinFee);
-                    printf("CreateTransactionWithInputTx: re-iterating (nFreeRet = %s)\n", FormatMoney(nFeeRet).c_str());
-                    continue;
-                }
-
-                // Fill vtxPrev by copying from previous transactions vtxPrev
-                wtxNew.AddSupportingTransactions(txdb);
-                wtxNew.fTimeReceivedIsTxTime = true;
-
-                break;
             }
         }
     }
@@ -1406,10 +1409,19 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
                 return ret;
             }
 
-            if (wtxIn.IsSpent(nTxOut))
+            // check if prev output is spent
             {
-                ret.err_msg = "Last tx of this name was spent by non-namecoin tx. This means that this name cannot be updated anymore - you will have to wait until it expires.";
-                return ret;
+                CTxDB txdb("r");
+                CTxIndex txindex;
+
+                if (!txdb.ReadTxIndex(wtxIn.GetHash(), txindex) ||
+                    !txindex.vSpent[nTxOut].IsNull())
+                {
+                    ss << "Last tx of this name was spent by non-namecoin tx. This means that this name cannot be updated anymore - you will have to wait until it expires:\n"
+                       << wtxInHash.GetHex().c_str();
+                    ret.err_msg = ss.str();
+                    return ret;
+                }
             }
 
             if (!NameActive(dbName, vchName))
@@ -1545,10 +1557,19 @@ NameTxReturn name_delete(const vector<unsigned char> &vchName)
                 return ret;
             }
 
-            if (wtxIn.IsSpent(nTxOut))
+            // check if prev output is spent
             {
-                ret.err_msg = "Last tx of this name was spent by non-namecoin tx. This means that this name cannot be updated anymore - you will have to wait until it expires.";
-                return ret;
+                CTxDB txdb("r");
+                CTxIndex txindex;
+
+                if (!txdb.ReadTxIndex(wtxIn.GetHash(), txindex) ||
+                    !txindex.vSpent[nTxOut].IsNull())
+                {
+                    ss << "Last tx of this name was spent by non-namecoin tx. This means that this name cannot be updated anymore - you will have to wait until it expires:\n"
+                       << wtxInHash.GetHex().c_str();
+                    ret.err_msg = ss.str();
+                    return ret;
+                }
             }
 
             if (!NameActive(dbName, vchName))
