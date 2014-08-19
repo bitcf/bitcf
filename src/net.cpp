@@ -252,16 +252,18 @@ bool GetMyExternalIP(CNetAddr& ipRet)
 
 /*--------------------------------------------------------------------------*/
 // from file stun.cpp
-int GetExternalIPbySTUN(uint32_t rnd, struct sockaddr_in *mapped);
+int GetExternalIPbySTUN(uint64_t rnd, struct sockaddr_in *mapped, const char **srv);
 
 /*--------------------------------------------------------------------------*/
 bool GetMyExternalIP_STUN(CNetAddr& ipRet) {
   struct sockaddr_in mapped;
-  uint32_t rnd = GetRand(0xffffffff);
-  int rc = GetExternalIPbySTUN(rnd, &mapped);
+  uint64_t rnd = GetRand(~0LL);
+  const char *srv;
+  int rc = GetExternalIPbySTUN(rnd, &mapped, &srv);
   if(rc >= 0) {
     ipRet = CNetAddr(mapped.sin_addr);
-    printf("GetExternalIPbySTUN(%x) returned %s in attempt %d\n", rnd, addrLocalHost.ToStringIP().c_str(), rc);
+    printf("GetExternalIPbySTUN(%llx) returned %s in attempt %d; Server=%s\n", 
+	    rnd, addrLocalHost.ToStringIP().c_str(), rc, srv);
     return true;
   }
   return false;
