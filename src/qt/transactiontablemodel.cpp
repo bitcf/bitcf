@@ -71,7 +71,7 @@ public:
 #endif
         cachedWallet.clear();
         {
-            LOCK(wallet->cs_wallet);
+            LOCK2(cs_main, wallet->cs_wallet);
             for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
             {
                 cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
@@ -97,7 +97,7 @@ public:
         qSort(updated_sorted);
 
         {
-            LOCK(wallet->cs_wallet);
+            LOCK2(cs_main, wallet->cs_wallet);
             for(int update_idx = updated_sorted.size()-1; update_idx >= 0; --update_idx)
             {
                 const uint256 &hash = updated_sorted.at(update_idx);
@@ -170,16 +170,14 @@ public:
             // If a status update is needed (blocks came in since last check),
             //  update the status of this transaction from the wallet. Otherwise,
             // simply re-use the cached status.
+            LOCK2(cs_main, wallet->cs_wallet);
             if(rec->statusUpdateNeeded())
             {
-                {
-                    LOCK(wallet->cs_wallet);
-                    std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
+                std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
 
-                    if(mi != wallet->mapWallet.end())
-                    {
-                        rec->updateStatus(mi->second);
-                    }
+                if(mi != wallet->mapWallet.end())
+                {
+                    rec->updateStatus(mi->second);
                 }
             }
             return rec;
@@ -193,7 +191,7 @@ public:
     QString describe(TransactionRecord *rec)
     {
         {
-            LOCK(wallet->cs_wallet);
+            LOCK2(cs_main, wallet->cs_wallet);
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
             {

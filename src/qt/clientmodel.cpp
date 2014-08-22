@@ -24,6 +24,7 @@ int ClientModel::getNumConnections() const
 
 int ClientModel::getNumBlocks() const
 {
+    LOCK(cs_main);
     return nBestHeight;
 }
 
@@ -35,6 +36,7 @@ int ClientModel::getNumBlocksAtStartup()
 
 QDateTime ClientModel::getLastBlockDate() const
 {
+    LOCK(cs_main);
     return QDateTime::fromTime_t(pindexBest->GetBlockTime());
 }
 

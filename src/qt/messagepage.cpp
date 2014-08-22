@@ -11,7 +11,6 @@
 #include "wallet.h"
 #include "init.h"
 #include "base58.h"
-#include "util.h"
 
 #include "messagepage.h"
 #include "ui_messagepage.h"

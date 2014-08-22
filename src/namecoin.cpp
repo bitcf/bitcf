@@ -887,7 +887,7 @@ map<vector<unsigned char>, NameTxInfo> GetNameList(const vector<unsigned char> &
     {
         CTxDB txdb("r");
         CNameDB dbName("r");
-        LOCK(pwalletMain->cs_wallet);
+        LOCK2(cs_main, pwalletMain->cs_wallet);
 
         //add all names from wallet tx
         map< vector<unsigned char>, int > mapHeight;
