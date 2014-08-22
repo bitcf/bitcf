@@ -47,8 +47,7 @@ public:
     {
         cachedNameTable.clear();
 
-        map<vector<unsigned char>, NameTxInfo> scannedNames = GetNameList(); //this excludes pending name ops
-
+        map<vector<unsigned char>, NameTxInfo> scannedNames = GetNameList();
         BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, scannedNames)
         {
             // TODO check if there is pending name ops.
@@ -67,9 +66,9 @@ public:
                     nHeightStatus = NameTableEntry::NAME_NEW;
                 else if (nti.op == OP_NAME_UPDATE)
                     nHeightStatus = NameTableEntry::NAME_UPDATE;
-                else if (nti.op == OP_NAME_UPDATE)
+                else if (nti.op == OP_NAME_DELETE)
                     nHeightStatus = NameTableEntry::NAME_DELETE;
-                NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(nti.vchValue), nti.strAddress, nHeightStatus, nti.nIsMine);
+                NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(nti.vchValue), nti.strAddress, nHeightStatus, nti.fIsMine);
                 cachedNameTable.append(nte);
             }
             else
@@ -78,7 +77,7 @@ public:
                 if (!GetExpirationData(item.second.vchName, nTotalLifeTime, nNameHeight))
                     continue;
 
-                NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, nTotalLifeTime + nNameHeight, item.second.nIsMine);
+                NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, nTotalLifeTime + nNameHeight, item.second.fIsMine);
                 cachedNameTable.append(nte);
             }
         }
@@ -205,13 +204,21 @@ void NameTableModel::update()
                     continue;
                 else
                 {
-                    int nTotalLifeTime, nNameHeight;
-                    if (!GetExpirationData(vchName, nTotalLifeTime, nNameHeight))
-                        continue;
                     if (item->nExpiresAt == NameTableEntry::NAME_DELETE)
-                        priv->updateEntry(item->name, item->value, item->address, nTotalLifeTime + nNameHeight, CT_DELETED);
+                    {
+                        priv->updateEntry(item->name, item->value, item->address, item->nExpiresAt, CT_DELETED);
+                        // Data array changed - restart scan
+                        n = priv->size();
+                        i = -1;
+                        continue;
+                    }
                     else
+                    {
+                        int nTotalLifeTime, nNameHeight;
+                        if (!GetExpirationData(vchName, nTotalLifeTime, nNameHeight))
+                            continue;
                         priv->updateEntry(item->name, item->value, item->address, nTotalLifeTime + nNameHeight, CT_UPDATED);
+                    }
                 }
             }
 
@@ -221,6 +228,7 @@ void NameTableModel::update()
                 // Data array changed - restart scan
                 n = priv->size();
                 i = -1;
+                continue;
             }
         }
         // Invalidate expiration counter for all rows.
@@ -276,8 +284,10 @@ QVariant NameTableModel::data(const QModelIndex &index, int role) const
 
     NameTableEntry *rec = static_cast<NameTableEntry*>(index.internalPointer());
 
-    if (role == Qt::DisplayRole || role == Qt::EditRole)
+    switch (role)
     {
+    case Qt::DisplayRole:
+    case Qt::EditRole:
         switch (index.column())
         {
         case Name:
@@ -301,15 +311,18 @@ QVariant NameTableModel::data(const QModelIndex &index, int role) const
                 return rec->nExpiresAt - pindexBest->nHeight;
             }
         }
-    }
-    else if (role == Qt::TextAlignmentRole)
-        return column_alignments[index.column()];
-    else if (role == Qt::FontRole)
-    {
+        break;
+    case Qt::TextAlignmentRole: return column_alignments[index.column()];
+    case Qt::FontRole: {
         QFont font;
         if (index.column() == Address)
             font = GUIUtil::bitcoinAddressFont();
         return font;
+    }
+    case Qt::BackgroundRole:
+        if (!rec->fIsMine)
+            return QVariant(QColor(Qt::red));
+        break;
     }
 
     return QVariant();

@@ -114,14 +114,14 @@ struct NameTxInfo
 
     //used only by DecodeNameScript()
     std::string strAddress;
-    int nIsMine;  //  -1 - unknown,   0 - not mine,   1 - is mine
+    bool fIsMine;
 
     //used only by GetNameList()
     int nTimeLeft;
 
-    NameTxInfo(): nRentalDays(-1), op(-1), nOut(-1), nIsMine(-1), nTimeLeft(-1) {}
+    NameTxInfo(): nRentalDays(-1), op(-1), nOut(-1), fIsMine(false), nTimeLeft(-1) {}
     NameTxInfo(std::vector<unsigned char> vchName1, std::vector<unsigned char> vchValue1, int nRentalDays1, int op1, int nOut1, std::string err_msg1):
-        vchName(vchName1), vchValue(vchValue1), nRentalDays(nRentalDays1), op(op1), nOut(nOut1), err_msg(err_msg1), nIsMine(-1), nTimeLeft(-1) {}
+        vchName(vchName1), vchValue(vchValue1), nRentalDays(nRentalDays1), op(op1), nOut(nOut1), err_msg(err_msg1), fIsMine(false), nTimeLeft(-1) {}
 };
 
 bool DecodeNameScript(const CScript& script, NameTxInfo& ret, bool checkValuesCorrectness = true, bool checkAddressAndIfIsMine = false);

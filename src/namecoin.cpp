@@ -675,6 +675,7 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
         if (opcode != OP_DROP)
             return false;
         ret.err_msg = "";
+        ret.fIsMine = true; // name_delete should be always our transaction.
         return true;
     }
 
@@ -726,6 +727,7 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
     if (valueSize != delimiterSize)
         return false;
 
+
     ret.err_msg = "";     //sucess! we have read name script structure without errors!
     if (checkValuesCorrectness)
     {
@@ -746,8 +748,8 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
         CScript scriptSig;
         txnouttype whichType;
         if (!Solver(*pwalletMain, scriptPubKey, 0, 0, scriptSig, whichType))
-            ret.nIsMine = 0;
-        else ret.nIsMine = 1;
+            ret.fIsMine = false;
+        else ret.fIsMine = true;
     }
 
     return true;
@@ -868,8 +870,8 @@ Value name_list(const Array& params, bool fHelp)
         Object oName;
         oName.push_back(Pair("name", stringFromVch(item.second.vchName)));
         oName.push_back(Pair("value", stringFromVch(item.second.vchValue)));
-        if (item.second.nIsMine == 0)
-            oName.push_back(Pair("transferred", 1));
+        if (item.second.fIsMine == false)
+            oName.push_back(Pair("transferred", true));
         oName.push_back(Pair("address", item.second.strAddress));
         oName.push_back(Pair("expires_in", item.second.nTimeLeft));
         if (item.second.nTimeLeft <= 0)
@@ -900,9 +902,6 @@ map<vector<unsigned char>, NameTxInfo> GetNameList(const vector<unsigned char> &
 
             NameTxInfo nti;
             if (!DecodeNameTx(tx, nti, false, true))
-                continue;
-
-            if (!dbName.ExistsName(nti.vchName))
                 continue;
 
             // allow only latest wallet tx with that name

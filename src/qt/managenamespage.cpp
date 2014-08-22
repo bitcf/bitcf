@@ -358,16 +358,19 @@ void ManageNamesPage::onTxTypeChanged(const QString &txType)
 {
     if (txType == "NAME_NEW")
     {
+        ui->registerDays->setEnabled(true);
         ui->registerAddress->setDisabled(true);
         ui->registerValue->setEnabled(true);
     }
     else if (txType == "NAME_UPDATE")
     {
+        ui->registerDays->setEnabled(true);
         ui->registerAddress->setEnabled(true);
         ui->registerValue->setEnabled(true);
     }
     else if (txType == "NAME_DELETE")
     {
+        ui->registerDays->setDisabled(true);
         ui->registerAddress->setDisabled(true);
         ui->registerValue->setDisabled(true);
     }

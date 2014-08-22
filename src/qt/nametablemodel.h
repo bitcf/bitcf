@@ -62,7 +62,7 @@ struct NameTableEntry
     QString value;
     QString address;
     int nExpiresAt;
-    bool transferred;
+    bool fIsMine;
 
     // for pending (not yet in a block) name operations
     static const int NAME_NEW = -1;
@@ -72,11 +72,11 @@ struct NameTableEntry
 
     bool HeightValid() { return nExpiresAt >= 0; }
 
-    NameTableEntry() : nExpiresAt(NAME_NON_EXISTING), transferred(false) {}
-    NameTableEntry(const QString &name, const QString &value, const QString &address, int nExpiresAt, bool transferred = false) :
-        name(name), value(value), address(address), nExpiresAt(nExpiresAt), transferred(transferred) {}
-    NameTableEntry(const std::string &name, const std::string &value, const std::string &address, int nExpiresAt, bool transferred = false) :
-        name(QString::fromStdString(name)), value(QString::fromStdString(value)), address(QString::fromStdString(address)), nExpiresAt(nExpiresAt), transferred(transferred) {}
+    NameTableEntry() : nExpiresAt(NAME_NON_EXISTING), fIsMine(true) {}
+    NameTableEntry(const QString &name, const QString &value, const QString &address, int nExpiresAt, bool fIsMine = true) :
+        name(name), value(value), address(address), nExpiresAt(nExpiresAt), fIsMine(fIsMine) {}
+    NameTableEntry(const std::string &name, const std::string &value, const std::string &address, int nExpiresAt, bool fIsMine = true) :
+        name(QString::fromStdString(name)), value(QString::fromStdString(value)), address(QString::fromStdString(address)), nExpiresAt(nExpiresAt), fIsMine(fIsMine) {}
 };
 
 /** General change type (added, updated, removed). This should be in ui_interface.h in namecoin*/
