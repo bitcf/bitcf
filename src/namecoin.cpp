@@ -131,7 +131,7 @@ bool NameActive(CNameDB& dbName, const vector<unsigned char> &vchName, int curre
     if (dbName.ExistsName(vchName))
     {
         int nTotalLifeTime, nHeight;
-        if (!GetExpirationData(vchName, nTotalLifeTime, nHeight))
+        if (!GetExpirationData(dbName, vchName, nTotalLifeTime, nHeight))
             return error("NameActive(): failed to get expiration data");
 
         if (currentBlockHeight < 0)
@@ -1830,7 +1830,7 @@ bool ConnectInputsInner(CTxDB& txdb,
             if (prev_nti.vchName != vchName)
                 return error("ConnectInputsHook() : name_update name mismatch");
 
-            if (!NameActive(vchName, pindexBlock->nHeight))
+            if (!NameActive(dbName, vchName, pindexBlock->nHeight))
                 return error("ConnectInputsHook() : name_update on expired name");
             break;
         }
@@ -1842,7 +1842,7 @@ bool ConnectInputsInner(CTxDB& txdb,
             if (prev_nti.vchName != vchName)
                 return error("ConnectInputsHook() : name_delete name mismatch");
 
-            if (!NameActive(vchName, pindexBlock->nHeight))
+            if (!NameActive(dbName, vchName, pindexBlock->nHeight))
                 return error("ConnectInputsHook() : name_delete on expired name");
             break;
         }
