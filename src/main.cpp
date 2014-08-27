@@ -991,8 +991,9 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
 
-    double fModifier = min(1.0, (double)pindexLast->nHeight / 10000.0);
-    int nSpacingRatio = max(10, (int)(STAKE_TARGET_SPACING * fModifier));
+    int nSpacingRatio = (pindexLast->nHeight <= 10000) ? max(10, STAKE_TARGET_SPACING * pindexLast->nHeight / 10000) :
+                                                         max(10, STAKE_TARGET_SPACING);
+
     int64 nTargetSpacing = fProofOfStake? STAKE_TARGET_SPACING : min(nTargetSpacingWorkMax, (int64) nSpacingRatio * (1 + pindexLast->nHeight - pindexPrev->nHeight));
     int64 nInterval = nTargetTimespan / nTargetSpacing;
 
@@ -2005,8 +2006,19 @@ bool CBlock::AcceptBlock()
     int nHeight = pindexPrev->nHeight+1;
 
     // Check proof-of-work or proof-of-stake
-    if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
-        return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
+    if (nHeight > 10000)
+    {
+        if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
+            return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
+    }
+    else
+    {
+        // this is needed only for emercoin official blockchain, because of mistake we made at the beginning
+        unsigned int check = GetNextTargetRequired(pindexPrev, IsProofOfStake());
+        unsigned int max_error = check / 100000;
+        if (!(nBits >= check - max_error && nBits <= check + max_error)) // +- 0.001% interval
+            return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
+    }
 
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast() || GetBlockTime() + nMaxClockDrift < pindexPrev->GetBlockTime())
