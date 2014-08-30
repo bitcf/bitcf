@@ -50,62 +50,105 @@
 /*---------------------------------------------------------------------*/
 
 struct StunSrv {
-  char     name[24];
+  char     name[30];
   uint16_t port;
 };
 
 /*---------------------------------------------------------------------*/
-static const int StunSrvListQty = 47; // Must be PRIME!!!!!
+static const int StunSrvListQty = 89; // Must be PRIME!!!!!
 
 static struct StunSrv StunSrvList[] = {
+{"23.21.150.121",	3478},
+{"iphone-stun.strato-iphone.de",	3478},
 {"numb.viagenie.ca",	3478},
 {"s1.taraba.net",	3478},
 {"s2.taraba.net",	3478},
+{"stun.12connect.com",	3478},
 {"stun.12voip.com",	3478},
 {"stun.1und1.de",	3478},
+{"stun.3cx.com",	3478},
+{"stun.actionvoip.com",	3478},
+{"stun.aeta-audio.com",	3478},
+{"stun.aeta.com",	3478},
+{"stun.annatel.net",	3478},
+{"stun.antisip.com",	3478},
 {"stun.bluesip.net",	3478},
 {"stun.callwithus.com",	3478},
 {"stun.counterpath.com",	3478},
 {"stun.counterpath.net",	3478},
+{"stun.dus.net",	3478},
 {"stun.e-fon.ch",	3478},
+{"stun.easyvoip.com",	3478},
 {"stun.ekiga.net",	3478},
+{"stun.freecall.com",	3478},
 {"stun.freeswitch.org",	3478},
+{"stun.freevoipdeal.com",	3478},
+{"stun.gmx.de",	3478},
 {"stun.gmx.net",	3478},
+{"stun.hoiio.com",	3478},
 {"stun.ideasip.com",	3478},
 {"stun.internetcalls.com",	3478},
+{"stun.ipcomms.net",	3478},
+{"stun.ippi.fr",	3478},
 {"stun.ipshka.com",	3478},
 {"stun.iptel.org",	3478},
+{"stun.justvoip.com",	3478},
+{"stun.kiwilink.co.nz",	3478},
 {"stun.l.google.com",	19302},
+{"stun.lowratevoip.com",	3478},
+{"stun.netappel.com",	3478},
+{"stun.netappel.fr",	3478},
 {"stun.noc.ams-ix.net",	3478},
+{"stun.nonoh.net",	3478},
+{"stun.ozekiphone.com",	3478},
 {"stun.phoneserve.com",	3478},
+{"stun.poivy.com",	3478},
+{"stun.powervoip.com",	3478},
 {"stun.rixtelecom.se",	3478},
 {"stun.schlund.de",	3478},
+{"stun.services.mozilla.com",	3478},
 {"stun.sigmavoip.com",	3478},
+{"stun.sip.us",	3478},
 {"stun.sipdiscount.com",	3478},
 {"stun.sipgate.net",	10000},
 {"stun.sipgate.net",	3478},
+{"stun.siplogin.de",	3478},
+{"stun.sipnet.net",	3478},
 {"stun.sipnet.ru",	3478},
+{"stun.sippeer.dk",	3478},
+{"stun.smartvoip.com",	3478},
 {"stun.softjoys.com",	3478},
+{"stun.sonetel.com",	3478},
+{"stun.sonetel.net",	3478},
+{"stun.spokn.com",	3478},
 {"stun.stunprotocol.org",	3478},
 {"stun.t-online.de",	3478},
 {"stun.telbo.com",	3478},
 {"stun.voip.aebc.com",	3478},
+{"stun.voip.blackberry.com",	3478},
+{"stun.voip.eutelia.it",	3478},
 {"stun.voiparound.com",	3478},
 {"stun.voipbuster.com",	3478},
+{"stun.voipbusterpro.com",	3478},
+{"stun.voipcheap.co.uk",	3478},
 {"stun.voipcheap.com",	3478},
 {"stun.voipgate.com",	3478},
 {"stun.voipplanet.nl",	3478},
 {"stun.voipraider.com",	3478},
 {"stun.voipstunt.com",	3478},
+{"stun.voipwise.com",	3478},
 {"stun.voxgratia.org",	3478},
 {"stun.zadarma.com",	3478},
+{"stun.zoiper.com",	3478},
+{"stun1.faktortel.com.au",	3478},
 {"stun1.l.google.com",	19302},
 {"stun1.voiceeclipse.net",	3478},
 {"stun2.l.google.com",	19302},
 {"stun3.l.google.com",	19302},
 {"stun4.l.google.com",	19302},
-{"stunserver.org",	3478}
+{"stunserver.org",	3478},
 };
+
 
 /* wrapper to send an STUN message */
 static int stun_send(int s, struct sockaddr_in *dst, struct stun_header *resp)
@@ -115,10 +158,10 @@ static int stun_send(int s, struct sockaddr_in *dst, struct stun_header *resp)
 }
 
 /* helper function to generate a random request id */
-static uint32_t randfiller;
+static uint64_t randfiller;
 static void stun_req_id(struct stun_header *req)
 {
-  const uint32_t *S_block = (const uint32_t *)StunSrvList;
+  const uint64_t *S_block = (const uint64_t *)StunSrvList;
   req->id.id[0] |= 0x55555555;
   req->id.id[1] &= 0x55555555;
   req->id.id[2] |= 0x55555555;
@@ -126,9 +169,9 @@ static void stun_req_id(struct stun_header *req)
   register char x = 20;
   do {
     uint32_t s_elm = S_block[(uint8_t)randfiller];
-    randfiller ^= (randfiller << 1) | (randfiller >> 31);
+    randfiller ^= (randfiller << 5) | (randfiller >> (64 - 5));
     randfiller += s_elm ^ x;
-    req->id.id[x & 3] ^= randfiller + (randfiller >> 1);
+    req->id.id[x & 3] ^= randfiller + (randfiller >> 13);
   } while(--x);
 }
 
@@ -299,7 +342,7 @@ static int StunRequest(const char *host, uint16_t port, struct sockaddr_in *mapp
 // Output: populate struct struct mapped
 // Retval:
 
-int GetExternalIPbySTUN(uint32_t rnd, struct sockaddr_in *mapped) {
+int GetExternalIPbySTUN(uint64_t rnd, struct sockaddr_in *mapped, const char **srv) {
   randfiller    = rnd;
   uint16_t pos  = rnd;
   uint16_t step = rnd >> 8; 
@@ -308,7 +351,7 @@ int GetExternalIPbySTUN(uint32_t rnd, struct sockaddr_in *mapped) {
   uint16_t attempt;
   for(attempt = 1; attempt < StunSrvListQty * 2; attempt++) {
     pos = (pos + step) % StunSrvListQty;
-    int rc = StunRequest(StunSrvList[pos].name, StunSrvList[pos].port, mapped);
+    int rc = StunRequest(*srv = StunSrvList[pos].name, StunSrvList[pos].port, mapped);
     if(rc >= 0)
       return attempt;
     // fprintf(stderr, "Lookup: %s:%u\t%s\t%d\n", StunSrvList[pos].name, 
