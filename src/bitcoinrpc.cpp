@@ -1297,6 +1297,172 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
     return ListReceived(params, true);
 }
 
+Value gettxlistfor(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 3 || params.size() > 5)
+        throw runtime_error(
+                "gettxlistfor <from block> <to block> <address> [type=0] [verbose=0]\n"
+                "[type]: 0 - sent/recieved, 1 - recieved, 2 - sent\n"
+                "[verbose]: 0 - false, 1 - true\n"
+                );
+
+    int nFromHeight = params[0].get_int();
+    int nToHeight   = params[1].get_int();
+    if (nFromHeight < 0 || nFromHeight > nToHeight || nToHeight > nBestHeight)
+        throw runtime_error("<from block> must be less than or equal <to block> AND must be inside blockchain height\n");
+
+    CBitcoinAddress searchAddress(params[2].get_str());
+    if (!searchAddress.IsValid())
+        throw runtime_error("<address> is not valid emercoin address\n");
+
+    int type = 0;
+    if (params.size() > 3)
+    {
+        type = params[3].get_int();
+        if (type < 0 || type > 2)
+            throw runtime_error("[type] must be between 0 and 2");
+    }
+
+    bool verbose = false;
+    if (params.size() > 4)
+    {
+        verbose = params[4].get_int();
+        if (verbose < 0 || verbose > 1)
+            throw runtime_error("[verbose] must be 0 or 1");
+    }
+
+    CBlockIndex* pblockindex = mapBlockIndex[hashBestChain];
+
+    while (pblockindex->pprev && pblockindex->nHeight > nFromHeight)
+    {
+        pblockindex = pblockindex->pprev;
+    }
+
+    CTxDB txdb("r");
+    Array res;
+    while (pblockindex->nHeight <= nToHeight)
+    {
+        CBlock block;
+        block.ReadFromDisk(pblockindex, true);
+
+        map<uint256, CTransaction> mapFoundTx;
+
+        // recieved by searchAddress
+        Array recieved;
+        BOOST_FOREACH (const CTransaction& tx, block.vtx)
+        {
+            bool found = false;
+            int64 nValueOut = 0;
+            Array vouts;
+            int voutNumber = 0;
+
+            BOOST_FOREACH(const CTxOut& txout, tx.vout)
+            {
+                txnouttype type;
+                vector<CTxDestination> addresses;
+                int nRequired;
+                if (!ExtractDestinations(txout.scriptPubKey, type, addresses, nRequired))
+                    continue;
+
+                BOOST_FOREACH(const CTxDestination& addr, addresses) // 1 txout can contain more than 1 address
+                    if (CBitcoinAddress(addr).ToString() == CBitcoinAddress(searchAddress).ToString())
+                    {
+                        mapFoundTx[tx.GetHash()] = tx;
+                        found = true;
+                        nValueOut += txout.nValue;
+                        vouts.push_back(voutNumber);
+                        break;
+                    }
+                voutNumber++;
+            }
+
+            if (found && (type == 0 || type == 1))
+            {
+                // get senders info
+                // TODO: check wich one has spent it
+                Array prev_owners;
+                if (verbose)
+                {
+                    set<string> sPrewOwners;
+                    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+                    {
+                        CTransaction prev;
+                        if(!txdb.ReadDiskTx(txin.prevout.hash, prev))
+                            continue;
+
+                        txnouttype type;
+                        vector<CTxDestination> addresses;
+                        int nRequired;
+                        if (!ExtractDestinations(prev.vout[txin.prevout.n].scriptPubKey, type, addresses, nRequired))
+                            continue;
+
+                        BOOST_FOREACH(const CTxDestination& addr, addresses) // 1 txout can contain more than 1 address
+                            sPrewOwners.insert(CBitcoinAddress(addr).ToString());
+                    }
+
+                    BOOST_FOREACH(string addr, sPrewOwners)
+                        prev_owners.push_back(addr);
+                }
+
+                Object txinfo;
+                txinfo.push_back(Pair("txid", tx.GetHash().ToString()));
+                if (verbose)
+                {
+                    txinfo.push_back(Pair("vout", vouts));
+                    txinfo.push_back(Pair("prev_owners", prev_owners));
+                    txinfo.push_back(Pair("amount", ValueFromAmount(nValueOut)));
+                }
+                txinfo.push_back(Pair("date", DateTimeStrFormat(tx.nTime)));
+                recieved.push_back(txinfo);
+            }
+        }
+
+        // sent by searchAddress
+        Array sent;
+        BOOST_FOREACH (const CTransaction& tx, block.vtx)
+        {
+            bool found = false;
+
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            {
+                if (!mapFoundTx.count(txin.prevout.hash))
+                    continue;
+                found = true;
+
+                //CTransaction prevTx = mapFoundTx[txin.prevout.hash];
+                //int64 nValueIn = prevTx.vout[txin.prevout.n].nValue;
+            }
+
+            if (found && (type == 0 || type == 2))
+            {
+                Object txinfo;
+                txinfo.push_back(Pair("txid", tx.GetHash().ToString()));
+                //txinfo.push_back(Pair("reciever", vouts));
+                //txinfo.push_back(Pair("amount", ValueFromAmount(nValueOut)));
+                txinfo.push_back(Pair("date", DateTimeStrFormat(tx.nTime)));
+                sent.push_back(txinfo);
+            }
+        }
+
+        if (!recieved.empty() || !sent.empty())
+        {
+            Object blockinfo;
+            blockinfo.push_back(Pair("height", (pblockindex->nHeight == std::numeric_limits<int>::max() ? 0 : pblockindex->nHeight)));
+            if (type == 0 || type == 1)
+                blockinfo.push_back(Pair("recieved", recieved));
+            if (type == 0 || type == 2)
+                blockinfo.push_back(Pair("sent", sent));
+            res.push_back(blockinfo);
+        }
+
+        if (pblockindex->nHeight >= nToHeight) // we do not wish to move past last block, as it might not exist
+            break;
+        pblockindex = pblockindex->pnext;
+    }
+
+    return res;
+}
+
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64 nGeneratedImmature, nGeneratedMature, nFee;
@@ -2485,6 +2651,7 @@ static const CRPCCommand vRPCCommands[] =
     { "signrawtransaction",     &signrawtransaction,     false},
     { "sendrawtransaction",     &sendrawtransaction,     false},
     { "decoderawtransaction",   &decoderawtransaction,   false},
+    { "gettxlistfor",           &gettxlistfor,           false},
 };
 
 CRPCTable::CRPCTable()
@@ -3102,11 +3269,11 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
             throw runtime_error("type mismatch");
         params[1] = v.get_obj();
     }
-    if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
-    if (strMethod == "reservebalance"          && n > 0) ConvertTo<bool>(params[0]);
-    if (strMethod == "reservebalance"          && n > 1) ConvertTo<double>(params[1]);
-    if (strMethod == "addmultisigaddress"      && n > 0) ConvertTo<boost::int64_t>(params[0]);
-    if (strMethod == "addmultisigaddress"      && n > 1)
+    if (strMethod == "sendmany"               && n > 2) ConvertTo<boost::int64_t>(params[2]);
+    if (strMethod == "reservebalance"         && n > 0) ConvertTo<bool>(params[0]);
+    if (strMethod == "reservebalance"         && n > 1) ConvertTo<double>(params[1]);
+    if (strMethod == "addmultisigaddress"     && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "addmultisigaddress"     && n > 1)
     {
         string s = params[1].get_str();
         Value v;
@@ -3122,6 +3289,11 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "createrawtransaction"   && n > 1) ConvertTo<Object>(params[1]);
     if (strMethod == "signrawtransaction"     && n > 1) ConvertTo<Array>(params[1], true);
     if (strMethod == "signrawtransaction"     && n > 2) ConvertTo<Array>(params[2], true);
+
+    if (strMethod == "gettxlistfor"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "gettxlistfor"           && n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "gettxlistfor"           && n > 3) ConvertTo<boost::int64_t>(params[3]);
+    if (strMethod == "gettxlistfor"           && n > 4) ConvertTo<boost::int64_t>(params[4]);
 
     return params;
 }
