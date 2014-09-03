@@ -1,4 +1,4 @@
-EmerCoin 0.2.3 BETA
+EmerCoin 0.2.4 BETA
 
 Copyright (c) 2013-2014 EmerCoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
