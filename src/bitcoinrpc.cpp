@@ -1463,6 +1463,59 @@ Value gettxlistfor(const Array& params, bool fHelp)
     return res;
 }
 
+Value deletetransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+                "deletetransaction <txid>\nNormally used when a transaction cannot be confirmed due to a double spend.\n"
+                );
+
+    if (params.size() != 1)
+        throw runtime_error("missing txid");
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+    if (!pwalletMain->mapWallet.count(hash))
+        throw runtime_error("transaction not in wallet");
+
+    if (!mempool.exists(hash))
+    {
+        CTransaction tx;
+        uint256 hashBlock = 0;
+        if (GetTransaction(hash, tx, hashBlock) && hashBlock != 0)
+            throw runtime_error("transaction is already in blockchain");
+    }
+    CWalletTx wtx = pwalletMain->mapWallet[hash];
+
+    Object result;
+    bool ret;
+
+    ret = mempool.remove(wtx);
+    result.push_back(Pair("removing tx from memory pool", ret));
+
+    ret = pwalletMain->EraseFromWallet(wtx.GetHash());
+    result.push_back(Pair("erasing tx from wallet.dat", ret));
+
+    int nMismatchSpent;
+    int64 nBalanceInQuestion;
+    pwalletMain->FixSpentCoins(nMismatchSpent, nBalanceInQuestion);
+
+    if (nMismatchSpent != 0)
+    {
+        result.push_back(Pair("mismatched spent coins", nMismatchSpent));
+        result.push_back(Pair("amount affected by repair", ValueFromAmount(nBalanceInQuestion)));
+    }
+    result.push_back(Pair("done", "true"));
+
+#ifdef QT_GUI
+    // notify GUI
+    pwalletMain->UpdatedTransaction(wtx.GetHash());
+#endif
+
+    return result;
+}
+
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64 nGeneratedImmature, nGeneratedMature, nFee;
@@ -2640,18 +2693,21 @@ static const CRPCCommand vRPCCommands[] =
     { "dumpprivkey",            &dumpprivkey,            false },
     { "importprivkey",          &importprivkey,          false },
     { "getcheckpoint",          &getcheckpoint,          true },
-    { "reservebalance",         &reservebalance,         false},
-    { "checkwallet",            &checkwallet,            false},
-    { "repairwallet",           &repairwallet,           false},
-    { "makekeypair",            &makekeypair,            false},
-    { "sendalert",              &sendalert,              false},
-    { "getrawtransaction",      &getrawtransaction,      false},
-    { "listunspent",            &listunspent,            false},
-    { "createrawtransaction",   &createrawtransaction,   false},
-    { "signrawtransaction",     &signrawtransaction,     false},
-    { "sendrawtransaction",     &sendrawtransaction,     false},
-    { "decoderawtransaction",   &decoderawtransaction,   false},
-    { "gettxlistfor",           &gettxlistfor,           false},
+    { "reservebalance",         &reservebalance,         false },
+    { "checkwallet",            &checkwallet,            false },
+    { "repairwallet",           &repairwallet,           false },
+    { "makekeypair",            &makekeypair,            false },
+    { "sendalert",              &sendalert,              false },
+    { "getrawtransaction",      &getrawtransaction,      false },
+    { "listunspent",            &listunspent,            false },
+    { "createrawtransaction",   &createrawtransaction,   false },
+    { "signrawtransaction",     &signrawtransaction,     false },
+    { "sendrawtransaction",     &sendrawtransaction,     false },
+    { "decoderawtransaction",   &decoderawtransaction,   false },
+
+    // new non-standard commands
+    { "gettxlistfor",           &gettxlistfor,           false },
+    { "deletetransaction",      &deletetransaction,      false },
 };
 
 CRPCTable::CRPCTable()
@@ -3294,6 +3350,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "gettxlistfor"           && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "gettxlistfor"           && n > 3) ConvertTo<boost::int64_t>(params[3]);
     if (strMethod == "gettxlistfor"           && n > 4) ConvertTo<boost::int64_t>(params[4]);
+
+
 
     return params;
 }
