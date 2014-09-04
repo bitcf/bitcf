@@ -52,6 +52,7 @@ public:
     virtual bool IsMine(const CTxOut& txout);
     virtual bool IsNameTx(int nVersion);
     virtual bool IsNameScript(CScript scr);
+    virtual bool deletePendingName(const CTransaction& tx);
 };
 
 vector<unsigned char> vchFromValue(const Value& value) {
@@ -2128,3 +2129,20 @@ Value name_decrypt(const Array& params, bool fHelp)
     Object result;
     return result;
 }
+
+
+bool CNamecoinHooks::deletePendingName(const CTransaction& tx)
+{
+    NameTxInfo nti;
+    if (DecodeNameTx(tx, nti, false) && mapNamePending.count(nti.vchName))
+    {
+        mapNamePending[nti.vchName].erase(tx.GetHash());
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+

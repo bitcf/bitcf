@@ -1503,6 +1503,9 @@ Value deletetransaction(const Array& params, bool fHelp)
     ret = pwalletMain->EraseFromWallet(wtx.GetHash());
     result.push_back(Pair("erasing tx from wallet.dat", ret));
 
+    ret = hooks->deletePendingName(wtx);
+    result.push_back(Pair("removing name tx (if this is name tx) from pending name operations", ret));
+
     int nMismatchSpent;
     int64 nBalanceInQuestion;
     pwalletMain->FixSpentCoins(nMismatchSpent, nBalanceInQuestion);
