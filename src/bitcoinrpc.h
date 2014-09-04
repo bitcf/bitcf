@@ -162,6 +162,9 @@ extern void EnsureWalletIsUnlocked();
 //extern json_spirit::Value validateaddress(const json_spirit::Array& params, bool fHelp);
 //extern json_spirit::Value getinfo(const json_spirit::Array& params, bool fHelp);
 
+//extern json_spirit::Value gettxlistfor(const json_spirit::Array& params, bool fHelp);
+//extern json_spirit::Value deletetransaction(const json_spirit::Array& params, bool fHelp);
+
 
 extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
 extern json_spirit::Value listunspent(const json_spirit::Array& params, bool fHelp);
