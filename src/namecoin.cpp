@@ -24,7 +24,7 @@ struct nameTempProxy
     int nTime;
     vector<unsigned char> vchName;
     int op;
-    int hash;
+    uint256 hash;
     CNameIndex ind;
 };
 static vector<nameTempProxy> vNameTemp; // used to store name tx after connectInputs and before connectBlock . TODO: remove this global var and make it local
@@ -874,10 +874,11 @@ Value name_list(const Array& params, bool fHelp)
     if (params.size() == 1)
         vchNameUniq = vchFromValue(params[0]);
 
-    map<vector<unsigned char>, NameTxInfo> scannedNames = GetNameList(vchNameUniq);
+    map<vector<unsigned char>, NameTxInfo> mapNames, mapPending;
+    GetNameList(vchNameUniq, mapNames, mapPending);
 
     Array oRes;
-    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, scannedNames)
+    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, mapNames)
     {
         Object oName;
         oName.push_back(Pair("name", stringFromVch(item.second.vchName)));
@@ -885,58 +886,85 @@ Value name_list(const Array& params, bool fHelp)
         if (item.second.fIsMine == false)
             oName.push_back(Pair("transferred", true));
         oName.push_back(Pair("address", item.second.strAddress));
-        oName.push_back(Pair("expires_in", item.second.nTimeLeft));
-        if (item.second.nTimeLeft <= 0)
-            oName.push_back(Pair("expired", 1));
+        oName.push_back(Pair("expires_in", item.second.nExpiresAt - pindexBest->nHeight));
+        if (item.second.nExpiresAt <= 0)
+            oName.push_back(Pair("expired", true));
 
         oRes.push_back(oName);
     }
     return oRes;
 }
 
-//read wallet txs and extract: name, value, rentalDays, nOut and timeLeft (and TODO: address)
-map<vector<unsigned char>, NameTxInfo> GetNameList(const vector<unsigned char> &vchNameUniq)
+// read wallet name txs and extract: name, value, rentalDays, nOut and nExpiresAt
+void GetNameList(const vector<unsigned char> &vchNameUniq, map<vector<unsigned char>, NameTxInfo> &mapNames, map<vector<unsigned char>, NameTxInfo> &mapPending)
 {
-    map<vector<unsigned char>, NameTxInfo> scannedNames;
+    CTxDB txdb("r");
+    CNameDB dbName("r");
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    // add all names from wallet tx that are in blockchain
+    map< vector<unsigned char>, int > mapHeight;
+    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
     {
-        CTxDB txdb("r");
-        CNameDB dbName("r");
-        LOCK2(cs_main, pwalletMain->cs_wallet);
+        CTransaction tx;
+        CTxIndex txindex;
+        if(!txdb.ReadDiskTx(item.second.GetHash(), tx, txindex))
+            continue;
 
-        //add all names from wallet tx
-        map< vector<unsigned char>, int > mapHeight;
-        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-        {
-            CTransaction tx;
-            CTxIndex txindex;
-            if(!txdb.ReadDiskTx(item.second.GetHash(), tx, txindex))
-                continue;
+        NameTxInfo nti;
+        if (!DecodeNameTx(tx, nti, false, true))
+            continue;
 
-            NameTxInfo nti;
-            if (!DecodeNameTx(tx, nti, false, true))
-                continue;
+        // allow only latest wallet tx with that name
+        int thisTxDepth = txindex.GetDepthInMainChain();
+        if (mapHeight.count(nti.vchName) == 1 && mapHeight[nti.vchName] < thisTxDepth)
+            continue;
 
-            // allow only latest wallet tx with that name
-            int thisTxDepth = txindex.GetDepthInMainChain();
-            if (mapHeight.count(nti.vchName) == 1 && mapHeight[nti.vchName] < thisTxDepth)
-                continue;
+        if (vchNameUniq.size() > 0 && vchNameUniq != nti.vchName)
+            continue;
 
-            if (vchNameUniq.size() > 0 && vchNameUniq != nti.vchName)
-                continue;
+        if (!GetNameValue(dbName, nti.vchName, nti.vchValue))   // get last known value
+            continue;
 
-            if (!GetNameValue(dbName, nti.vchName, nti.vchValue))   // get last known value
-                continue;
+        int nTotalLifeTime, nNameHeight;
+        if (!GetExpirationData(dbName, nti.vchName, nTotalLifeTime, nNameHeight))
+            continue;
+        nti.nExpiresAt = nTotalLifeTime + nNameHeight;
 
-            int nTotalLifeTime, nNameHeight;
-            if (!GetExpirationData(dbName, nti.vchName, nTotalLifeTime, nNameHeight))
-                continue;
-            nti.nTimeLeft = (nTotalLifeTime + nNameHeight) - pindexBest->nHeight;
-
-            scannedNames[nti.vchName] = nti;
-            mapHeight[nti.vchName] = thisTxDepth;
-        }
+        mapNames[nti.vchName] = nti;
+        mapHeight[nti.vchName] = thisTxDepth;
     }
-    return scannedNames;
+
+    // add all pending names
+    BOOST_FOREACH(PAIRTYPE(const vector<unsigned char>, set<uint256>)& item, mapNamePending)
+    {
+        if (!item.second.size())
+            continue;
+
+        // if there is a set of pending op on a single name - select last one, by nTime
+        CTransaction tx;
+        tx.nTime = 0;
+        bool found = false;
+        BOOST_FOREACH(uint256 hash, item.second)
+        {
+            if (!mempool.exists(hash))
+                continue;
+            if (mempool.mapTx[hash].nTime > tx.nTime)
+            {
+                tx = mempool.mapTx[hash];
+                found = true;
+            }
+        }
+
+        if (!found)
+            continue;
+
+        NameTxInfo nti;
+        if (!DecodeNameTx(tx, nti, false, true))
+            continue;
+
+        mapPending[nti.vchName] = nti;
+    }
 }
 
 Value name_debug(const Array& params, bool fHelp)
@@ -1678,9 +1706,8 @@ bool DecodeNameTx(const CTransaction& tx, NameTxInfo& nti, bool checkValuesCorre
     return found;
 }
 
-bool GetTxFee(const CTransaction& tx, bool fBlock, bool fMiner, int64& txFee)
+bool GetTxFee(CTxDB& txdb, const CTransaction& tx, bool fBlock, bool fMiner, int64& txFee)
 {
-    CTxDB txdb("r");
     MapPrevTx mapInputs;
     map<uint256, CTxIndex> mapUnused;
     bool fInvalid = false;
@@ -1688,6 +1715,12 @@ bool GetTxFee(const CTransaction& tx, bool fBlock, bool fMiner, int64& txFee)
         return false;
     txFee = tx.GetValueIn(mapInputs) - tx.GetValueOut();
     return true;
+}
+
+bool GetTxFee(const CTransaction& tx, bool fBlock, bool fMiner, int64& txFee)
+{
+    CTxDB txdb("r");
+    return GetTxFee(txdb, tx, fBlock, fMiner, txFee);
 }
 
 int IndexOfNameOutput(const CTransaction& tx)
@@ -1789,7 +1822,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
                 bool txFeePass = false;
                 int64 txFee;
-                if (!GetTxFee(tx, fBlock, fMiner, txFee) && fMiner)
+                if (!GetTxFee(txdb, tx, fBlock, fMiner, txFee) && fMiner)
                     return error("ConnectInputsHook() : could not read fee from database.");
 
                 for (int i = 1; i <= 10; i++)
@@ -1819,7 +1852,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
                 bool txFeePass = false;
                 int64 txFee;
-                if (!GetTxFee(tx, fBlock, fMiner, txFee) && fMiner)
+                if (!GetTxFee(txdb, tx, fBlock, fMiner, txFee) && fMiner)
                     return error("ConnectInputsHook() : could not read fee from database.");
 
                 for (int i = 1; i <= 10; i++)
@@ -1882,6 +1915,7 @@ bool ConnectInputsInner(CTxDB& txdb,
         tmp.nTime = tx.nTime;
         tmp.vchName = vchName;
         tmp.op = op;
+        tmp.hash = tx.GetHash();
         tmp.ind = txPos2;
 
         vNameTemp.push_back(tmp);
@@ -1918,6 +1952,8 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
             std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapNamePending.find(nti.vchName);
             if (mi != mapNamePending.end())
                 mi->second.erase(tx.GetHash());
+            if (mi->second.empty())
+                mapNamePending.erase(nti.vchName);
         }
         return false;
     }
@@ -2043,9 +2079,13 @@ bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         }
         {
             LOCK(cs_main);
-            std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapNamePending.find(i.vchName);
+            map<vector<unsigned char>, set<uint256> >::iterator mi = mapNamePending.find(i.vchName);
             if (mi != mapNamePending.end())
+            {
                 mi->second.erase(i.hash);
+                if (mi->second.empty())
+                    mapNamePending.erase(i.vchName);
+            }
         }
         if (!dbName.TxnCommit())
             return error("failed to write %s to name DB", stringFromVch(i.vchName).c_str());
@@ -2170,6 +2210,8 @@ bool CNamecoinHooks::deletePendingName(const CTransaction& tx)
     if (DecodeNameTx(tx, nti, false) && mapNamePending.count(nti.vchName))
     {
         mapNamePending[nti.vchName].erase(tx.GetHash());
+        if (mapNamePending[nti.vchName].empty())
+            mapNamePending.erase(nti.vchName);
         return true;
     }
     else

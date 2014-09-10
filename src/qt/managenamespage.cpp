@@ -276,7 +276,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
         else if (txType == "NAME_DELETE")
         {
             nHeight = NameTableEntry::NAME_DELETE;
-            status = CT_UPDATED; //we still want to display this name until it is delited
+            status = CT_UPDATED; //we still want to display this name until it is deleted
             res = walletModel->nameDelete(name);
         }
 

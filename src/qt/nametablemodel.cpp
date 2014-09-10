@@ -45,45 +45,53 @@ public:
 
     void refreshNameTable()
     {
+//        parent->beginRemoveRows(QModelIndex(), 0, parent->rowCount()-1);
+//        cachedNameTable.clear();
+//        parent->endRemoveRows();
+
+        parent->beginResetModel();
         cachedNameTable.clear();
 
-        map<vector<unsigned char>, NameTxInfo> scannedNames = GetNameList();
-        BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, scannedNames)
+        vector<unsigned char> vchNameUniq;
+        map<vector<unsigned char>, NameTxInfo> mapNames, mapPending;
+        GetNameList(vchNameUniq, mapNames, mapPending);
+
+        // add info about existing names
+        BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, mapNames)
         {
-            // TODO check if there is pending name ops.
-            if (mapNamePending.count(item.second.vchName) && mapNamePending[item.second.vchName].size())
+            // add pending updates|deletes to existing names
+            if (mapPending.count(item.second.vchName))
             {
-                uint256 hash = *(mapNamePending[item.second.vchName].begin());
-                if (!mempool.exists(hash))
-                    continue;
-                CTransaction tx = mempool.mapTx[hash];
-                NameTxInfo nti;
-                if(!DecodeNameTx(tx, nti, false, true))
-                    continue;
+                NameTxInfo nti = mapPending[item.second.vchName];
 
                 int nHeightStatus;
-                if (nti.op == OP_NAME_NEW)
-                    nHeightStatus = NameTableEntry::NAME_NEW;
-                else if (nti.op == OP_NAME_UPDATE)
+                if (nti.op == OP_NAME_UPDATE)
                     nHeightStatus = NameTableEntry::NAME_UPDATE;
                 else if (nti.op == OP_NAME_DELETE)
                     nHeightStatus = NameTableEntry::NAME_DELETE;
-                NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(nti.vchValue), nti.strAddress, nHeightStatus, nti.fIsMine);
+                NameTableEntry nte(stringFromVch(nti.vchName), stringFromVch(nti.vchValue), nti.strAddress, nHeightStatus, item.second.fIsMine);
                 cachedNameTable.append(nte);
             }
             else
             {
-                int nTotalLifeTime, nNameHeight;
-                if (!GetExpirationData(item.second.vchName, nTotalLifeTime, nNameHeight))
-                    continue;
+                NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, item.second.nExpiresAt, item.second.fIsMine);
+                cachedNameTable.append(nte);
+            }
+        }
 
-                NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, nTotalLifeTime + nNameHeight, item.second.fIsMine);
+        // add info about pending new names
+        BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, mapPending)
+        {
+            if (item.second.op == OP_NAME_NEW)
+            {
+                NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, NameTableEntry::NAME_NEW, item.second.fIsMine);
                 cachedNameTable.append(nte);
             }
         }
 
         // qLowerBound() and qUpperBound() require our cachedNameTable list to be sorted in asc order
         qSort(cachedNameTable.begin(), cachedNameTable.end(), NameTableEntryLessThan());
+        parent->endResetModel();
     }
 
     void updateEntry(const NameTableEntry &nameObj, int status, int *outNewRowIndex = NULL)
@@ -186,82 +194,12 @@ NameTableModel::~NameTableModel()
 
 void NameTableModel::update()
 {
-    if (nBestHeight != cachedNumBlocks)
+    // just do a complete table refresh, for simplicity sake
+    if (wallet->vCheckNewNames.size() > 0 || nBestHeight != cachedNumBlocks)
     {
-        LOCK(cs_main);
-
-        cachedNumBlocks = nBestHeight;
-        // Blocks came in since last poll.
-        // Delete expired names and update status of pending name ops.
-        for (int i = 0, n = priv->size(); i < n; i++)
-        {
-            NameTableEntry *item = priv->index(i);
-            if (!item->HeightValid())
-            {
-                string strName = item->name.toStdString();
-                vector<unsigned char> vchName(strName.begin(), strName.end());
-                if (mapNamePending.count(vchName) && mapNamePending[vchName].size())
-                    continue;
-                else
-                {
-                    if (item->nExpiresAt == NameTableEntry::NAME_DELETE)
-                    {
-                        priv->updateEntry(item->name, item->value, item->address, item->nExpiresAt, CT_DELETED);
-                        // Data array changed - restart scan
-                        n = priv->size();
-                        i = -1;
-                        continue;
-                    }
-                    else
-                    {
-                        int nTotalLifeTime, nNameHeight;
-                        if (!GetExpirationData(vchName, nTotalLifeTime, nNameHeight))
-                            continue;
-                        priv->updateEntry(item->name, item->value, item->address, nTotalLifeTime + nNameHeight, CT_UPDATED);
-                    }
-                }
-            }
-
-            if (item->nExpiresAt - pindexBest->nHeight <= 0)
-            {
-                priv->updateEntry(item->name, item->value, item->address, item->nExpiresAt, CT_DELETED);
-                // Data array changed - restart scan
-                n = priv->size();
-                i = -1;
-                continue;
-            }
-        }
-        // Invalidate expiration counter for all rows.
-        // Qt is smart enough to only actually request the data for the
-        // visible rows.
-        emit dataChanged(index(0, ExpiresIn), index(priv->size()-1, ExpiresIn));
-
-        // add new name tx, if any
-        BOOST_FOREACH(uint256 hash, wallet->vCheckNewNames)
-        {
-            CTransaction tx;
-            uint256 hashBlock = 0;
-            if (!GetTransaction(hash, tx, hashBlock))
-                continue;
-            NameTxInfo nti;
-            if (!DecodeNameTx(tx, nti, false, true))
-                continue;
-
-            int nHeightStatus;
-            if (nti.op == OP_NAME_NEW)
-                nHeightStatus = NameTableEntry::NAME_NEW;
-            else if (nti.op == OP_NAME_UPDATE)
-                nHeightStatus = NameTableEntry::NAME_UPDATE;
-            else if (nti.op == OP_NAME_UPDATE)
-                nHeightStatus = NameTableEntry::NAME_DELETE;
-
-            priv->updateEntry(QString::fromStdString(stringFromVch(nti.vchName)),
-                              QString::fromStdString(stringFromVch(nti.vchValue)),
-                              QString::fromStdString(nti.strAddress),
-                              nHeightStatus,
-                              CT_NEW);
-        }
+        priv->refreshNameTable();
         wallet->vCheckNewNames.clear();
+        cachedNumBlocks = nBestHeight;
     }
 }
 
