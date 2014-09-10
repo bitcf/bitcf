@@ -29,23 +29,8 @@ public:
 
 class CNameDB : public CDB
 {
-protected:
-    bool fHaveParent;
 public:
-    CNameDB(const char* pszMode="r+") : CDB("nameindex.dat", pszMode) {
-        fHaveParent = false;
-    }
-
-    CNameDB(const char* pszMode, CDB& parent) : CDB("nameindex.dat", pszMode) {
-        vTxn.push_back(parent.GetTxn());
-        fHaveParent = true;
-    }
-
-    ~CNameDB()
-    {
-        if (fHaveParent)
-            vTxn.erase(vTxn.begin());
-    }
+    CNameDB(const char* pszMode="r+") : CDB("nameindex.dat", pszMode) {}
 
     //bool WriteName(std::vector<unsigned char>& name, std::vector<CDiskTxPos> vtxPos)
     bool WriteName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos)

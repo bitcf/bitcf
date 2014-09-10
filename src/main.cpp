@@ -1544,6 +1544,9 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     BOOST_FOREACH(CTransaction& tx, vtx)
         SyncWithWallets(tx, this, true);
 
+    // write to nameindex.dat
+    hooks->ConnectBlock(txdb, pindex);
+
     return true;
 }
 

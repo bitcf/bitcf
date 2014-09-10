@@ -38,8 +38,8 @@ public:
     virtual bool DisconnectInputs(CTxDB& txdb,
             const CTransaction& tx,
             CBlockIndex* pindexBlock) = 0;
-    virtual bool ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex) = 0;
-    virtual bool DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex) = 0;
+    virtual bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex) = 0;
+    virtual bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex) = 0;
     virtual bool ExtractAddress(const CScript& script, std::string& address) = 0;
     virtual void AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx) = 0;
     virtual bool IsMine(const CTxOut& txout) = 0;

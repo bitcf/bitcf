@@ -17,7 +17,17 @@ using namespace json_spirit;
 template<typename T> void ConvertTo(Value& value, bool fAllowNull=false);
 
 map<vector<unsigned char>, uint256> mapMyNames;
-map<vector<unsigned char>, set<uint256> > mapNamePending;
+map<vector<unsigned char>, set<uint256> > mapNamePending; // for pending tx
+
+struct nameTempProxy
+{
+    int nTime;
+    vector<unsigned char> vchName;
+    int op;
+    int hash;
+    CNameIndex ind;
+};
+static vector<nameTempProxy> vNameTemp; // used to store name tx after connectInputs and before connectBlock . TODO: remove this global var and make it local
 
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
@@ -45,8 +55,8 @@ public:
     virtual bool DisconnectInputs(CTxDB& txdb,
             const CTransaction& tx,
             CBlockIndex* pindexBlock);
-    virtual bool ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex);
-    virtual bool DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex);
+    virtual bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex);
+    virtual bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     virtual bool ExtractAddress(const CScript& script, string& address);
     virtual void AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx);
     virtual bool IsMine(const CTxOut& txout);
@@ -201,7 +211,7 @@ bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight)
 }
 
 bool GetNameHeight(CTxDB& txdb, vector<unsigned char> vchName, int& nHeight) {
-    CNameDB dbName("cr", txdb);
+    CNameDB dbName("r");
     vector<CNameIndex> vtxPos;
     if (dbName.ExistsName(vchName))
     {
@@ -577,6 +587,7 @@ bool CNameDB::ReconstructNameIndex()
                 }
                 hooks->ConnectInputs(txdb, mapTestPool, tx, vTxPrev, vTxindex, pindex, txindex.pos, true, false);
             }
+            hooks->ConnectBlock(txdb, pindex);
             pindex = pindex->pnext;
         }
     }
@@ -1752,10 +1763,22 @@ bool ConnectInputsInner(CTxDB& txdb,
     int nRentalDays = nti.nRentalDays;
     int op = nti.op;
 
+    if (fMiner)
+    {
+        // Check that no other pending txs on this name are already in the block to be mined
+        // TODO: this should be done while accepting tx to memory pool
+        set<uint256>& setPending = mapNamePending[vchName];
+        BOOST_FOREACH(const PAIRTYPE(uint256, CTxIndex)& s, mapTestPool)
+        {
+            if (setPending.count(s.first))
+                return error("ConnectInputsHook() : will not mine %s because it clashes with %s", tx.GetHash().GetHex().c_str(), s.first.GetHex().c_str());
+        }
+    }
+
     if (GetBoolArg("-printNamecoinConnectInputs"))
         printf("name = %s, value = %s, fBlock = %d, fMiner = %d, hex = %s\n", stringFromVch(vchName).c_str(), stringFromVch(vchValue).c_str(), fBlock, fMiner, tx.GetHash().GetHex().c_str());
 
-    CNameDB dbName("cr+", txdb);
+    CNameDB dbName("r");
 
     switch (op)
     {
@@ -1787,16 +1810,6 @@ bool ConnectInputsInner(CTxDB& txdb,
             if (NameActive(dbName, vchName, pindexBlock->nHeight))
                 return error("ConnectInputsHook() : name_new on an unexpired name");
 
-            if (fMiner)
-            {
-                // Check that no other pending txs on this name are already in the block to be mined
-                set<uint256>& setPending = mapNamePending[vchName];
-                BOOST_FOREACH(const PAIRTYPE(uint256, CTxIndex)& s, mapTestPool)
-                {
-                    if (setPending.count(s.first))
-                        return error("ConnectInputsHook() : will not mine %s because it clashes with %s", tx.GetHash().GetHex().c_str(), s.first.GetHex().c_str());
-                }
-            }
             break;
         }
         case OP_NAME_UPDATE:
@@ -1850,51 +1863,28 @@ bool ConnectInputsInner(CTxDB& txdb,
             return error("ConnectInputsHook() : name transaction has unknown op");
     }
 
+    vector<CNameIndex> vtxPos;
+    if (dbName.ExistsName(vchName) && !dbName.ReadName(vchName, vtxPos))
+        return error("ConnectInputsHook() : failed to read from name DB");
+
+    if ((op == OP_NAME_UPDATE || op == OP_NAME_DELETE) && !CheckNameTxPos(vtxPos, vTxindex[nInput].pos))
+        return error("ConnectInputsHook() : tx %s rejected, since previous tx (%s) is not in the name DB\n", tx.GetHash().ToString().c_str(), vTxPrev[nInput].GetHash().ToString().c_str());
+
+    // all checks passed - record tx information to vNameTemp. It will be sorted by nTime and writen to nameindex.dat at the end of ConnectBlock
+    if (fBlock)
     {
-        //most checks have now passed - try to write changes to NameDB
-        vector<CNameIndex> vtxPos;
-        if (dbName.ExistsName(vchName))
-        {
-            if (!dbName.ReadName(vchName, vtxPos))
-                return error("ConnectInputsHook() : failed to read from name DB");
-        }
+        CNameIndex txPos2;
+        txPos2.nHeight = pindexBlock->nHeight;
+        txPos2.vValue = vchValue;
+        txPos2.txPos = txPos;
 
-        if (op == OP_NAME_UPDATE || op == OP_NAME_DELETE)
-        {
-            if (!CheckNameTxPos(vtxPos, vTxindex[nInput].pos))
-                return error("ConnectInputsHook() : tx %s rejected, since previous tx (%s) is not in the name DB\n", tx.GetHash().ToString().c_str(), vTxPrev[nInput].GetHash().ToString().c_str());
-        }
+        nameTempProxy tmp;
+        tmp.nTime = tx.nTime;
+        tmp.vchName = vchName;
+        tmp.op = op;
+        tmp.ind = txPos2;
 
-        if (fBlock)
-        {
-            dbName.TxnBegin();
-            if (op == OP_NAME_NEW || op == OP_NAME_DELETE)
-            {//try to delete previous chain of new->update->update->... from nameindex.dat
-                if (!dbName.EraseName(vchName))
-                    return error("ConnectInputsHook() : failed to write to name DB");
-                vtxPos.clear();
-            }
-            if (op == OP_NAME_NEW || op == OP_NAME_UPDATE)
-            {
-                CNameIndex txPos2;
-                txPos2.nHeight = pindexBlock->nHeight;
-                txPos2.vValue = vchValue;
-                txPos2.txPos = txPos;
-                vtxPos.push_back(txPos2); // fin add
-                if (!dbName.WriteName(vchName, vtxPos))
-                    return error("ConnectInputsHook() : failed to write to name DB");
-                printf("connectInputs(): writing %s to nameindex.dat\n", stringFromVch(vchName).c_str());
-            }
-
-            {
-                LOCK(cs_main);
-                std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapNamePending.find(vchName);
-                if (mi != mapNamePending.end())
-                    mi->second.erase(tx.GetHash());
-            }
-            if (!dbName.TxnCommit())
-                return error("failed to write %s to name DB", stringFromVch(vchName).c_str());
-        }
+        vNameTemp.push_back(tmp);
     }
     return true;
 }
@@ -1948,7 +1938,7 @@ bool CNamecoinHooks::DisconnectInputs(CTxDB& txdb,
         return error("DisconnectInputsHook() : could not decode namecoin tx");
     if (nti.op == OP_NAME_NEW || nti.op == OP_NAME_UPDATE)
     {
-        CNameDB dbName("cr+", txdb);
+        CNameDB dbName("cr+");
 
         dbName.TxnBegin();
 
@@ -2017,12 +2007,55 @@ bool CNamecoinHooks::ExtractAddress(const CScript& script, string& address)
     return true;
 }
 
-bool CNamecoinHooks::ConnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
+bool mycompare (const nameTempProxy &lhs, const nameTempProxy &rhs)
 {
+    return lhs.nTime < rhs.nTime;
+}
+// called at end of connecting block
+bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
+{
+    // sort by nTime
+    std::sort(vNameTemp.begin(), vNameTemp.end(), mycompare);
+
+    CNameDB dbName("cr+");
+
+    // All of these changes should succed. If there is an error - nameindex.dat is probably corrupt.
+    BOOST_FOREACH(const nameTempProxy &i, vNameTemp)
+    {
+        vector<CNameIndex> vtxPos;
+        if (dbName.ExistsName(i.vchName) && !dbName.ReadName(i.vchName, vtxPos))
+            return error("ConnectInputsHook() : failed to read from name DB");
+
+        // try to write changes to NameDB
+        dbName.TxnBegin();
+        if (i.op == OP_NAME_NEW || i.op == OP_NAME_DELETE)
+        {//try to delete previous chain of new->update->update->... from nameindex.dat
+            if (!dbName.EraseName(i.vchName))
+                return error("ConnectInputsHook() : failed to write to name DB");
+            vtxPos.clear();
+        }
+        if (i.op == OP_NAME_NEW || i.op == OP_NAME_UPDATE)
+        {
+            vtxPos.push_back(i.ind); // fin add
+            if (!dbName.WriteName(i.vchName, vtxPos))
+                return error("ConnectInputsHook() : failed to write to name DB");
+            printf("connectInputs(): writing %s to nameindex.dat\n", stringFromVch(i.vchName).c_str());
+        }
+        {
+            LOCK(cs_main);
+            std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapNamePending.find(i.vchName);
+            if (mi != mapNamePending.end())
+                mi->second.erase(i.hash);
+        }
+        if (!dbName.TxnCommit())
+            return error("failed to write %s to name DB", stringFromVch(i.vchName).c_str());
+    }
+    vNameTemp.clear();
+
     return true;
 }
 
-bool CNamecoinHooks::DisconnectBlock(CBlock& block, CTxDB& txdb, CBlockIndex* pindex)
+bool CNamecoinHooks::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 {
     return true;
 }
