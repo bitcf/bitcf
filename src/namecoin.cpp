@@ -898,32 +898,25 @@ Value name_list(const Array& params, bool fHelp)
 // read wallet name txs and extract: name, value, rentalDays, nOut and nExpiresAt
 void GetNameList(const vector<unsigned char> &vchNameUniq, map<vector<unsigned char>, NameTxInfo> &mapNames, map<vector<unsigned char>, NameTxInfo> &mapPending)
 {
-    CTxDB txdb("r");
     CNameDB dbName("r");
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     // add all names from wallet tx that are in blockchain
-    map< vector<unsigned char>, int > mapHeight;
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
     {
+        NameTxInfo ntiWalllet;
+        if (!DecodeNameTx(item.second, ntiWalllet, false, false))
+            continue;
+
         CTransaction tx;
-        CTxIndex txindex;
-        if(!txdb.ReadDiskTx(item.second.GetHash(), tx, txindex))
+        if (!GetLastTxOfName(dbName, ntiWalllet.vchName, tx))
             continue;
 
         NameTxInfo nti;
         if (!DecodeNameTx(tx, nti, false, true))
             continue;
 
-        // allow only latest wallet tx with that name
-        int thisTxDepth = txindex.GetDepthInMainChain();
-        if (mapHeight.count(nti.vchName) == 1 && mapHeight[nti.vchName] < thisTxDepth)
-            continue;
-
         if (vchNameUniq.size() > 0 && vchNameUniq != nti.vchName)
-            continue;
-
-        if (!GetNameValue(dbName, nti.vchName, nti.vchValue))   // get last known value
             continue;
 
         int nTotalLifeTime, nNameHeight;
@@ -932,7 +925,6 @@ void GetNameList(const vector<unsigned char> &vchNameUniq, map<vector<unsigned c
         nti.nExpiresAt = nTotalLifeTime + nNameHeight;
 
         mapNames[nti.vchName] = nti;
-        mapHeight[nti.vchName] = thisTxDepth;
     }
 
     // add all pending names
@@ -961,6 +953,9 @@ void GetNameList(const vector<unsigned char> &vchNameUniq, map<vector<unsigned c
 
         NameTxInfo nti;
         if (!DecodeNameTx(tx, nti, false, true))
+            continue;
+
+        if (vchNameUniq.size() > 0 && vchNameUniq != nti.vchName)
             continue;
 
         mapPending[nti.vchName] = nti;
