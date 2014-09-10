@@ -45,10 +45,6 @@ public:
 
     void refreshNameTable()
     {
-//        parent->beginRemoveRows(QModelIndex(), 0, parent->rowCount()-1);
-//        cachedNameTable.clear();
-//        parent->endRemoveRows();
-
         parent->beginResetModel();
         cachedNameTable.clear();
 
@@ -246,7 +242,8 @@ QVariant NameTableModel::data(const QModelIndex &index, int role) const
             }
             else
             {
-                return rec->nExpiresAt - pindexBest->nHeight;
+                float days = (rec->nExpiresAt - pindexBest->nHeight) / 144.0;  // 144 = 24 * 60 / 10 - number of blocks per day on average
+                return days < 0 ? QString("%1 hours").arg(days * 24, 0, 'f', 1) : QString("%1 days").arg(days, 0, 'f', 1);
             }
         }
         break;
