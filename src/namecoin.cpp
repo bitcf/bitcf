@@ -1817,7 +1817,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
                 bool txFeePass = false;
                 int64 txFee;
-                if (!GetTxFee(txdb, tx, fBlock, fMiner, txFee) && fMiner)
+                if (!GetTxFee(txdb, tx, fBlock, fMiner, txFee))
                     return error("ConnectInputsHook() : could not read fee from database.");
 
                 for (int i = 1; i <= 10; i++)
@@ -1847,7 +1847,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
                 bool txFeePass = false;
                 int64 txFee;
-                if (!GetTxFee(txdb, tx, fBlock, fMiner, txFee) && fMiner)
+                if (!GetTxFee(txdb, tx, fBlock, fMiner, txFee))
                     return error("ConnectInputsHook() : could not read fee from database.");
 
                 for (int i = 1; i <= 10; i++)
