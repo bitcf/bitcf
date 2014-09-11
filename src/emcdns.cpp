@@ -39,6 +39,7 @@
 #define MAX_TOK  64
 #define VAL_SIZE (22 * 1024)
 #define DNS_PREFIX "dns"
+#define REDEF_SYM  '~'
 /*---------------------------------------------------*/
 
 struct DNSHeader {
@@ -310,11 +311,12 @@ uint16_t EmcDns::HandleQuery() {
 int EmcDns::Tokenize(const char *key, const char *sep2, char **tokens, char *buf) {
   int tokensN = 0;
 
+  // Figure out main separator. If not defined, use |
   char mainsep[2];
-  if(isalpha(*buf))
-    mainsep[0] = '|';
-  else
+  if(*buf == '~') {
+    buf++;
     mainsep[0] = *buf++;
+  } else
   mainsep[1] = 0;
 
   for(char *token = strtok(buf, mainsep);
@@ -335,6 +337,15 @@ int EmcDns::Tokenize(const char *key, const char *sep2, char **tokens, char *buf
       if(sep2 == NULL || *sep2 == 0) {
 	tokens[tokensN++] = val;
 	break;
+      }
+     
+      // if needed. redefine sep2
+      char sepulka[2];
+      if(*val == '~') {
+	  *val++;
+	  sepulka[0] = *val++;
+	  sepulka[1] = 0;
+	  sep2 = sepulka;
       }
       // Tokenize value
       for(token = strtok(val, sep2); 
@@ -456,7 +467,7 @@ void EmcDns::Fill_RD_DName(char *txt, uint8_t mxsz, int8_t txtcor) {
 
 int EmcDns::Search(uint8_t *key) {
   // strcpy(m_value, "TXT=This is text|MX=127.0.0.1:3333,127.0.0.2|CNAME=emc.cc.st|PTR=olegh.cc.st,avalon.cc.st|A=192.168.0.120,127.0.0.1|AAAA=2607:f8b0:4004:806::1001|NS=ns1.google.com|TTL=4001");
-  strcpy(m_value, "/TXT=This is text/MX=yandex.ru:33,mx.lenta.ru:66/CNAME=emc.cc.st/PTR=olegh.cc.st,avalon.cc.st/A=192.168.0.120,127.0.0.1/AAAA=2607:f8b0:4004:806::1001/NS=ns1.google.com/TTL=4001");
+  strcpy(m_value, "~/TXT=~*This is text, Hello*2nd text/MX=yandex.ru:33,mx.lenta.ru:66/CNAME=emc.cc.st/PTR=olegh.cc.st,avalon.cc.st/A=192.168.0.120,127.0.0.1/AAAA=2607:f8b0:4004:806::1001/NS=ns1.google.com/TTL=4001");
   return 1;
 } //  EmcDns::Search
 
