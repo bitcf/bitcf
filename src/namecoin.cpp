@@ -2045,6 +2045,9 @@ bool mycompare (const nameTempProxy &lhs, const nameTempProxy &rhs)
 // called at end of connecting block
 bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 {
+    if (vNameTemp.empty())
+        return true;
+
     // sort by nTime
     std::sort(vNameTemp.begin(), vNameTemp.end(), mycompare);
 

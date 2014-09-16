@@ -34,7 +34,7 @@ static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 static const int64 MIN_TX_FEE = CENT;
-static const int64 MIN_RELAY_TX_FEE = CENT;
+static const int64 MIN_RELAY_TX_FEE = 2 * SUBCENT;
 static const int64 MAX_MONEY = 1000000000 * COIN;
 static const int64 MAX_MINT_PROOF_OF_WORK = 5020 * COIN;
 static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
@@ -623,6 +623,28 @@ public:
                 if (txout.nValue < CENT)
                     nMinFee = nBaseFee;
         }
+
+        // Raise the price as the block approaches full
+        if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
+        {
+            if (nNewBlockSize >= MAX_BLOCK_SIZE_GEN)
+                return MAX_MONEY;
+            nMinFee *= MAX_BLOCK_SIZE_GEN / (MAX_BLOCK_SIZE_GEN - nNewBlockSize);
+        }
+
+        if (!MoneyRange(nMinFee))
+            nMinFee = MAX_MONEY;
+        return nMinFee;
+    }
+
+    int64 GetMinFee2(unsigned int nBlockSize=1) const
+    {
+        // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
+        int64 nBaseFee = SUBCENT;
+
+        unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
+        unsigned int nNewBlockSize = nBlockSize + nBytes;
+        int64 nMinFee = (1 + (int64)nBytes / (10 * 1024)) * nBaseFee; // 1 subcent per 10 kb of data
 
         // Raise the price as the block approaches full
         if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
