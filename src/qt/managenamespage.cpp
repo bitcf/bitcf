@@ -95,9 +95,6 @@ ManageNamesPage::ManageNamesPage(QWidget *parent) :
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    // Connect signal for QComboBox wich select tx type
-    connect(ui->txTypeSelector, SIGNAL(currentIndexChanged(QString)), this, SLOT(onTxTypeChanged(QString)));
-
     // Reset gui sizes and visibility (for name new)
     ui->registerAddress->setDisabled(true);
 
@@ -354,29 +351,6 @@ void ManageNamesPage::onCopyAddressAction()
     GUIUtil::copyEntryData(ui->tableView, NameTableModel::Address);
 }
 
-void ManageNamesPage::onTxTypeChanged(const QString &txType)
-{
-    if (txType == "NAME_NEW")
-    {
-        ui->registerDays->setEnabled(true);
-        ui->registerAddress->setDisabled(true);
-        ui->registerValue->setEnabled(true);
-    }
-    else if (txType == "NAME_UPDATE")
-    {
-        ui->registerDays->setEnabled(true);
-        ui->registerAddress->setEnabled(true);
-        ui->registerValue->setEnabled(true);
-    }
-    else if (txType == "NAME_DELETE")
-    {
-        ui->registerDays->setDisabled(true);
-        ui->registerAddress->setDisabled(true);
-        ui->registerValue->setDisabled(true);
-    }
-    return;
-}
-
 void ManageNamesPage::exportClicked()
 {
     // CSV is currently the only supported format
@@ -401,4 +375,45 @@ void ManageNamesPage::exportClicked()
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
                               QMessageBox::Abort, QMessageBox::Abort);
     }
+}
+
+void ManageNamesPage::on_txTypeSelector_currentIndexChanged(const QString &txType)
+{
+    if (txType == "NAME_NEW")
+    {
+        ui->registerDays->setEnabled(true);
+        ui->registerAddress->setDisabled(true);
+        ui->registerValue->setEnabled(true);
+    }
+    else if (txType == "NAME_UPDATE")
+    {
+        ui->registerDays->setEnabled(true);
+        ui->registerAddress->setEnabled(true);
+        ui->registerValue->setEnabled(true);
+    }
+    else if (txType == "NAME_DELETE")
+    {
+        ui->registerDays->setDisabled(true);
+        ui->registerAddress->setDisabled(true);
+        ui->registerValue->setDisabled(true);
+    }
+    return;
+}
+
+void ManageNamesPage::on_cbMyNames_stateChanged(int arg1)
+{
+    if (ui->cbMyNames->checkState() == Qt::Unchecked)
+        model->fMyNames = false;
+    else if (ui->cbMyNames->checkState() == Qt::Checked)
+        model->fMyNames = true;
+    model->update(true);
+}
+
+void ManageNamesPage::on_cbOtherNames_stateChanged(int arg1)
+{
+    if (ui->cbOtherNames->checkState() == Qt::Unchecked)
+        model->fOtherNames = false;
+    else if (ui->cbOtherNames->checkState() == Qt::Checked)
+        model->fOtherNames = true;
+    model->update(true);
 }

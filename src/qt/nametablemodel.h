@@ -22,6 +22,9 @@ public:
     explicit NameTableModel(CWallet *wallet, WalletModel *parent = 0);
     ~NameTableModel();
 
+    bool fMyNames;
+    bool fOtherNames;
+
     enum ColumnIndex {
         Name = 0,
         Value = 1,
@@ -51,7 +54,7 @@ private:
 
 public slots:
     void updateEntry(const QString &name, const QString &value, const QString &address, int nHeight, int status, int *outNewRowIndex = NULL);
-    void update();
+    void update(bool forced = false);
 
     friend class NameTablePriv;
 };

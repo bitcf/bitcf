@@ -43,7 +43,7 @@ public:
     NameTablePriv(CWallet *wallet, NameTableModel *parent):
         wallet(wallet), parent(parent) {}
 
-    void refreshNameTable()
+    void refreshNameTable(bool fMyNames, bool fOtherNames)
     {
         parent->beginResetModel();
         cachedNameTable.clear();
@@ -55,6 +55,11 @@ public:
         // add info about existing names
         BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, mapNames)
         {
+            if (item.second.fIsMine && !fMyNames)     // name is mine      and  user have asked to hide my names
+                continue;
+            if (!item.second.fIsMine && !fOtherNames) // name is not mine  and  user have asked to hide other names
+                continue;
+
             // add pending updates|deletes to existing names
             if (mapPending.count(item.second.vchName))
             {
@@ -78,6 +83,11 @@ public:
         // add info about pending new names
         BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, mapPending)
         {
+            if (item.second.fIsMine && !fMyNames)     // name is mine      and  user have asked to hide my names
+                continue;
+            if (!item.second.fIsMine && !fOtherNames) // name is not mine  and  user have asked to hide other names
+                continue;
+
             if (item.second.op == OP_NAME_NEW)
             {
                 NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, NameTableEntry::NAME_NEW, item.second.fIsMine);
@@ -176,7 +186,10 @@ NameTableModel::NameTableModel(CWallet *wallet, WalletModel *parent) :
 {
     columns << tr("Name") << tr("Value") << tr("Address") << tr("Expires in");
     priv = new NameTablePriv(wallet, this);
-    priv->refreshNameTable();
+
+    fMyNames = true;
+    fOtherNames = false;
+    priv->refreshNameTable(fMyNames, fOtherNames);
 
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -188,12 +201,12 @@ NameTableModel::~NameTableModel()
     delete priv;
 }
 
-void NameTableModel::update()
+void NameTableModel::update(bool forced)
 {
     // just do a complete table refresh, for simplicity sake
-    if (wallet->vCheckNewNames.size() > 0 || nBestHeight != cachedNumBlocks)
+    if (wallet->vCheckNewNames.size() > 0 || nBestHeight != cachedNumBlocks || forced)
     {
-        priv->refreshNameTable();
+        priv->refreshNameTable(fMyNames, fOtherNames);
         wallet->vCheckNewNames.clear();
         cachedNumBlocks = nBestHeight;
     }

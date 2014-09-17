@@ -756,12 +756,8 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
             ret.strAddress = "";
         ret.strAddress = CBitcoinAddress(address).ToString();
 
-        // check if this is mine
-        CScript scriptSig;
-        txnouttype whichType;
-        if (!Solver(*pwalletMain, scriptPubKey, 0, 0, scriptSig, whichType))
-            ret.fIsMine = false;
-        else ret.fIsMine = true;
+        // check if this is mine destination
+        ret.fIsMine = IsMine(*pwalletMain, address);
     }
 
     return true;
