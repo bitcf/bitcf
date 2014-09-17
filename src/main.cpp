@@ -4033,13 +4033,20 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
+    // Compute timeout for pos as sqrt(numUTXO)
+    std::vector<COutput> vCoins;
+    pwalletMain->AvailableCoins(vCoins, false);
+    unsigned int pos_timio = 500 + 20 * sqrt(vCoins.size());
+    printf("Set proof-of-stake timeout: %ums for %u UTXOs\n", pos_timio, vCoins.size());
+    vCoins.clear();
+
     while (fGenerateBitcoins || fProofOfStake)
     {
         if (fShutdown)
             return;
         while (vNodes.empty() || IsInitialBlockDownload())
         {
-            Sleep(1000);
+            Sleep(5000);
             if (fShutdown)
                 return;
             if ((!fGenerateBitcoins) && !fProofOfStake)
@@ -4049,7 +4056,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         while (pwallet->IsLocked())
         {
             strMintWarning = strMintMessage;
-            Sleep(1000);
+            Sleep(5000);
         }
         strMintWarning = "";
 
@@ -4081,7 +4088,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
                 CheckWork(pblock.get(), *pwalletMain, reservekey);
                 SetThreadPriority(THREAD_PRIORITY_LOWEST);
             }
-            Sleep(500);
+            Sleep(pos_timio);
             continue;
         }
 
@@ -4195,7 +4202,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             if (pblock->GetBlockTime() >= (int64)pblock->vtx[0].nTime + nMaxClockDrift)
                 break;  // need to update coinbase timestamp
         }
-    }
+    } // main while
 }
 
 void static ThreadBitcoinMiner(void* parg)

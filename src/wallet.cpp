@@ -1273,9 +1273,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         return false;
     int64 nCredit = 0;
     CScript scriptPubKeyKernel;
+    CTxDB txdb("r"); // maxihatop moved out of loop
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        CTxDB txdb("r");
         CTxIndex txindex;
         if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
             continue;
