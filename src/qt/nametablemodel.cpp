@@ -43,7 +43,7 @@ public:
     NameTablePriv(CWallet *wallet, NameTableModel *parent):
         wallet(wallet), parent(parent) {}
 
-    void refreshNameTable(bool fMyNames, bool fOtherNames)
+    void refreshNameTable(bool fMyNames, bool fOtherNames, bool fExpired)
     {
         parent->beginResetModel();
         cachedNameTable.clear();
@@ -55,18 +55,22 @@ public:
         // add info about existing names
         BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, mapNames)
         {
-            if (item.second.fIsMine && !fMyNames)     // name is mine      and  user have asked to hide my names
+             // name is mine and user asked to hide my names
+            if (item.second.fIsMine && !fMyNames)
                 continue;
-            if (!item.second.fIsMine && !fOtherNames) // name is not mine  and  user have asked to hide other names
+            // name is _not_ mine and user asked to hide other names
+            if (!item.second.fIsMine && !fOtherNames)
                 continue;
 
-            // add pending updates|deletes to existing names
+            // add pending updates|deletes to existing names or name_new to expired names
             if (mapPending.count(item.second.vchName))
             {
                 NameTxInfo nti = mapPending[item.second.vchName];
 
                 int nHeightStatus;
-                if (nti.op == OP_NAME_UPDATE)
+                if (nti.op == OP_NAME_NEW)
+                    nHeightStatus = NameTableEntry::NAME_NEW;
+                else if (nti.op == OP_NAME_UPDATE)
                     nHeightStatus = NameTableEntry::NAME_UPDATE;
                 else if (nti.op == OP_NAME_DELETE)
                     nHeightStatus = NameTableEntry::NAME_DELETE;
@@ -75,12 +79,15 @@ public:
             }
             else
             {
+                // name have expired and users asked to hide expired names
+                if (item.second.nExpiresAt - pindexBest->nHeight <= 0 && !fExpired)
+                    continue;
                 NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, item.second.nExpiresAt, item.second.fIsMine);
                 cachedNameTable.append(nte);
             }
         }
 
-        // add info about pending new names
+        // add pending new names that did not previously exist
         BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, NameTxInfo)& item, mapPending)
         {
             if (item.second.fIsMine && !fMyNames)     // name is mine      and  user have asked to hide my names
@@ -88,7 +95,7 @@ public:
             if (!item.second.fIsMine && !fOtherNames) // name is not mine  and  user have asked to hide other names
                 continue;
 
-            if (item.second.op == OP_NAME_NEW)
+            if (mapNames.count(item.second.vchName) == 0 && item.second.op == OP_NAME_NEW)
             {
                 NameTableEntry nte(stringFromVch(item.second.vchName), stringFromVch(item.second.vchValue), item.second.strAddress, NameTableEntry::NAME_NEW, item.second.fIsMine);
                 cachedNameTable.append(nte);
@@ -189,7 +196,8 @@ NameTableModel::NameTableModel(CWallet *wallet, WalletModel *parent) :
 
     fMyNames = true;
     fOtherNames = false;
-    priv->refreshNameTable(fMyNames, fOtherNames);
+    fExpired = false;
+    priv->refreshNameTable(fMyNames, fOtherNames, fExpired);
 
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -206,7 +214,7 @@ void NameTableModel::update(bool forced)
     // just do a complete table refresh, for simplicity sake
     if (wallet->vCheckNewNames.size() > 0 || nBestHeight != cachedNumBlocks || forced)
     {
-        priv->refreshNameTable(fMyNames, fOtherNames);
+        priv->refreshNameTable(fMyNames, fOtherNames, fExpired);
         wallet->vCheckNewNames.clear();
         cachedNumBlocks = nBestHeight;
     }
@@ -268,8 +276,10 @@ QVariant NameTableModel::data(const QModelIndex &index, int role) const
         return font;
     }
     case Qt::BackgroundRole:
-        if (!rec->fIsMine)
-            return QVariant(QColor(Qt::red));
+        if (index.column() == ExpiresIn && rec->nExpiresAt - pindexBest->nHeight <= 0)
+            return QVariant(QColor(Qt::yellow));
+        else if (index.column() != ExpiresIn && !rec->fIsMine)
+            return QVariant(QColor(255,70,70));
         break;
     }
 

@@ -463,13 +463,8 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, C
         return strError;
     }
 
-#ifdef GUI
-    if (fAskFee && !uiInterface.ThreadSafeAskFee(nFeeRequired))
-        return "ABORTED";
-#else
     if (fAskFee && !ThreadSafeAskFee(nFeeRequired, "Emercoin"))
         return "ABORTED";
-#endif
 
     if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
         return _("SendMoneyWithInputTx(): The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
@@ -484,22 +479,15 @@ bool GetNameValue(CNameDB& dbName, const vector<unsigned char>& vchName, vector<
     if (!dbName.ReadName(vchName, vtxPos) || vtxPos.empty())
         return false;
 
-//    printf("GetNameValue() : vchName = %s -> (", stringFromVch(vchName).c_str());
-//    BOOST_FOREACH(CNameIndex& itx, vtxPos)
-//    {
-//        printf("%s, ", stringFromVch(itx.vValue).c_str());
-//    }
-//    printf("), front = %s\n", stringFromVch(vtxPos.front().vValue).c_str());
-
     vchValue = vtxPos.back().vValue;
     return true;
 }
 
+// scans nameindex.dat and return names with their last CNameIndex
 bool CNameDB::ScanNames(
         const vector<unsigned char>& vchName,
         int nMax,
         vector<pair<vector<unsigned char>, CNameIndex> >& nameScan)
-        //vector<pair<vector<unsigned char>, CDiskTxPos> >& nameScan)
 {
     Dbc* pcursor = GetCursor();
     if (!pcursor)
@@ -1039,7 +1027,7 @@ Value name_show(const Array& params, bool fHelp)
         oName.push_back(Pair("expires_in", nHeight + nTotalLifeTime - pindexBest->nHeight));
         if(nHeight + nTotalLifeTime - pindexBest->nHeight <= 0)
         {
-            oName.push_back(Pair("expired", 1));
+            oName.push_back(Pair("expired", true));
         }
         oLastName = oName;
     }
@@ -1185,12 +1173,10 @@ Value name_scan(const Array& params, bool fHelp)
     CNameDB dbName("r");
     Array oRes;
 
-    //vector<pair<vector<unsigned char>, CDiskTxPos> > nameScan;
     vector<pair<vector<unsigned char>, CNameIndex> > nameScan;
     if (!dbName.ScanNames(vchName, nMax, nameScan))
         throw JSONRPCError(RPC_WALLET_ERROR, "scan failed");
 
-    //pair<vector<unsigned char>, CDiskTxPos> pairScan;
     pair<vector<unsigned char>, CNameIndex> pairScan;
     BOOST_FOREACH(pairScan, nameScan)
     {

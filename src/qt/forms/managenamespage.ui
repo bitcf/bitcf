@@ -243,6 +243,13 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QCheckBox" name="cbExpired">
+       <property name="text">
+        <string>expired</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

@@ -417,3 +417,12 @@ void ManageNamesPage::on_cbOtherNames_stateChanged(int arg1)
         model->fOtherNames = true;
     model->update(true);
 }
+
+void ManageNamesPage::on_cbExpired_stateChanged(int arg1)
+{
+    if (ui->cbExpired->checkState() == Qt::Unchecked)
+        model->fExpired = false;
+    else if (ui->cbExpired->checkState() == Qt::Checked)
+        model->fExpired = true;
+    model->update(true);
+}

@@ -24,6 +24,7 @@ public:
 
     bool fMyNames;
     bool fOtherNames;
+    bool fExpired;
 
     enum ColumnIndex {
         Name = 0,
