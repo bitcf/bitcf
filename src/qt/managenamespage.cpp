@@ -17,6 +17,7 @@
 #include <QMessageBox>
 #include <QMenu>
 #include <QScrollBar>
+#include <QFileDialog>
 
 //
 // NameFilterProxyModel
@@ -109,7 +110,6 @@ ManageNamesPage::ManageNamesPage(QWidget *parent) :
     ui->addressFilter->installEventFilter(this);
 
     ui->registerName->setMaxLength(MAX_NAME_LENGTH);
-    ui->registerValue->setMaxLength(MAX_VALUE_LENGTH);
 
     ui->nameFilter->setMaxLength(MAX_NAME_LENGTH);
     ui->valueFilter->setMaxLength(GUI_MAX_VALUE_LENGTH);
@@ -207,7 +207,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
         return;
 
     QString name = ui->registerName->text();
-    QString value = ui->registerValue->text();
+    QString value = ui->registerValue->toPlainText();
     int days = ui->registerDays->text().toInt();
     QString txType = ui->txTypeSelector->currentText();
     QString newAddress = ui->registerAddress->text();
@@ -280,7 +280,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
         if (res.ok)
         {
             ui->registerName->setText("");
-            ui->registerValue->setText("");
+            ui->registerValue->setPlainText("");
             ui->submitNameButton->setDefault(true);
 
             int newRowIndex;
@@ -425,4 +425,32 @@ void ManageNamesPage::on_cbExpired_stateChanged(int arg1)
     else if (ui->cbExpired->checkState() == Qt::Checked)
         model->fExpired = true;
     model->update(true);
+}
+
+void ManageNamesPage::on_importValueButton_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Import File"), QDir::homePath(), tr("Files (*.*)"));
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) return;
+    QByteArray blob = file.readAll();
+
+    if (blob.size() > MAX_VALUE_LENGTH)
+    {
+        QMessageBox::critical(this, tr("Value too large!"), tr("Value is larger than maximum size: %1 bytes > %2 bytes").arg(blob.size()).arg(MAX_VALUE_LENGTH));
+        return;
+    }
+
+    vector<unsigned char> vchBlob;
+    vchBlob.reserve(blob.size());
+    for (int i = 0; i < blob.size(); ++i)
+        vchBlob.push_back(blob.at(i));
+
+    ui->registerValue->setPlainText(QString::fromStdString(stringFromVch(vchBlob)));
+}
+
+void ManageNamesPage::on_registerValue_textChanged()
+{
+    float size = ui->registerValue->toPlainText().length();
+    ui->labelValue->setText(tr("value(%1%)").arg(int(100 * size / MAX_VALUE_LENGTH)));
 }
