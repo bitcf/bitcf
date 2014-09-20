@@ -187,7 +187,7 @@ extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, b
 extern json_spirit::Value name_new(const json_spirit::Array& params, bool fHelp); // in namecoin.cpp
 extern json_spirit::Value name_update(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_delete(const json_spirit::Array& params, bool fHelp);
-//extern json_spirit::Value sendtoname(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendtoname(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_list(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_scan(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_filter(const json_spirit::Array& params, bool fHelp);

@@ -752,24 +752,12 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
 }
 
 //returns first name operation. I.e. name_new from chain like name_new->name_update->name_update->...->name_update
-//note: if name expire then such chain is deleted and new chain is started when new name_new is issued. So, only a single name_new can associated with a name at any given moment.
 bool GetFirstTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTransaction& tx)
 {
     vector<CNameIndex> vtxPos;
     if (!dbName.ReadName(vchName, vtxPos) || vtxPos.empty())
         return false;
     CNameIndex& txPos = vtxPos.front();
-    int nHeight = txPos.nHeight;
-
-    int nTotalLifeTime;
-    if (!GetNameTotalLifeTime(vchName, nTotalLifeTime))
-        return false;
-
-    if (nHeight + nTotalLifeTime < pindexBest->nHeight)
-    {
-        printf("GetFirstTxOfName(%s) : expired", stringFromVch(vchName).c_str());
-        return false;
-    }
 
     if (!tx.ReadFromDisk(txPos.txPos))
         return error("GetFirstTxOfName() : could not read tx from disk");
@@ -789,49 +777,56 @@ bool GetLastTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTra
 }
 
 
-//Value sendtoname(const Array& params, bool fHelp)
-//{
-//    if (fHelp || params.size() < 2 || params.size() > 4)
-//        throw runtime_error(
-//            "sendtoname <namecoinname> <amount> [comment] [comment-to]\n"
-//            "<amount> is a real and is rounded to the nearest 0.01"
-//            + HelpRequiringPassphrase());
+Value sendtoname(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 4)
+        throw runtime_error(
+            "sendtoname <name> <amount> [comment] [comment-to]\n"
+            "<amount> is a real and is rounded to the nearest 0.01"
+            + HelpRequiringPassphrase());
 
-//    vector<unsigned char> vchName = vchFromValue(params[0]);
-//    CNameDB dbName("r");
-//    if (!dbName.ExistsName(vchName))
-//        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Name not found");
+    vector<unsigned char> vchName = vchFromValue(params[0]);
+    CNameDB dbName("r");
+    if (!dbName.ExistsName(vchName))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Name not found");
 
-//    string strAddress;
-//    CTransaction tx;
-//    GetFirstTxOfName(dbName, vchName, tx);
-//    GetNameAddress(tx, strAddress);
+    CTransaction tx;
+    NameTxInfo nti;
+    if (!(GetLastTxOfName(dbName, vchName, tx) && DecodeNameTx(tx, nti, false, true)))
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read/decode last name transaction");
 
-//    uint160 hash160;
-//    if (!AddressToHash160(strAddress, hash160))
-//        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No valid namecoin address");
+    CBitcoinAddress address(nti.strAddress);
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Name contains invalid address"); // this error should never happen, and if it does - this probably means that client blockchain database is corrupted
 
-//    // Amount
-//    int64 nAmount = AmountFromValue(params[1]);
+    // Amount
+    int64 nAmount = AmountFromValue(params[1]);
 
-//    // Wallet comments
-//    CWalletTx wtx;
-//    if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
-//        wtx.mapValue["comment"] = params[2].get_str();
-//    if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
-//        wtx.mapValue["to"]      = params[3].get_str();
+    if (!NameActive(dbName, vchName))
+    {
+        stringstream ss;
+        ss << "This name have expired. If you still wish to send money to it's last owner you can use this command:\n"
+           << "sendtoaddress " << address.ToString() << " " << nAmount;
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, ss.str());
+    }
 
-//    {
-//        LOCK(cs_main);
-//        EnsureWalletIsUnlocked();
+    // Wallet comments
+    CWalletTx wtx;
+    if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
+        wtx.mapValue["comment"] = params[2].get_str();
+    if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
+        wtx.mapValue["to"]      = params[3].get_str();
 
-//        string strError = pwalletMain->SendMoneyToBitcoinAddress(strAddress, nAmount, wtx);
-//        if (strError != "")
-//            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-//    }
 
-//    return wtx.GetHash().GetHex();
-//}
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);;
+    if (strError != "")
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+    Object res;
+    res.push_back(Pair("sending to", address.ToString()));
+    res.push_back(Pair("transaction", wtx.GetHash().GetHex()));
+    return res;
+}
 
 bool CNamecoinHooks::IsMine(const CTxOut& txout)
 {
