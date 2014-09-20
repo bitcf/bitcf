@@ -1,5 +1,6 @@
 #include "db.h"
 #include "bitcoinrpc.h"
+#include "base58.h"
 
 class CNameIndex
 {
@@ -77,13 +78,10 @@ extern std::map<std::vector<unsigned char>, std::set<uint256> > mapNamePending;
 
 int IndexOfNameOutput(const CTransaction& tx);
 
-bool GetNameOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
-bool GetValueOfNameTx(const CTransaction& tx, std::vector<unsigned char>& value);
-bool GetRentalDaysOfNameTx(const CTransaction& tx, int &nRentalDays);
+bool GetNameCurrentAddress(const std::vector<unsigned char> &vchName, CBitcoinAddress &address, std::string &error);
 bool GetNameTotalLifeTime(const std::vector<unsigned char> &vchName, int &nTotalLifeTime);
 bool GetExpirationData(const std::vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight);
 bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight);
-bool GetNameTxAddress(const CTransaction& tx, std::string& strAddress);
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 bool GetNameHeight(CNameDB& dbName, std::vector<unsigned char> vchName, int& nHeight);
 std::vector<unsigned char> vchFromString(const std::string &str);

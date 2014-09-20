@@ -3,7 +3,6 @@ using namespace std;
 
 #include "script.h"
 #include "wallet.h"
-#include "base58.h"
 extern CWallet* pwalletMain;
 extern std::map<uint256, CTransaction> mapTransactions;
 
@@ -786,29 +785,7 @@ Value sendtoname(const Array& params, bool fHelp)
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
-    CNameDB dbName("r");
-    if (!dbName.ExistsName(vchName))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Name not found");
-
-    CTransaction tx;
-    NameTxInfo nti;
-    if (!(GetLastTxOfName(dbName, vchName, tx) && DecodeNameTx(tx, nti, false, true)))
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read/decode last name transaction");
-
-    CBitcoinAddress address(nti.strAddress);
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_DATABASE_ERROR, "Name contains invalid address"); // this error should never happen, and if it does - this probably means that client blockchain database is corrupted
-
-    // Amount
     int64 nAmount = AmountFromValue(params[1]);
-
-    if (!NameActive(dbName, vchName))
-    {
-        stringstream ss;
-        ss << "This name have expired. If you still wish to send money to it's last owner you can use this command:\n"
-           << "sendtoaddress " << address.ToString() << " " << nAmount;
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, ss.str());
-    }
 
     // Wallet comments
     CWalletTx wtx;
@@ -816,6 +793,11 @@ Value sendtoname(const Array& params, bool fHelp)
         wtx.mapValue["comment"] = params[2].get_str();
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["to"]      = params[3].get_str();
+
+    string error;
+    CBitcoinAddress address;
+    if (!GetNameCurrentAddress(vchName, address, error))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
 
 
     string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);;
@@ -826,6 +808,42 @@ Value sendtoname(const Array& params, bool fHelp)
     res.push_back(Pair("sending to", address.ToString()));
     res.push_back(Pair("transaction", wtx.GetHash().GetHex()));
     return res;
+}
+
+bool GetNameCurrentAddress(const vector<unsigned char> &vchName, CBitcoinAddress &address, string &error)
+{
+    CNameDB dbName("r");
+    if (!dbName.ExistsName(vchName))
+    {
+        error = "Name not found";
+        return false;
+    }
+
+    CTransaction tx;
+    NameTxInfo nti;
+    if (!(GetLastTxOfName(dbName, vchName, tx) && DecodeNameTx(tx, nti, false, true)))
+    {
+        error = "Failed to read/decode last name transaction";
+        return false;
+    }
+
+    address.SetString(nti.strAddress);
+    if (!address.IsValid())
+    {
+        error = "Name contains invalid address"; // this error should never happen, and if it does - this probably means that client blockchain database is corrupted
+        return false;
+    }
+
+    if (!NameActive(dbName, vchName))
+    {
+        stringstream ss;
+        ss << "This name have expired. If you still wish to send money to it's last owner you can use this command:\n"
+           << "sendtoaddress " << address.ToString() << " <your_amount> ";
+        error = ss.str();
+        return false;
+    }
+
+    return true;
 }
 
 bool CNamecoinHooks::IsMine(const CTxOut& txout)
@@ -1192,7 +1210,6 @@ Value name_scan(const Array& params, bool fHelp)
         if ((nHeight + nTotalLifeTime - pindexBest->nHeight <= 0)
             || txPos.IsNull()
             || !tx.ReadFromDisk(txPos))
-            //|| !GetValueOfNameTx(tx, vchValue))
         {
             oName.push_back(Pair("expired", 1));
         }

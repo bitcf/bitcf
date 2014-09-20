@@ -234,7 +234,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
     if (name != name.simplified() || name.contains(" "))
     {
         if (QMessageBox::Yes != QMessageBox::warning(this, tr("Name registration warning"),
-              tr("The name you entered contains whitespace characters. It is probably invalid. Are you sure you want to use this name?"),
+              tr("The name you entered contains whitespace characters. Are you sure you want to use this name?"),
               QMessageBox::Yes | QMessageBox::Cancel,
               QMessageBox::Cancel))
         {
