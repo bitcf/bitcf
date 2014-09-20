@@ -81,17 +81,20 @@ ManageNamesPage::ManageNamesPage(QWidget *parent) :
     QAction *copyNameAction = new QAction(tr("Copy &Name"), this);
     QAction *copyValueAction = new QAction(tr("Copy &Value"), this);
     QAction *copyAddressAction = new QAction(tr("Copy &Address"), this);
+    QAction *copyAllAction = new QAction(tr("Copy all to edit boxes"), this);
 
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyNameAction);
     contextMenu->addAction(copyValueAction);
     contextMenu->addAction(copyAddressAction);
+    contextMenu->addAction(copyAllAction);
 
     // Connect signals for context menu actions
     connect(copyNameAction, SIGNAL(triggered()), this, SLOT(onCopyNameAction()));
     connect(copyValueAction, SIGNAL(triggered()), this, SLOT(onCopyValueAction()));
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(onCopyAddressAction()));
+    connect(copyAllAction, SIGNAL(triggered()), this, SLOT(onCopyAllAction()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -349,6 +352,26 @@ void ManageNamesPage::onCopyValueAction()
 void ManageNamesPage::onCopyAddressAction()
 {
     GUIUtil::copyEntryData(ui->tableView, NameTableModel::Address);
+}
+
+void ManageNamesPage::onCopyAllAction()
+{
+    if(!ui->tableView || !ui->tableView->selectionModel())
+        return;
+
+    QModelIndexList selection;
+
+    selection = ui->tableView->selectionModel()->selectedRows(NameTableModel::Name);
+    if(!selection.isEmpty())
+        ui->registerName->setText(selection.at(0).data(Qt::EditRole).toString());
+
+    selection = ui->tableView->selectionModel()->selectedRows(NameTableModel::Value);
+    if(!selection.isEmpty())
+        ui->registerValue->setPlainText(selection.at(0).data(Qt::EditRole).toString());
+
+    selection = ui->tableView->selectionModel()->selectedRows(NameTableModel::Address);
+    if(!selection.isEmpty())
+        ui->registerAddress->setText(selection.at(0).data(Qt::EditRole).toString());
 }
 
 void ManageNamesPage::exportClicked()
