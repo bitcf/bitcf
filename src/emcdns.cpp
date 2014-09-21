@@ -62,7 +62,7 @@ struct DNSHeader {
     for(uint16_t *p = &msgID; p <= &ARCount; *p++)
       *p = ntohs(*p);
   }
-}; // struct DNSHeader 
+} __attribute__((packed)); // struct DNSHeader
 
 class EmcDns {
   public:
@@ -215,11 +215,13 @@ void EmcDns::HandlePacket() {
   printf("NSCount: %d\n", m_hdr->NSCount);
   printf("ARCount: %d\n", m_hdr->ARCount);
 
-  // Assert following 3 counters iand bits are zero
-  uint16_t zCount = m_hdr->ANCount | m_hdr->NSCount | m_hdr->ARCount | (m_hdr->Bits & (m_hdr->QR_MASK | m_hdr->TC_MASK));
+  // Assert following 3 counters and bits are zero
+//*  uint16_t zCount = m_hdr->ANCount | m_hdr->NSCount | m_hdr->ARCount | (m_hdr->Bits & (m_hdr->QR_MASK | m_hdr->TC_MASK));
+  uint16_t zCount = m_hdr->ANCount | m_hdr->NSCount | (m_hdr->Bits & (m_hdr->QR_MASK | m_hdr->TC_MASK));
 
   // Clear answer counters - maybe contains junk from client
-  m_hdr->ANCount = m_hdr->NSCount = m_hdr->ARCount = 0;
+  //* m_hdr->ANCount = m_hdr->NSCount = m_hdr->ARCount = 0;
+  m_hdr->ARCount = m_hdr->ANCount = m_hdr->NSCount = m_hdr->ARCount = 0;
   m_hdr->Bits   |= m_hdr->QR_MASK; // Change Q->R
 
   do {
@@ -245,6 +247,18 @@ void EmcDns::HandlePacket() {
       }
     }
   } while(false);
+
+  // Remove AR-section from request, if exist
+  int ar_len = m_rcvend - m_rcv;
+
+  if(ar_len < 0) {
+      m_hdr->Bits |= 1; // Format error, RCV pointer is over
+  }
+
+  if(ar_len > 0) {
+    memmove(m_rcv, m_rcvend, m_snd - m_rcvend);
+    m_snd -= ar_len;
+  }
 
   // Truncate answer, if needed
   if(m_snd >= m_bufend) {
@@ -317,6 +331,7 @@ int EmcDns::Tokenize(const char *key, const char *sep2, char **tokens, char *buf
     buf++;
     mainsep[0] = *buf++;
   } else
+     mainsep[0] = '|';
   mainsep[1] = 0;
 
   for(char *token = strtok(buf, mainsep);
@@ -487,3 +502,4 @@ int main(int argc, char **argv) {
 }
 
 /*---------------------------------------------------*/
+
