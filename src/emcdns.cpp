@@ -159,8 +159,10 @@ int EmcDns::Reset(uint16_t port_no) {
     m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2);
     m_buf    = (uint8_t *)(m_value + VAL_SIZE); 
     m_bufend = m_buf + MAX_OUT;
-    if(m_value == NULL)
-      return -1; // no memory for buffers
+    if(m_value == NULL) {
+      close(m_sockfd);
+      return -5; // no memory for buffers
+    }
   } // if(port_no != 0)
   
   return m_port = port_no;
