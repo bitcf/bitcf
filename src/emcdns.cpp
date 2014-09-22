@@ -300,6 +300,11 @@ uint16_t EmcDns::HandleQuery() {
   if(qclass != 1)
     return 4; // Not implemented - support INET only
 
+  // ToLower search key
+  for(p = key + sizeof(DNS_PREFIX); *p; p++)
+      if(*p >= 'A' && *p <= 'Z')
+	  *p |= 040; // tolower
+
   if(Search(key) <= 0) // Result saved into m_value
       return 3; // empty answer, not found, return NXDOMAIN
 
@@ -483,6 +488,7 @@ void EmcDns::Fill_RD_DName(char *txt, uint8_t mxsz, int8_t txtcor) {
 /*---------------------------------------------------*/
 
 int EmcDns::Search(uint8_t *key) {
+    printf("Called: EmcDns::Search(%s)\n", key);
   // strcpy(m_value, "TXT=This is text|MX=127.0.0.1:3333,127.0.0.2|CNAME=emc.cc.st|PTR=olegh.cc.st,avalon.cc.st|A=192.168.0.120,127.0.0.1|AAAA=2607:f8b0:4004:806::1001|NS=ns1.google.com|TTL=4001");
   strcpy(m_value, "~/TXT=~*This is text, Hello*2nd text/MX=yandex.ru:33,mx.lenta.ru:66/CNAME=emc.cc.st/PTR=olegh.cc.st,avalon.cc.st/A=192.168.0.120,127.0.0.1/AAAA=2607:f8b0:4004:806::1001/NS=ns1.google.com/TTL=4001");
   return 1;
