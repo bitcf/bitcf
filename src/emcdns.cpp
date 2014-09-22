@@ -108,9 +108,7 @@ class EmcDns {
 
 EmcDns::EmcDns() {
   m_port = 0;
-  m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2);
-  m_buf    = (uint8_t *)(m_value + VAL_SIZE); 
-  m_bufend = m_buf + MAX_OUT;
+  m_value = NULL;
   printf("EmcDns created\n");
 } // EmcDns::EmcDns
 
@@ -118,7 +116,6 @@ EmcDns::EmcDns() {
 
 EmcDns::~EmcDns() {
   Reset(0);
-  free(m_value);
   printf("EmcDns destroyed\n");
 } // EmcDns::~EmcDns
 
@@ -132,13 +129,11 @@ int EmcDns::Reset(uint16_t port_no) {
     close(m_sockfd);
     pthread_join(m_thread, NULL);
     printf("join OK\n");
+    free(m_value);
     m_port = 0;
   }
 
   if(port_no != 0) { 
-    // Set object to a new state
-    if(m_value == NULL)
-      return -1; // no memory for buffers
     // Create socket
     m_sockfd = socket(PF_INET, SOCK_DGRAM, 0);
     if(m_sockfd < 0) {
@@ -160,7 +155,12 @@ int EmcDns::Reset(uint16_t port_no) {
       close(m_sockfd);
       return -4; // cannot create inner thread
     }
-
+    // Set object to a new state
+    m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2);
+    m_buf    = (uint8_t *)(m_value + VAL_SIZE); 
+    m_bufend = m_buf + MAX_OUT;
+    if(m_value == NULL)
+      return -1; // no memory for buffers
   } // if(port_no != 0)
   
   return m_port = port_no;
