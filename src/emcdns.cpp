@@ -108,9 +108,7 @@ class EmcDns {
 
 EmcDns::EmcDns() {
   m_port = 0;
-  m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2);
-  m_buf    = (uint8_t *)(m_value + VAL_SIZE); 
-  m_bufend = m_buf + MAX_OUT;
+  m_value = NULL;
   printf("EmcDns created\n");
 } // EmcDns::EmcDns
 
@@ -118,7 +116,6 @@ EmcDns::EmcDns() {
 
 EmcDns::~EmcDns() {
   Reset(0);
-  free(m_value);
   printf("EmcDns destroyed\n");
 } // EmcDns::~EmcDns
 
@@ -132,13 +129,11 @@ int EmcDns::Reset(uint16_t port_no) {
     close(m_sockfd);
     pthread_join(m_thread, NULL);
     printf("join OK\n");
+    free(m_value);
     m_port = 0;
   }
 
   if(port_no != 0) { 
-    // Set object to a new state
-    if(m_value == NULL)
-      return -1; // no memory for buffers
     // Create socket
     m_sockfd = socket(PF_INET, SOCK_DGRAM, 0);
     if(m_sockfd < 0) {
@@ -160,7 +155,14 @@ int EmcDns::Reset(uint16_t port_no) {
       close(m_sockfd);
       return -4; // cannot create inner thread
     }
-
+    // Set object to a new state
+    m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2);
+    m_buf    = (uint8_t *)(m_value + VAL_SIZE); 
+    m_bufend = m_buf + MAX_OUT;
+    if(m_value == NULL) {
+      close(m_sockfd);
+      return -5; // no memory for buffers
+    }
   } // if(port_no != 0)
   
   return m_port = port_no;
@@ -297,6 +299,11 @@ uint16_t EmcDns::HandleQuery() {
 
   if(qclass != 1)
     return 4; // Not implemented - support INET only
+
+  // ToLower search key
+  for(p = key + sizeof(DNS_PREFIX); *p; p++)
+      if(*p >= 'A' && *p <= 'Z')
+	  *p |= 040; // tolower
 
   if(Search(key) <= 0) // Result saved into m_value
       return 3; // empty answer, not found, return NXDOMAIN
@@ -481,6 +488,7 @@ void EmcDns::Fill_RD_DName(char *txt, uint8_t mxsz, int8_t txtcor) {
 /*---------------------------------------------------*/
 
 int EmcDns::Search(uint8_t *key) {
+    printf("Called: EmcDns::Search(%s)\n", key);
   // strcpy(m_value, "TXT=This is text|MX=127.0.0.1:3333,127.0.0.2|CNAME=emc.cc.st|PTR=olegh.cc.st,avalon.cc.st|A=192.168.0.120,127.0.0.1|AAAA=2607:f8b0:4004:806::1001|NS=ns1.google.com|TTL=4001");
   strcpy(m_value, "~/TXT=~*This is text, Hello*2nd text/MX=yandex.ru:33,mx.lenta.ru:66/CNAME=emc.cc.st/PTR=olegh.cc.st,avalon.cc.st/A=192.168.0.120,127.0.0.1/AAAA=2607:f8b0:4004:806::1001/NS=ns1.google.com/TTL=4001");
   return 1;
