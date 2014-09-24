@@ -29,6 +29,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
     setFocusProxy(ui->payTo);
 
     GUIUtil::setupAddressWidget(ui->payTo, this);
+    ui->payTo->setValidator(0);
 }
 
 SendCoinsEntry::~SendCoinsEntry()
