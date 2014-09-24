@@ -32,6 +32,7 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 
+#include "namecoin.h"
 #include "emcdns.h"
 #include "hooks.h"
 extern CHooks* hooks;
@@ -41,7 +42,7 @@ extern CHooks* hooks;
 #define BUF_SIZE (512 + 512)
 #define MAX_OUT  (512) // Old DNS restricts UDP to 512 bytes
 #define MAX_TOK  64
-#define VAL_SIZE (20 * 1024 + 16)
+#define VAL_SIZE (MAX_VALUE_LENGTH + 16)
 #define DNS_PREFIX "dns"
 #define REDEF_SYM  '~'
 /*---------------------------------------------------*/
@@ -437,12 +438,13 @@ int EmcDns::Search(uint8_t *key) {
   if (key == NULL)
     return 0;
 
+  printf("Called: EmcDns::Search(%s)\n", key);
+
   string name(reinterpret_cast<char*>(key));
   string value;
   if (!hooks->getNameValue(name, value))
     return 0;
 
-  printf("Called: EmcDns::Search(%s)\n", key);
   strcpy(m_value, value.c_str());
   //strcpy(m_value, "~/TXT=~*This is text, Hello*2nd text/MX=yandex.ru:33,mx.lenta.ru:66/CNAME=emc.cc.st/PTR=olegh.cc.st,avalon.cc.st/A=192.168.0.120,127.0.0.1/AAAA=2607:f8b0:4004:806::1001/NS=ns1.google.com/TTL=4001");
   return 1;

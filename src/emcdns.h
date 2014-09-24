@@ -2,13 +2,13 @@
 #define EMCDNS_H
 
 struct DNSHeader {
-  static const uint QR_MASK = 0x8000;
-  static const uint OPCODE_MASK = 0x7800; // shr 11
-  static const uint AA_MASK = 0x0400;
-  static const uint TC_MASK = 0x0200;
-  static const uint RD_MASK = 0x0100;
-  static const uint RA_MASK = 0x8000;
-  static const uint RCODE_MASK = 0x000F;
+  static const uint32_t QR_MASK = 0x8000;
+  static const uint32_t OPCODE_MASK = 0x7800; // shr 11
+  static const uint32_t AA_MASK = 0x0400;
+  static const uint32_t TC_MASK = 0x0200;
+  static const uint32_t RD_MASK = 0x0100;
+  static const uint32_t RA_MASK = 0x8000;
+  static const uint32_t RCODE_MASK = 0x000F;
 
   uint16_t msgID;
   uint16_t Bits;
@@ -61,3 +61,4 @@ class EmcDns {
 }; // class EmcDns
 
 #endif // EMCDNS_H
+
