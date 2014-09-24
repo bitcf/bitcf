@@ -17,6 +17,7 @@
 #include <boost/filesystem/convenience.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include "emcdns.h"
 
 #ifndef WIN32
 #include <signal.h>
@@ -26,6 +27,7 @@ using namespace std;
 using namespace boost;
 
 CWallet* pwalletMain;
+EmcDns* emcdns;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -621,6 +623,22 @@ bool AppInit2(int argc, char* argv[])
 
     if (fServer)
         CreateThread(ThreadRPCServer, NULL);
+
+    if (GetBoolArg("-emcdns", false))
+    {
+        emcdns = new EmcDns();
+        printf("DNS server started\n");
+        int port = GetArg("-emcdnsport", EMCDNS_PORT);
+        if (port < 0)
+            port = EMCDNS_PORT;
+        int rc = emcdns->Reset(port);
+        printf("dnssrv.Reset executed=%d\n", rc);
+        if (rc < 0)
+        {
+            perror("Error code");
+            printf("Error when creating dns server...");
+        }
+    }
 
 #ifdef QT_GUI
     if (GetStartOnSystemStartup())

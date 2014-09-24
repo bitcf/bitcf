@@ -165,7 +165,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/namecoin.h \
     src/qt/nametablemodel.h \
     src/qt/managenamespage.h \
-    src/hooks.h
+    src/hooks.h \
+    src/emcdns.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -227,7 +228,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/stun.cpp \
     src/namecoin.cpp \
     src/qt/nametablemodel.cpp \
-    src/qt/managenamespage.cpp
+    src/qt/managenamespage.cpp \
+    src/emcdns.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

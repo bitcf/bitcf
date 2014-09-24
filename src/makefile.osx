@@ -91,7 +91,9 @@ OBJS= \
     obj/wallet.o \
     obj/walletdb.o \
     obj/noui.o \
-    obj/stun.o
+    obj/stun.o \
+    obj/namecoin.o \
+    obj/emcdns.o
 
 ifdef USE_UPNP
 	DEFS += -DUSE_UPNP=$(USE_UPNP)

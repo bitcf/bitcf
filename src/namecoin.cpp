@@ -62,6 +62,7 @@ public:
     virtual bool IsNameTx(int nVersion);
     virtual bool IsNameScript(CScript scr);
     virtual bool deletePendingName(const CTransaction& tx);
+    virtual bool getNameValue(const string& name, string& value);
 };
 
 vector<unsigned char> vchFromValue(const Value& value) {
@@ -800,7 +801,7 @@ Value sendtoname(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
 
 
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);;
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
@@ -2103,97 +2104,98 @@ bool CNamecoinHooks::IsNameScript(CScript scr)
     return DecodeNameScript(scr, nti, false);
 }
 
-#include <boost/assign/list_of.hpp>
-using namespace boost::assign;
 
-void sha256(const uint256& input, uint256& output)
-{
-    SHA256((unsigned char*)&input, sizeof(input), (unsigned char*)&output);
-}
+//#include <boost/assign/list_of.hpp>
+//using namespace boost::assign;
 
-string stringFromCKeyingMaterial(const CKeyingMaterial &vch) {
-    string res;
-    CKeyingMaterial::const_iterator vi = vch.begin();
-    while (vi != vch.end()) {
-        res += (char)(*vi);
-        vi++;
-    }
-    return res;
-}
+//void sha256(const uint256& input, uint256& output)
+//{
+//    SHA256((unsigned char*)&input, sizeof(input), (unsigned char*)&output);
+//}
 
-Value name_encrypt(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 2 || params.size() > 3)
-        throw runtime_error(
-            "name_encrypt <msg> <sign> [to]\n"
-            "Encrypts a string and returns a hex string. Does not alter wallet or blockchain.\n"
-            "  msg: message to be signed\n"
-            "  sign: key from key->value pair that belongs to you\n"
-            "  to: [username1, username2..usernameN]\n");
+//string stringFromCKeyingMaterial(const CKeyingMaterial &vch) {
+//    string res;
+//    CKeyingMaterial::const_iterator vi = vch.begin();
+//    while (vi != vch.end()) {
+//        res += (char)(*vi);
+//        vi++;
+//    }
+//    return res;
+//}
 
-    RPCTypeCheck(params, list_of(str_type)(str_type)(array_type), true);
+//Value name_encrypt(const Array& params, bool fHelp)
+//{
+//    if (fHelp || params.size() < 2 || params.size() > 3)
+//        throw runtime_error(
+//            "name_encrypt <msg> <sign> [to]\n"
+//            "Encrypts a string and returns a hex string. Does not alter wallet or blockchain.\n"
+//            "  msg: message to be signed\n"
+//            "  sign: key from key->value pair that belongs to you\n"
+//            "  to: [username1, username2..usernameN]\n");
 
-    vector<unsigned char> msg = vchFromValue(params[0]);
-    if (msg.size() == 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "message is too short");
+//    RPCTypeCheck(params, list_of(str_type)(str_type)(array_type), true);
 
-    uint256 hash;
-    SHA256(&msg[0], msg.size(), (unsigned char*)&hash);
+//    vector<unsigned char> msg = vchFromValue(params[0]);
+//    if (msg.size() == 0)
+//        throw JSONRPCError(RPC_INVALID_PARAMETER, "message is too short");
 
-    CCrypter crypter;
+//    uint256 hash;
+//    SHA256(&msg[0], msg.size(), (unsigned char*)&hash);
 
-//set pass
-    SecureString value;
-    value = "value1";
-    string str = "aaaabbbb"; //needs to be 8 byte size
-    vector<unsigned char> salt(str.begin(), str.end());
-    bool res1 = crypter.SetKeyFromPassphrase(value, salt, 25000, 0);
+//    CCrypter crypter;
 
-//encrypt
-    str = "value1 value2 value3 value4";
-    CKeyingMaterial message(str.begin(), str.end());
-    vector<unsigned char> cipher;
-    bool res2 = crypter.Encrypt(message, cipher);
+////set pass
+//    SecureString value;
+//    value = "value1";
+//    string str = "aaaabbbb"; //needs to be 8 byte size
+//    vector<unsigned char> salt(str.begin(), str.end());
+//    bool res1 = crypter.SetKeyFromPassphrase(value, salt, 25000, 0);
 
-    //printf("cipher text = %s", stringFromVch(cipher).c_str());
+////encrypt
+//    str = "value1 value2 value3 value4";
+//    CKeyingMaterial message(str.begin(), str.end());
+//    vector<unsigned char> cipher;
+//    bool res2 = crypter.Encrypt(message, cipher);
 
-//decrypt
-    CKeyingMaterial decryptedText;
-    crypter.Decrypt(cipher, decryptedText);
+//    //printf("cipher text = %s", stringFromVch(cipher).c_str());
 
-
-    //printf("decrypted text = %s", stringFromCKeyingMaterial(decryptedText).c_str());
+////decrypt
+//    CKeyingMaterial decryptedText;
+//    crypter.Decrypt(cipher, decryptedText);
 
 
+//    //printf("decrypted text = %s", stringFromCKeyingMaterial(decryptedText).c_str());
 
 
-    Object result;
-    result.push_back(Pair("msg", stringFromVch(msg)));
-    result.push_back(Pair("hash", HexStr(BEGIN(hash), END(hash))));
-    //result.push_back(Pair("crypter cipher hex", HexStr(cipher)));
-    string t1 = EncodeBase58(cipher);
-    vector<unsigned char> decoded;; DecodeBase58(t1,decoded);
-    result.push_back(Pair("crypter cipher base58", t1));
-    result.push_back(Pair("decoded == cipher", decoded == cipher));
-    result.push_back(Pair("crypter pass", res1));
-    result.push_back(Pair("crypter encrypt", res2));
-    return result;
-}
 
 
-Value name_decrypt(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 2 || params.size() > 2)
-        throw runtime_error(
-            "name_decrypt <hexstring> [msg]\n"
-            "Decrypts a hex string and returns string. Does not alter wallet or blockchain.\n"
-            "hexstring: encrypted message\n"
-            "to: [username1, username2..usernameN]\n"
-            "sign: key from key->value pair that belongs to you.\n");
+//    Object result;
+//    result.push_back(Pair("msg", stringFromVch(msg)));
+//    result.push_back(Pair("hash", HexStr(BEGIN(hash), END(hash))));
+//    //result.push_back(Pair("crypter cipher hex", HexStr(cipher)));
+//    string t1 = EncodeBase58(cipher);
+//    vector<unsigned char> decoded;; DecodeBase58(t1,decoded);
+//    result.push_back(Pair("crypter cipher base58", t1));
+//    result.push_back(Pair("decoded == cipher", decoded == cipher));
+//    result.push_back(Pair("crypter pass", res1));
+//    result.push_back(Pair("crypter encrypt", res2));
+//    return result;
+//}
 
-    Object result;
-    return result;
-}
+
+//Value name_decrypt(const Array& params, bool fHelp)
+//{
+//    if (fHelp || params.size() < 2 || params.size() > 2)
+//        throw runtime_error(
+//            "name_decrypt <hexstring> [msg]\n"
+//            "Decrypts a hex string and returns string. Does not alter wallet or blockchain.\n"
+//            "hexstring: encrypted message\n"
+//            "to: [username1, username2..usernameN]\n"
+//            "sign: key from key->value pair that belongs to you.\n");
+
+//    Object result;
+//    return result;
+//}
 
 
 bool CNamecoinHooks::deletePendingName(const CTransaction& tx)
@@ -2212,4 +2214,22 @@ bool CNamecoinHooks::deletePendingName(const CTransaction& tx)
     }
 }
 
+bool CNamecoinHooks::getNameValue(const string& name, string& value)
+{
+    vector<unsigned char> vchName = vchFromString(name);
+    CNameDB dbName("r");
+    if (!dbName.ExistsName(vchName))
+        return false;
 
+    CTransaction tx;
+    NameTxInfo nti;
+    if (!(GetLastTxOfName(dbName, vchName, tx) && DecodeNameTx(tx, nti, false, true)))
+        return false;
+
+    if (!NameActive(dbName, vchName))
+        return false;
+
+    value = stringFromVch(nti.vchValue);
+
+    return true;
+}

@@ -32,6 +32,10 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 
+#include "emcdns.h"
+#include "hooks.h"
+extern CHooks* hooks;
+
 /*---------------------------------------------------*/
 
 #define BUF_SIZE (512 + 512)
@@ -40,70 +44,6 @@
 #define VAL_SIZE (22 * 1024)
 #define DNS_PREFIX "dns"
 #define REDEF_SYM  '~'
-/*---------------------------------------------------*/
-
-struct DNSHeader {
-  static const uint QR_MASK = 0x8000;
-  static const uint OPCODE_MASK = 0x7800; // shr 11
-  static const uint AA_MASK = 0x0400;
-  static const uint TC_MASK = 0x0200;
-  static const uint RD_MASK = 0x0100;
-  static const uint RA_MASK = 0x8000;
-  static const uint RCODE_MASK = 0x000F;
-
-  uint16_t msgID;
-  uint16_t Bits;
-  uint16_t QDCount;
-  uint16_t ANCount;
-  uint16_t NSCount;
-  uint16_t ARCount;
-
-  inline void Transcode() {
-    for(uint16_t *p = &msgID; p <= &ARCount; *p++)
-      *p = ntohs(*p);
-  }
-} __attribute__((packed)); // struct DNSHeader
-
-class EmcDns {
-  public:
-     EmcDns();
-    ~EmcDns();
-
-    int Reset(uint16_t port_no);
-
-  private:
-    static void *StatRun(void *p);
-    void Run(); 
-    void HandlePacket();
-    uint16_t HandleQuery();
-    int  Search(uint8_t *key);
-    int  Tokenize(const char *key, const char *sep2, char **tokens, char *buf);
-    void Answer_ALL(uint16_t qtype, char *buf);
-    void Fill_RD_IP(char *ipddrtxt, int af);
-    void Fill_RD_DName(char *txt, uint8_t mxsz, int8_t txtcor);
-
-    inline void Out2(uint16_t x) { memcpy(m_snd, &x, 2); m_snd += 2; }
-    inline void Out4(uint32_t x) { memcpy(m_snd, &x, 4); m_snd += 4; }
-
-    DNSHeader *m_hdr;
-    char     *m_value;
-    uint8_t  *m_buf, *m_bufend, *m_snd, *m_rcv, *m_rcvend;
-    pthread_t m_thread;
-    int       m_sockfd;
-    int       m_rcvlen;
-    uint32_t  m_ttl;
-    uint16_t  m_port;
-    uint16_t  m_label_ref;
-    struct sockaddr_in m_clientAddress;
-    struct sockaddr_in m_address;
-    socklen_t m_addrLen;
-}; // class EmcDns
-
-
-/*---------------------------------------------------*/
-
-
-
 /*---------------------------------------------------*/
 
 EmcDns::EmcDns() {
@@ -488,26 +428,19 @@ void EmcDns::Fill_RD_DName(char *txt, uint8_t mxsz, int8_t txtcor) {
 /*---------------------------------------------------*/
 
 int EmcDns::Search(uint8_t *key) {
-    printf("Called: EmcDns::Search(%s)\n", key);
-  // strcpy(m_value, "TXT=This is text|MX=127.0.0.1:3333,127.0.0.2|CNAME=emc.cc.st|PTR=olegh.cc.st,avalon.cc.st|A=192.168.0.120,127.0.0.1|AAAA=2607:f8b0:4004:806::1001|NS=ns1.google.com|TTL=4001");
-  strcpy(m_value, "~/TXT=~*This is text, Hello*2nd text/MX=yandex.ru:33,mx.lenta.ru:66/CNAME=emc.cc.st/PTR=olegh.cc.st,avalon.cc.st/A=192.168.0.120,127.0.0.1/AAAA=2607:f8b0:4004:806::1001/NS=ns1.google.com/TTL=4001");
+  if (key == NULL)
+    return 0;
+
+  string name(reinterpret_cast<char*>(key));
+  string value;
+  if (!hooks->getNameValue(name, value))
+    return 0;
+
+  printf("Called: EmcDns::Search(%s)\n", key);
+  strcpy(m_value, value.c_str());
+  //strcpy(m_value, "~/TXT=~*This is text, Hello*2nd text/MX=yandex.ru:33,mx.lenta.ru:66/CNAME=emc.cc.st/PTR=olegh.cc.st,avalon.cc.st/A=192.168.0.120,127.0.0.1/AAAA=2607:f8b0:4004:806::1001/NS=ns1.google.com/TTL=4001");
   return 1;
 } //  EmcDns::Search
-
-
-/*---------------------------------------------------*/
-
-int main(int argc, char **argv) {
-  printf("Main started\n");
-  EmcDns dnssrv;
-  int rc = dnssrv.Reset(5353);
-  printf("dnssrv.Reset executed=%d\n", rc);
-  if(rc < 0) perror("Error code");
-  sleep(200);
-  // dnssrv.Reset(0);
-  printf("Main exited\n");
-  return 0;
-}
 
 /*---------------------------------------------------*/
 

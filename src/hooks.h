@@ -46,6 +46,7 @@ public:
     virtual bool IsNameTx(int nVersion) = 0;
     virtual bool IsNameScript(CScript scr) = 0;
     virtual bool deletePendingName(const CTransaction& tx) = 0;
+    virtual bool getNameValue(const string& name, string& value) = 0;
 };
 
 extern CHooks* InitHook();
