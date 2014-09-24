@@ -41,7 +41,7 @@ extern CHooks* hooks;
 #define BUF_SIZE (512 + 512)
 #define MAX_OUT  (512) // Old DNS restricts UDP to 512 bytes
 #define MAX_TOK  64
-#define VAL_SIZE (22 * 1024)
+#define VAL_SIZE (20 * 1024 + 16)
 #define DNS_PREFIX "dns"
 #define REDEF_SYM  '~'
 /*---------------------------------------------------*/
@@ -55,14 +55,14 @@ EmcDns::EmcDns() {
 /*---------------------------------------------------*/
 
 EmcDns::~EmcDns() {
-  Reset(0);
+  Reset(0, NULL);
   printf("EmcDns destroyed\n");
 } // EmcDns::~EmcDns
 
 
 /*---------------------------------------------------*/
 
-int EmcDns::Reset(uint16_t port_no) {
+int EmcDns::Reset(uint16_t port_no, const char *gw_suffix) {
   if(m_port != 0) {
     // reset current object to initial state
     shutdown(m_sockfd, SHUT_RDWR);
@@ -96,13 +96,16 @@ int EmcDns::Reset(uint16_t port_no) {
       return -4; // cannot create inner thread
     }
     // Set object to a new state
-    m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2);
-    m_buf    = (uint8_t *)(m_value + VAL_SIZE); 
-    m_bufend = m_buf + MAX_OUT;
+    m_gw_suf_len = gw_suffix == NULL? 0 : strlen(gw_suffix);
+    m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + 2);
     if(m_value == NULL) {
       close(m_sockfd);
       return -5; // no memory for buffers
     }
+    m_buf    = (uint8_t *)(m_value + VAL_SIZE);
+    m_bufend = m_buf + MAX_OUT;
+    m_gw_suffix = m_gw_suf_len?
+      strcpy(m_value + VAL_SIZE + BUF_SIZE + 2, gw_suffix) : NULL;
   } // if(port_no != 0)
   
   return m_port = port_no;
@@ -244,6 +247,9 @@ uint16_t EmcDns::HandleQuery() {
   for(p = key + sizeof(DNS_PREFIX); *p; p++)
       if(*p >= 'A' && *p <= 'Z')
 	  *p |= 040; // tolower
+
+  if(m_gw_suf_len && (p -= m_gw_suf_len) > key + sizeof(DNS_PREFIX) && strcmp((char *)p, m_gw_suffix) == 0)
+    *p = 0; // Cut suffix m_gw_sufix, if exist
 
   if(Search(key) <= 0) // Result saved into m_value
       return 3; // empty answer, not found, return NXDOMAIN

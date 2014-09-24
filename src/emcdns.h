@@ -28,7 +28,7 @@ class EmcDns {
      EmcDns();
     ~EmcDns();
 
-    int Reset(uint16_t port_no);
+    int Reset(uint16_t port_no, const char *gw_suffix);
 
   private:
     static void *StatRun(void *p);
@@ -46,6 +46,7 @@ class EmcDns {
 
     DNSHeader *m_hdr;
     char     *m_value;
+    const char *m_gw_suffix;
     uint8_t  *m_buf, *m_bufend, *m_snd, *m_rcv, *m_rcvend;
     pthread_t m_thread;
     int       m_sockfd;
@@ -53,6 +54,7 @@ class EmcDns {
     uint32_t  m_ttl;
     uint16_t  m_port;
     uint16_t  m_label_ref;
+    uint16_t  m_gw_suf_len;
     struct sockaddr_in m_clientAddress;
     struct sockaddr_in m_address;
     socklen_t m_addrLen;

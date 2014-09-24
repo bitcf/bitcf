@@ -624,6 +624,7 @@ bool AppInit2(int argc, char* argv[])
     if (fServer)
         CreateThread(ThreadRPCServer, NULL);
 
+    // init emcdns. WARNING: this should be done after hooks initialization
     if (GetBoolArg("-emcdns", false))
     {
         emcdns = new EmcDns();
@@ -631,12 +632,12 @@ bool AppInit2(int argc, char* argv[])
         int port = GetArg("-emcdnsport", EMCDNS_PORT);
         if (port < 0)
             port = EMCDNS_PORT;
-        int rc = emcdns->Reset(port);
+        int rc = emcdns->Reset(port, ".dns.emercoin.com");
         printf("dnssrv.Reset executed=%d\n", rc);
         if (rc < 0)
         {
             perror("Error code");
-            printf("Error when creating dns server...");
+            printf("Error when creating dns server: %d", rc);
         }
     }
 
