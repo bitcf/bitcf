@@ -71,6 +71,7 @@ void Shutdown(void* parg)
     {
         fShutdown = true;
         nTransactionsUpdated++;
+        delete emcdns;
         DBFlush(false);
         StopNode();
         DBFlush(true);
@@ -632,7 +633,8 @@ bool AppInit2(int argc, char* argv[])
         int port = GetArg("-emcdnsport", EMCDNS_PORT);
         if (port < 0)
             port = EMCDNS_PORT;
-        int rc = emcdns->Reset(port, ".dns.emercoin.com");
+        string suffix = GetArg("-emcdnssuffix", "");
+        int rc = emcdns->Reset(port, suffix.c_str());
         printf("dnssrv.Reset executed=%d\n", rc);
         if (rc < 0)
         {
