@@ -27,7 +27,7 @@ using namespace std;
 using namespace boost;
 
 CWallet* pwalletMain;
-EmcDns* emcdns;
+EmcDns* emcdns = NULL;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +71,8 @@ void Shutdown(void* parg)
     {
         fShutdown = true;
         nTransactionsUpdated++;
-        delete emcdns;
+	if(emcdns)
+          delete emcdns;
         DBFlush(false);
         StopNode();
         DBFlush(true);
