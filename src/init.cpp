@@ -631,7 +631,7 @@ bool AppInit2(int argc, char* argv[])
         emcdns = new EmcDns();
         printf("DNS server started\n");
         int port = GetArg("-emcdnsport", EMCDNS_PORT);
-        if (port < 0)
+        if (port <= 0)
             port = EMCDNS_PORT;
         string suffix = GetArg("-emcdnssuffix", "");
         int rc = emcdns->Reset(port, suffix.c_str());
