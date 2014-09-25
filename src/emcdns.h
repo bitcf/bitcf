@@ -31,7 +31,7 @@ class EmcDns {
     int Reset(uint16_t port_no, const char *gw_suffix);
 
   private:
-    static void *StatRun(void *p);
+    static void StatRun(void *p);
     void Run();
     void HandlePacket();
     uint16_t HandleQuery();
@@ -48,8 +48,7 @@ class EmcDns {
     char     *m_value;
     const char *m_gw_suffix;
     uint8_t  *m_buf, *m_bufend, *m_snd, *m_rcv, *m_rcvend;
-    pthread_t m_thread;
-    int       m_sockfd;
+    SOCKET    m_sockfd;
     int       m_rcvlen;
     uint32_t  m_ttl;
     uint16_t  m_port;

@@ -20,19 +20,23 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <stdlib.h>
 
 #include <string.h>
 
+#ifdef WIN32
+#include <winsock2.h>
+#else
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#endif
+
 #include <ctype.h>
 
 #include "namecoin.h"
+#include "util.h"
 #include "emcdns.h"
 #include "hooks.h"
 extern CHooks* hooks;
@@ -66,9 +70,10 @@ EmcDns::~EmcDns() {
 int EmcDns::Reset(uint16_t port_no, const char *gw_suffix) {
   if(m_port != 0) {
     // reset current object to initial state
+#ifndef WIN32
     shutdown(m_sockfd, SHUT_RDWR);
-    close(m_sockfd);
-    pthread_join(m_thread, NULL);
+#endif
+    closesocket(m_sockfd);
     printf("join OK\n");
     free(m_value);
     m_port = 0;
@@ -76,9 +81,11 @@ int EmcDns::Reset(uint16_t port_no, const char *gw_suffix) {
 
   if(port_no != 0) { 
     // Create socket
-    m_sockfd = socket(PF_INET, SOCK_DGRAM, 0);
-    if(m_sockfd < 0) {
+    int ret = socket(PF_INET, SOCK_DGRAM, 0);
+    if(ret < 0) {
       return -2; // Cannot create socket
+    } else {
+      m_sockfd = ret;
     }
 
     m_address.sin_family = AF_INET;
@@ -87,20 +94,22 @@ int EmcDns::Reset(uint16_t port_no, const char *gw_suffix) {
 
     if(bind(m_sockfd, (struct sockaddr *) &m_address,
                      sizeof (struct sockaddr_in)) < 0) {
-      close(m_sockfd);
+      closesocket(m_sockfd);
       return -3; // Cannot bind socket
     }
 
     // Create listener thread
-    if(pthread_create(&m_thread, NULL, StatRun, this) < 0) {
-      close(m_sockfd);
-      return -4; // cannot create inner thread
+    if (!CreateThread(StatRun, this))
+    {
+        closesocket(m_sockfd);
+        return -4; // cannot create inner thread
     }
+
     // Set object to a new state
     m_gw_suf_len = gw_suffix == NULL? 0 : strlen(gw_suffix);
     m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + 2);
     if(m_value == NULL) {
-      close(m_sockfd);
+      closesocket(m_sockfd);
       return -5; // no memory for buffers
     }
     m_buf    = (uint8_t *)(m_value + VAL_SIZE);
@@ -114,10 +123,9 @@ int EmcDns::Reset(uint16_t port_no, const char *gw_suffix) {
 
 /*---------------------------------------------------*/
 
-void *EmcDns::StatRun(void *p) {
+void EmcDns::StatRun(void *p) {
   EmcDns *obj = (EmcDns*)p;
   obj->Run();
-  return NULL;
 } // EmcDns::StatRun
 
 /*---------------------------------------------------*/
@@ -125,7 +133,7 @@ void EmcDns::Run() {
   printf("EmcDns Called RUN\n");
   for( ; ; ) {
     m_addrLen = sizeof(m_clientAddress);
-    m_rcvlen  = recvfrom(m_sockfd, m_buf, BUF_SIZE, 0,
+    m_rcvlen  = recvfrom(m_sockfd, (char *)m_buf, BUF_SIZE, 0,
 	            (struct sockaddr *) &m_clientAddress, &m_addrLen);
     if(m_rcvlen <= 0)
 	break;
@@ -134,12 +142,11 @@ void EmcDns::Run() {
 
     HandlePacket();
 
-    sendto(m_sockfd, m_buf, m_snd - m_buf, MSG_NOSIGNAL, 
+    sendto(m_sockfd, (const char *)m_buf, m_snd - m_buf, MSG_NOSIGNAL,
 	             (struct sockaddr *) &m_clientAddress, m_addrLen);
   } // for
 
   printf("Received2 packet=%d\n", m_rcvlen);
-  pthread_exit(NULL);
 } //  EmcDns::Run
 
 /*---------------------------------------------------*/
@@ -369,6 +376,32 @@ void EmcDns::Answer_ALL(uint16_t qtype, char *buf) {
 } // EmcDns::Answer_A 
 
 /*---------------------------------------------------*/
+
+#ifdef WIN32
+int inet_pton(int af, const char *src, void *dst)
+{
+  struct sockaddr_storage ss;
+  int size = sizeof(ss);
+  char src_copy[INET6_ADDRSTRLEN+1];
+
+  ZeroMemory(&ss, sizeof(ss));
+  /* stupid non-const API */
+  strncpy (src_copy, src, INET6_ADDRSTRLEN+1);
+  src_copy[INET6_ADDRSTRLEN] = 0;
+
+  if (WSAStringToAddress(src_copy, af, NULL, (struct sockaddr *)&ss, &size) == 0) {
+    switch(af) {
+      case AF_INET:
+    *(struct in_addr *)dst = ((struct sockaddr_in *)&ss)->sin_addr;
+    return 1;
+      case AF_INET6:
+    *(struct in6_addr *)dst = ((struct sockaddr_in6 *)&ss)->sin6_addr;
+    return 1;
+    }
+  }
+  return 0;
+}
+#endif
 
 void EmcDns::Fill_RD_IP(char *ipddrtxt, int af) {
   uint16_t out_sz;
