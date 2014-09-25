@@ -49,37 +49,68 @@ extern CHooks* hooks;
 #define VAL_SIZE (MAX_VALUE_LENGTH + 16)
 #define DNS_PREFIX "dns"
 #define REDEF_SYM  '~'
+
+/*---------------------------------------------------*/
+
+#ifdef WIN32
+int inet_pton(int af, const char *src, void *dst)
+{
+  struct sockaddr_storage ss;
+  int size = sizeof(ss);
+  char src_copy[INET6_ADDRSTRLEN+1];
+
+  ZeroMemory(&ss, sizeof(ss));
+  /* stupid non-const API */
+  strncpy (src_copy, src, INET6_ADDRSTRLEN+1);
+  src_copy[INET6_ADDRSTRLEN] = 0;
+
+  if (WSAStringToAddress(src_copy, af, NULL, (struct sockaddr *)&ss, &size) == 0) {
+    switch(af) {
+      case AF_INET:
+    *(struct in_addr *)dst = ((struct sockaddr_in *)&ss)->sin_addr;
+    return 1;
+      case AF_INET6:
+    *(struct in6_addr *)dst = ((struct sockaddr_in6 *)&ss)->sin6_addr;
+    return 1;
+    }
+  }
+  return 0;
+}
+#endif
+
 /*---------------------------------------------------*/
 
 EmcDns::EmcDns() {
-  m_port = 0;
-  m_value = NULL;
-  printf("EmcDns created\n");
+  memset(this, 0, sizeof(this));
 } // EmcDns::EmcDns
 
 /*---------------------------------------------------*/
 
 EmcDns::~EmcDns() {
-  Reset(0, NULL);
-  printf("EmcDns destroyed\n");
+  Reset(NULL, 0, NULL, 0);
 } // EmcDns::~EmcDns
 
 
 /*---------------------------------------------------*/
 
-int EmcDns::Reset(uint16_t port_no, const char *gw_suffix) {
+int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, uint8_t verbose) {
   if(m_port != 0) {
     // reset current object to initial state
 #ifndef WIN32
     shutdown(m_sockfd, SHUT_RDWR);
 #endif
     closesocket(m_sockfd);
-    printf("join OK\n");
+#ifndef WIN32
+    // pthread_join(m_thread, NULL);
+#endif
     free(m_value);
     m_port = 0;
+    if(m_verbose > 0)
+	 printf("EmcDns::Reset: Destroyed OK\n");
   }
 
   if(port_no != 0) { 
+    m_verbose = verbose;
     // Create socket
     int ret = socket(PF_INET, SOCK_DGRAM, 0);
     if(ret < 0) {
@@ -89,11 +120,16 @@ int EmcDns::Reset(uint16_t port_no, const char *gw_suffix) {
     }
 
     m_address.sin_family = AF_INET;
-    m_address.sin_addr.s_addr = INADDR_ANY;
     m_address.sin_port = htons(port_no);
+
+    if(!inet_pton(AF_INET, bind_ip, &m_address.sin_addr.s_addr)) 
+      m_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if(bind(m_sockfd, (struct sockaddr *) &m_address,
                      sizeof (struct sockaddr_in)) < 0) {
+      char buf[80];
+      sprintf(buf, "EmcDns::Reset: Cannot bind to port %u", port_no);
+      perror(buf);
       closesocket(m_sockfd);
       return -3; // Cannot bind socket
     }
@@ -101,14 +137,16 @@ int EmcDns::Reset(uint16_t port_no, const char *gw_suffix) {
     // Create listener thread
     if (!CreateThread(StatRun, this))
     {
-        closesocket(m_sockfd);
-        return -4; // cannot create inner thread
+      perror("EmcDns::Reset: Cannot create thread");
+      closesocket(m_sockfd);
+      return -4; // cannot create inner thread
     }
 
     // Set object to a new state
     m_gw_suf_len = gw_suffix == NULL? 0 : strlen(gw_suffix);
     m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + 2);
     if(m_value == NULL) {
+      perror("EmcDns::Reset: Cannot allocate buffer");
       closesocket(m_sockfd);
       return -5; // no memory for buffers
     }
@@ -116,6 +154,10 @@ int EmcDns::Reset(uint16_t port_no, const char *gw_suffix) {
     m_bufend = m_buf + MAX_OUT;
     m_gw_suffix = m_gw_suf_len?
       strcpy(m_value + VAL_SIZE + BUF_SIZE + 2, gw_suffix) : NULL;
+    if(m_verbose > 0)
+	 printf("EmcDns::Reset: Created/Attached: %s:%u\n", 
+		 m_address.sin_addr.s_addr == INADDR_ANY? "INADDR_ANY" : bind_ip, 
+		 port_no);
   } // if(port_no != 0)
   
   return m_port = port_no;
@@ -130,7 +172,7 @@ void EmcDns::StatRun(void *p) {
 
 /*---------------------------------------------------*/
 void EmcDns::Run() {
-  printf("EmcDns Called RUN\n");
+  if(m_verbose > 2) printf("EmcDns Called RUN\n");
   for( ; ; ) {
     m_addrLen = sizeof(m_clientAddress);
     m_rcvlen  = recvfrom(m_sockfd, (char *)m_buf, BUF_SIZE, 0,
@@ -146,13 +188,15 @@ void EmcDns::Run() {
 	             (struct sockaddr *) &m_clientAddress, m_addrLen);
   } // for
 
-  printf("Received2 packet=%d\n", m_rcvlen);
+  if(m_verbose > 2) printf("Received2 packet=%d\n", m_rcvlen);
+  ExitThread(0);
+
 } //  EmcDns::Run
 
 /*---------------------------------------------------*/
 
 void EmcDns::HandlePacket() {
-  printf("Received/HANDLE packet=%d\n", m_rcvlen);
+  if(m_verbose > 2) printf("Received/HANDLE packet=%d\n", m_rcvlen);
 
   m_hdr = (DNSHeader *)m_buf;
   // Decode input header from network format
@@ -161,13 +205,14 @@ void EmcDns::HandlePacket() {
   m_rcv = m_buf + sizeof(DNSHeader);
   m_rcvend = m_snd = m_buf + m_rcvlen;
 
-  printf("msgID  : %d\n", m_hdr->msgID);
-  printf("Bits   : %04x\n", m_hdr->Bits);
-  printf("QDCount: %d\n", m_hdr->QDCount);
-  printf("ANCount: %d\n", m_hdr->ANCount);
-  printf("NSCount: %d\n", m_hdr->NSCount);
-  printf("ARCount: %d\n", m_hdr->ARCount);
-
+  if(m_verbose > 3) {
+    printf("msgID  : %d\n", m_hdr->msgID);
+    printf("Bits   : %04x\n", m_hdr->Bits);
+    printf("QDCount: %d\n", m_hdr->QDCount);
+    printf("ANCount: %d\n", m_hdr->ANCount);
+    printf("NSCount: %d\n", m_hdr->NSCount);
+    printf("ARCount: %d\n", m_hdr->ARCount);
+  }
   // Assert following 3 counters and bits are zero
 //*  uint16_t zCount = m_hdr->ANCount | m_hdr->NSCount | m_hdr->ARCount | (m_hdr->Bits & (m_hdr->QR_MASK | m_hdr->TC_MASK));
   uint16_t zCount = m_hdr->ANCount | m_hdr->NSCount | (m_hdr->Bits & (m_hdr->QR_MASK | m_hdr->TC_MASK));
@@ -246,7 +291,7 @@ uint16_t EmcDns::HandleQuery() {
   uint16_t qtype  = *m_rcv++; qtype  = (qtype  << 8) + *m_rcv++; 
   uint16_t qclass = *m_rcv++; qclass = (qclass << 8) + *m_rcv++;
 
-  printf("HandleQuery: D=%s QT=%x QC=%x\n", key, qtype, qclass);
+  if(m_verbose > 0) printf("HandleQuery: D=%s QT=%x QC=%x\n", key, qtype, qclass);
 
   if(qclass != 1)
     return 4; // Not implemented - support INET only
@@ -353,10 +398,10 @@ void EmcDns::Answer_ALL(uint16_t qtype, char *buf) {
   char *tokens[MAX_TOK];
   int tokQty = Tokenize(key, ",", tokens, buf);
 
-  printf("Exec: Answer_ALL(%d, %s)=%d\n", qtype, key, tokQty);
+  if(m_verbose > 0) printf("Exec: Answer_ALL(%d, %s)=%d\n", qtype, key, tokQty);
 
   for(int tok_no = 0; tok_no < tokQty; tok_no++) {
-      printf("  Answer_ALL(%d):%d:[%s]\n", qtype, tok_no, tokens[tok_no]);
+      if(m_verbose > 1) printf("  Answer_ALL(%d):%d:[%s]\n", qtype, tok_no, tokens[tok_no]);
       Out2(m_label_ref);
       Out2(htons(qtype)); // A record
       Out2(htons(1)); //  INET
@@ -376,32 +421,6 @@ void EmcDns::Answer_ALL(uint16_t qtype, char *buf) {
 } // EmcDns::Answer_A 
 
 /*---------------------------------------------------*/
-
-#ifdef WIN32
-int inet_pton(int af, const char *src, void *dst)
-{
-  struct sockaddr_storage ss;
-  int size = sizeof(ss);
-  char src_copy[INET6_ADDRSTRLEN+1];
-
-  ZeroMemory(&ss, sizeof(ss));
-  /* stupid non-const API */
-  strncpy (src_copy, src, INET6_ADDRSTRLEN+1);
-  src_copy[INET6_ADDRSTRLEN] = 0;
-
-  if (WSAStringToAddress(src_copy, af, NULL, (struct sockaddr *)&ss, &size) == 0) {
-    switch(af) {
-      case AF_INET:
-    *(struct in_addr *)dst = ((struct sockaddr_in *)&ss)->sin_addr;
-    return 1;
-      case AF_INET6:
-    *(struct in6_addr *)dst = ((struct sockaddr_in6 *)&ss)->sin6_addr;
-    return 1;
-    }
-  }
-  return 0;
-}
-#endif
 
 void EmcDns::Fill_RD_IP(char *ipddrtxt, int af) {
   uint16_t out_sz;
@@ -471,7 +490,7 @@ int EmcDns::Search(uint8_t *key) {
   if (key == NULL)
     return 0;
 
-  printf("Called: EmcDns::Search(%s)\n", key);
+  if(m_verbose > 1) printf("Called: EmcDns::Search(%s)\n", key);
 
   string name(reinterpret_cast<char*>(key));
   string value;
@@ -479,7 +498,6 @@ int EmcDns::Search(uint8_t *key) {
     return 0;
 
   strcpy(m_value, value.c_str());
-  //strcpy(m_value, "~/TXT=~*This is text, Hello*2nd text/MX=yandex.ru:33,mx.lenta.ru:66/CNAME=emc.cc.st/PTR=olegh.cc.st,avalon.cc.st/A=192.168.0.120,127.0.0.1/AAAA=2607:f8b0:4004:806::1001/NS=ns1.google.com/TTL=4001");
   return 1;
 } //  EmcDns::Search
 

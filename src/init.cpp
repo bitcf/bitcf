@@ -632,10 +632,12 @@ bool AppInit2(int argc, char* argv[])
         emcdns = new EmcDns();
         printf("DNS server started\n");
         int port = GetArg("-emcdnsport", EMCDNS_PORT);
+	int verbose = GetArg("-emcdnsverbose", 1);
         if (port <= 0)
             port = EMCDNS_PORT;
-        string suffix = GetArg("-emcdnssuffix", "");
-        int rc = emcdns->Reset(port, suffix.c_str());
+        string suffix  = GetArg("-emcdnssuffix", "");
+        string bind_ip = GetArg("-emcdnsbindip", "");
+        int rc = emcdns->Reset(bind_ip.c_str(), port, suffix.c_str(), verbose);
         printf("dnssrv.Reset executed=%d\n", rc);
         if (rc < 0)
         {

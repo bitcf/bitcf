@@ -28,7 +28,7 @@ class EmcDns {
      EmcDns();
     ~EmcDns();
 
-    int Reset(uint16_t port_no, const char *gw_suffix);
+    int Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, uint8_t verbose); 
 
   private:
     static void StatRun(void *p);
@@ -54,6 +54,8 @@ class EmcDns {
     uint16_t  m_port;
     uint16_t  m_label_ref;
     uint16_t  m_gw_suf_len;
+    uint8_t   m_verbose;
+    uint8_t   m_reserved;
     struct sockaddr_in m_clientAddress;
     struct sockaddr_in m_address;
     socklen_t m_addrLen;
