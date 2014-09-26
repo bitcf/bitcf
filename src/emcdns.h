@@ -29,10 +29,10 @@ class EmcDns {
     ~EmcDns();
 
     int Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, uint8_t verbose); 
+    void Run();
 
   private:
     static void StatRun(void *p);
-    void Run();
     void HandlePacket();
     uint16_t HandleQuery();
     int  Search(uint8_t *key);

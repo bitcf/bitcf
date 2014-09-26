@@ -641,21 +641,22 @@ bool AppInit2(int argc, char* argv[])
         printf("dnssrv.Reset executed=%d\n", rc);
         if (rc < 0)
         {
-            perror("Error code");
             printf("Error when creating dns server: %d", rc);
+	    delete emcdns;
+	    emcdns = NULL;
         }
     }
 
 #ifdef QT_GUI
     if (GetStartOnSystemStartup())
         SetStartOnSystemStartup(true); // Remove startup links
-#endif
-
-#if !defined(QT_GUI)
-    while (1)
+#else
+    if(emcdns)
+	emcdns->Run();
+    else
+      while (1)
         Sleep(5000);
 #endif
-
     return true;
 }
 

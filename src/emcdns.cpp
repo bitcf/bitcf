@@ -134,6 +134,9 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
       return -3; // Cannot bind socket
     }
 
+    // Create own lostener, only if GUI; 
+    // Otherwise, Run() will be called from AppInit2
+#ifdef QT_GUI
     // Create listener thread
     if (!CreateThread(StatRun, this))
     {
@@ -141,6 +144,7 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
       closesocket(m_sockfd);
       return -4; // cannot create inner thread
     }
+#endif
 
     // Set object to a new state
     m_gw_suf_len = gw_suffix == NULL? 0 : strlen(gw_suffix);
@@ -168,6 +172,7 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
 void EmcDns::StatRun(void *p) {
   EmcDns *obj = (EmcDns*)p;
   obj->Run();
+  ExitThread(0);
 } // EmcDns::StatRun
 
 /*---------------------------------------------------*/
@@ -189,7 +194,6 @@ void EmcDns::Run() {
   } // for
 
   if(m_verbose > 2) printf("Received2 packet=%d\n", m_rcvlen);
-  ExitThread(0);
 
 } //  EmcDns::Run
 
