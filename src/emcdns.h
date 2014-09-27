@@ -1,6 +1,8 @@
 #ifndef EMCDNS_H
 #define EMCDNS_H
 
+#define EMCDNS_MAX_ALLOWED 32
+
 struct DNSHeader {
   static const uint32_t QR_MASK = 0x8000;
   static const uint32_t OPCODE_MASK = 0x7800; // shr 11
@@ -23,12 +25,13 @@ struct DNSHeader {
   }
 } __attribute__((packed)); // struct DNSHeader
 
+
 class EmcDns {
   public:
      EmcDns();
     ~EmcDns();
 
-    int Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, uint8_t verbose); 
+    int Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, const char *allowed_suff, uint8_t verbose); 
     void Run();
 
   private:
@@ -55,7 +58,8 @@ class EmcDns {
     uint16_t  m_label_ref;
     uint16_t  m_gw_suf_len;
     uint8_t   m_verbose;
-    uint8_t   m_reserved;
+    uint8_t   m_allowed_qty;
+    char     *m_allowed[EMCDNS_MAX_ALLOWED];
     struct sockaddr_in m_clientAddress;
     struct sockaddr_in m_address;
     socklen_t m_addrLen;

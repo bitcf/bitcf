@@ -87,13 +87,13 @@ EmcDns::EmcDns() {
 /*---------------------------------------------------*/
 
 EmcDns::~EmcDns() {
-  Reset(NULL, 0, NULL, 0);
+  Reset(NULL, 0, NULL, NULL, 0);
 } // EmcDns::~EmcDns
 
 
 /*---------------------------------------------------*/
 
-int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, uint8_t verbose) {
+int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, const char *allowed_suff, uint8_t verbose) {
   if(m_port != 0) {
     // reset current object to initial state
 #ifndef WIN32
@@ -147,8 +147,10 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
 #endif
 
     // Set object to a new state
+    int allowed_len = allowed_suff == NULL? 0 : strlen(allowed_suff);
     m_gw_suf_len = gw_suffix == NULL? 0 : strlen(gw_suffix);
-    m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + 2);
+
+    m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + allowed_len + 3);
     if(m_value == NULL) {
       perror("EmcDns::Reset: Cannot allocate buffer");
       closesocket(m_sockfd);
@@ -158,6 +160,21 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
     m_bufend = m_buf + MAX_OUT;
     m_gw_suffix = m_gw_suf_len?
       strcpy(m_value + VAL_SIZE + BUF_SIZE + 2, gw_suffix) : NULL;
+    
+    // Create array of allowed suffixes
+    if(allowed_len) {
+      for(char *p = strcpy(m_value + VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + 1, allowed_suff); 
+	*p && m_allowed_qty < EMCDNS_MAX_ALLOWED; 
+	p++) {
+	  if(*p == '|' || *p <= 040)
+	      *p = 0;
+	  if(*p == '.') {
+	      *p = 0;
+	      m_allowed[m_allowed_qty++] = p + 1;
+	  }
+      }
+    } // if(allowed_len)
+
     if(m_verbose > 0)
 	 printf("EmcDns::Reset: Created/Attached: %s:%u\n", 
 		 m_address.sin_addr.s_addr == INADDR_ANY? "INADDR_ANY" : bind_ip, 
@@ -177,7 +194,7 @@ void EmcDns::StatRun(void *p) {
 
 /*---------------------------------------------------*/
 void EmcDns::Run() {
-  if(m_verbose > 2) printf("EmcDns Called RUN\n");
+  if(m_verbose > 2) printf("EmcDns::Run: started\n");
   for( ; ; ) {
     m_addrLen = sizeof(m_clientAddress);
     m_rcvlen  = recvfrom(m_sockfd, (char *)m_buf, BUF_SIZE, 0,
@@ -193,14 +210,14 @@ void EmcDns::Run() {
 	             (struct sockaddr *) &m_clientAddress, m_addrLen);
   } // for
 
-  if(m_verbose > 2) printf("Received2 packet=%d\n", m_rcvlen);
+  if(m_verbose > 2) printf("EmcDns::Run: Received Exit packet_len=%d\n", m_rcvlen);
 
 } //  EmcDns::Run
 
 /*---------------------------------------------------*/
 
 void EmcDns::HandlePacket() {
-  if(m_verbose > 2) printf("Received/HANDLE packet=%d\n", m_rcvlen);
+  if(m_verbose > 2) printf("EmcDns::HandlePacket: Handle packet_len=%d\n", m_rcvlen);
 
   m_hdr = (DNSHeader *)m_buf;
   // Decode input header from network format
@@ -210,12 +227,12 @@ void EmcDns::HandlePacket() {
   m_rcvend = m_snd = m_buf + m_rcvlen;
 
   if(m_verbose > 3) {
-    printf("msgID  : %d\n", m_hdr->msgID);
-    printf("Bits   : %04x\n", m_hdr->Bits);
-    printf("QDCount: %d\n", m_hdr->QDCount);
-    printf("ANCount: %d\n", m_hdr->ANCount);
-    printf("NSCount: %d\n", m_hdr->NSCount);
-    printf("ARCount: %d\n", m_hdr->ARCount);
+    printf("\tEmcDns::HandlePacket: msgID  : %d\n", m_hdr->msgID);
+    printf("\tEmcDns::HandlePacket: Bits   : %04x\n", m_hdr->Bits);
+    printf("\tEmcDns::HandlePacket: QDCount: %d\n", m_hdr->QDCount);
+    printf("\tEmcDns::HandlePacket: ANCount: %d\n", m_hdr->ANCount);
+    printf("\tEmcDns::HandlePacket: NSCount: %d\n", m_hdr->NSCount);
+    printf("\tEmcDns::HandlePacket: ARCount: %d\n", m_hdr->ARCount);
   }
   // Assert following 3 counters and bits are zero
 //*  uint16_t zCount = m_hdr->ANCount | m_hdr->NSCount | m_hdr->ARCount | (m_hdr->Bits & (m_hdr->QR_MASK | m_hdr->TC_MASK));
@@ -295,7 +312,7 @@ uint16_t EmcDns::HandleQuery() {
   uint16_t qtype  = *m_rcv++; qtype  = (qtype  << 8) + *m_rcv++; 
   uint16_t qclass = *m_rcv++; qclass = (qclass << 8) + *m_rcv++;
 
-  if(m_verbose > 0) printf("HandleQuery: D=%s QT=%x QC=%x\n", key, qtype, qclass);
+  if(m_verbose > 0) printf("EmcDns::HandleQuery Key=%s QType=%x QClass=%x\n", key, qtype, qclass);
 
   if(qclass != 1)
     return 4; // Not implemented - support INET only
@@ -305,8 +322,35 @@ uint16_t EmcDns::HandleQuery() {
       if(*p >= 'A' && *p <= 'Z')
 	  *p |= 040; // tolower
 
-  if(m_gw_suf_len && (p -= m_gw_suf_len) > key + sizeof(DNS_PREFIX) && strcmp((char *)p, m_gw_suffix) == 0)
-    *p = 0; // Cut suffix m_gw_sufix, if exist
+  if(m_gw_suf_len) { // suffix defined [public DNS], need to cut
+    p -= m_gw_suf_len;
+    if(p <= key + sizeof(DNS_PREFIX) || strcmp((const char *)p, m_gw_suffix) != 0) {
+      if(m_verbose > 3) 
+	  printf("EmcDns::HandleQuery: missing GW-suffix=%s in given key=%s; return NXDOMAIN\n", 
+		  m_gw_suffix, key);
+      return 3; // Invalid or missing domain suffix, return NXDOMAIN
+    }
+    *p = 0; // Cut suffix m_gw_sufix
+  }
+
+  if(m_allowed_qty) { // Activate TLD-filter
+    while(*--p != '.')
+      if(p <= key + sizeof(DNS_PREFIX)) {
+        if(m_verbose > 3) 
+	  printf("EmcDns::HandleQuery: missing TLD-suffix in given key=%s; return NXDOMAIN\n", key);
+	return 3; // No any suffix, so NXDOMAIN
+      }
+    p++; // Set PTR after dot, to the suffix
+    for(uint8_t sufndx = 0; ; sufndx++) {
+      if(sufndx >= m_allowed_qty) {
+        if(m_verbose > 3) 
+	  printf("EmcDns::HandleQuery: TLD-suffix in given key=%s is not allowed; return NXDOMAIN\n", key);
+	return 3; // Reached EndOfList, so NXDOMAIN
+      }
+      if(strcmp((const char *)p, m_allowed[sufndx]) == 0)
+	break;
+    } // for
+  } // if(m_allowed_qty)
 
   if(Search(key) <= 0) // Result saved into m_value
       return 3; // empty answer, not found, return NXDOMAIN
@@ -318,8 +362,6 @@ uint16_t EmcDns::HandleQuery() {
     m_ttl = htonl(ttlqty? atoi(tokens[0]) : 24 * 3600);
   }
   
-  // printf("TTL=%u\n", ntohl(m_ttl));
-
   if(qtype == 0xff) { // ALL Q-types
     char val2[VAL_SIZE];
     // List values for ANY:    A NS CNA PTR MX AAAA
@@ -402,10 +444,11 @@ void EmcDns::Answer_ALL(uint16_t qtype, char *buf) {
   char *tokens[MAX_TOK];
   int tokQty = Tokenize(key, ",", tokens, buf);
 
-  if(m_verbose > 0) printf("Exec: Answer_ALL(%d, %s)=%d\n", qtype, key, tokQty);
+  if(m_verbose > 0) printf("EmcDns::Answer_ALL(QT=%d, key=%s); TokenQty=%d\n", qtype, key, tokQty);
 
   for(int tok_no = 0; tok_no < tokQty; tok_no++) {
-      if(m_verbose > 1) printf("  Answer_ALL(%d):%d:[%s]\n", qtype, tok_no, tokens[tok_no]);
+      if(m_verbose > 1) 
+	printf("\tEmcDns::Answer_ALL: Token:%u=[%s]\n", tok_no, tokens[tok_no]);
       Out2(m_label_ref);
       Out2(htons(qtype)); // A record
       Out2(htons(1)); //  INET
@@ -491,12 +534,10 @@ void EmcDns::Fill_RD_DName(char *txt, uint8_t mxsz, int8_t txtcor) {
 /*---------------------------------------------------*/
 
 int EmcDns::Search(uint8_t *key) {
-  if (key == NULL)
-    return 0;
+  if(m_verbose > 1) 
+    printf("EmcDns::Search(%s)\n", key);
 
-  if(m_verbose > 1) printf("Called: EmcDns::Search(%s)\n", key);
-
-  string name(reinterpret_cast<char*>(key));
+  string name((const char *)key);
   string value;
   if (!hooks->getNameValue(name, value))
     return 0;

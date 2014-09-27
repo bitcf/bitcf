@@ -637,7 +637,8 @@ bool AppInit2(int argc, char* argv[])
             port = EMCDNS_PORT;
         string suffix  = GetArg("-emcdnssuffix", "");
         string bind_ip = GetArg("-emcdnsbindip", "");
-        int rc = emcdns->Reset(bind_ip.c_str(), port, suffix.c_str(), verbose);
+        string allowed = GetArg("-emcdnsallowed", "");
+        int rc = emcdns->Reset(bind_ip.c_str(), port, suffix.c_str(), allowed.c_str(), verbose);
         printf("dnssrv.Reset executed=%d\n", rc);
         if (rc < 0)
         {
@@ -653,9 +654,8 @@ bool AppInit2(int argc, char* argv[])
 #else
     if(emcdns)
 	emcdns->Run();
-    else
-      while (1)
-        Sleep(5000);
+    while(1)
+      Sleep(5000);
 #endif
     return true;
 }
