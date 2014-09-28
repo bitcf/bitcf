@@ -80,8 +80,7 @@ int inet_pton(int af, const char *src, void *dst)
 
 /*---------------------------------------------------*/
 
-EmcDns::EmcDns() {
-  memset(this, 0, sizeof(this));
+EmcDns::EmcDns() : m_port(0) {
 } // EmcDns::EmcDns
 
 /*---------------------------------------------------*/
@@ -111,6 +110,7 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
   }
 
   if(port_no != 0) { 
+    memset(this, 0, sizeof(this)); // Clear previous state
     m_verbose = verbose;
     // Create socket
     int ret = socket(PF_INET, SOCK_DGRAM, 0);
@@ -187,7 +187,7 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
 	  continue;
 	}
         pos  = ((pos >> 7) | (pos << 1)) + c;
-	step = (((uint32_t)step << 5) - step) ^ c; // (step * 31) ^ c
+	step = ((step << 5) - step) ^ c; // (step * 31) ^ c
       } // for
     } // if(allowed_len)
 
@@ -358,7 +358,7 @@ uint16_t EmcDns::HandleQuery() {
 	return 3; // No any suffix, so NXDOMAIN
       }
       pos  = ((pos >> 7) | (pos << 1)) + *p;
-      step = (((uint32_t)step << 5) - step) ^ *p; // (step * 31) ^ c
+      step = ((step << 5) - step) ^ *p; // (step * 31) ^ c
     }
 
     p++; // Set PTR after dot, to the suffix
