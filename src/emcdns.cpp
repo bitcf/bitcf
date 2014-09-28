@@ -313,6 +313,7 @@ uint16_t EmcDns::HandleQuery() {
   uint8_t *p = keyp;
   strncpy((char *)keyp, (const char *)m_rcv, BUF_SIZE - sizeof(DNS_PREFIX));
 
+  // Decode domain string to dot-separated, insert ':' at begin
   for(uint8_t sep = ':'; *p != 0; ) {
     uint8_t sym = *p;
     *p = sep; 
@@ -325,57 +326,89 @@ uint16_t EmcDns::HandleQuery() {
   m_label_ref = htons((m_rcv - m_buf) | 0xc000);
   m_rcv += p - keyp + 1; // Promote to end of QNAME
 
+  keyp++; // Set PTR to begin of token, after ':' in "dns:"
+
   uint16_t qtype  = *m_rcv++; qtype  = (qtype  << 8) + *m_rcv++; 
   uint16_t qclass = *m_rcv++; qclass = (qclass << 8) + *m_rcv++;
 
-  if(m_verbose > 0) printf("EmcDns::HandleQuery Key=%s QType=%x QClass=%x\n", key, qtype, qclass);
+  if(m_verbose > 0) 
+    printf("EmcDns::HandleQuery Key=%s QType=%x QClass=%x\n", key, qtype, qclass);
 
   if(qclass != 1)
     return 4; // Not implemented - support INET only
 
   // ToLower search key
-  for(p = key + sizeof(DNS_PREFIX); *p; p++)
+  for(p = keyp; *p; p++)
       if(*p >= 'A' && *p <= 'Z')
 	  *p |= 040; // tolower
 
+  // If thid is puplic gateway, gw-suffix must be specified, like 
+  // emcdnssuffix=.xyz.com
+  // Followind block cut this suffix.
+  // If received domain name "xyz.com" only, keyp is empty string
+
   if(m_gw_suf_len) { // suffix defined [public DNS], need to cut
     p -= m_gw_suf_len;
-    if(p <= key + sizeof(DNS_PREFIX) || strcmp((const char *)p, m_gw_suffix) != 0) {
-      if(m_verbose > 3) 
-	  printf("EmcDns::HandleQuery: missing GW-suffix=%s in given key=%s; return NXDOMAIN\n", 
+    int d = p - keyp;
+    if(d >=  0 && strcmp((const char *)p, m_gw_suffix) != 0
+    || d == -1 && strcmp((const char *)p + 1, m_gw_suffix + 1) != 0
+    || d <  -1) {
+        if(m_verbose > 3) 
+	    printf("EmcDns::HandleQuery: missing GW-suffix=%s in given key=%s; return NXDOMAIN\n", 
 		  m_gw_suffix, key);
-      return 3; // Invalid or missing domain suffix, return NXDOMAIN
+        return 3; // Invalid or missing domain suffix, return NXDOMAIN
     }
+    if(d < 0) 
+      p = keyp;
     *p = 0; // Cut suffix m_gw_sufix
+  } // if(m_gw_suf_len)
+
+  // Search for TLD-suffix, like ".coin"
+  // If name without dot, like "www", this is candidate for local search
+  // Compute 2-hash params for TLD-suffix or local name
+
+  uint8_t pos = 0, step = 0; // pos, step for double hashing
+
+  while(p > keyp) {
+    uint8_t c = *--p;
+    if(c == '.')
+      break; // this is TLD-suffix
+    pos  = ((pos >> 7) | (pos << 1)) + *p;
+    step = ((step << 5) - step) ^ *p; // (step * 31) ^ c
   }
 
-  if(m_allowed_qty) { // Activate TLD-filter
-    uint8_t pos = 0, step = 0; // pos, step for double hashing
-    while(*--p != '.') {
-      if(p <= key + sizeof(DNS_PREFIX)) {
-        if(m_verbose > 3) 
-	  printf("EmcDns::HandleQuery: missing TLD-suffix in given key=%s; return NXDOMAIN\n", key);
-	return 3; // No any suffix, so NXDOMAIN
-      }
-      pos  = ((pos >> 7) | (pos << 1)) + *p;
-      step = ((step << 5) - step) ^ *p; // (step * 31) ^ c
-    }
+  step |= 1; // Set even step for 2-hashing
 
-    p++; // Set PTR after dot, to the suffix
-    step |= 1;
+  if(p == keyp) {
+    // no TLD suffix, try to search local 1st
+    if(LocalSearch(p, pos, step) > 0)
+      p = NULL; // local search is OK, do not perform nameindex search
+  }
 
-    do {
-      pos += step;
-      if(m_allowed_offset[pos] == 0) {
+  // If local search is unsuccessful, try to search in the nameindex DB.
+  if(p) {
+    // Check domain by tld filters, if activated. Otherwise, pass to nameindex as is.
+    if(m_allowed_qty) { // Activated TLD-filter
+      if(*p != '.') {
         if(m_verbose > 3) 
-	  printf("EmcDns::HandleQuery: TLD-suffix in given key=%s is not allowed; return NXDOMAIN\n", key);
-	return 3; // Reached EndOfList, so NXDOMAIN
+  	  printf("EmcDns::HandleQuery: TLD-suffix is not specified in given key=%s; return NXDOMAIN\n", p, key);
+	return 3; // TLD-suffix is not specified, so NXDOMAIN
       } 
-    } while(strcmp((const char *)p, m_allowed_base + m_allowed_offset[pos]) != 0);
-  } // if(m_allowed_qty)
+      p++; // Set PTR after dot, to the suffix
+      do {
+        pos += step;
+        if(m_allowed_offset[pos] == 0) {
+          if(m_verbose > 3) 
+  	    printf("EmcDns::HandleQuery: TLD-suffix=[.%s] in given key=%s is not allowed; return NXDOMAIN\n", p, key);
+	  return 3; // Reached EndOfList, so NXDOMAIN
+        } 
+      } while(m_allowed_offset[pos] < 0 || strcmp((const char *)p, m_allowed_base + m_allowed_offset[pos]) != 0);
+    } // if(m_allowed_qty)
 
-  if(Search(key) <= 0) // Result saved into m_value
+    // Search in the nameindex db. Possible to search filtered indexes, or even pure names, like "dns:www"
+    if(Search(key) <= 0) // Result saved into m_value
       return 3; // empty answer, not found, return NXDOMAIN
+  } // if(p) 
 
   { // Extract TTL
     char val2[VAL_SIZE];
@@ -389,11 +422,32 @@ uint16_t EmcDns::HandleQuery() {
     // List values for ANY:    A NS CNA PTR MX AAAA
     const uint16_t q_all[] = { 1, 2, 5, 12, 15, 28, 0 };
     for(const uint16_t *q = q_all; *q; q++)
-      Answer_ALL(*q,  strcpy(val2, m_value));
+      Answer_ALL(*q, strcpy(val2, m_value));
   } else 
       Answer_ALL(qtype, m_value);
   return 0;
 } // EmcDns::HandleQuery
+
+/*---------------------------------------------------*/
+
+int EmcDns::LocalSearch(const uint8_t *key, uint8_t pos, uint8_t step) {
+  if(*key == 0)
+    key = (const uint8_t *)"@";
+  if(m_verbose > 1) 
+    printf("EmcDns::LocalSearch(%s, %u, %u) called\n", key, pos, step);
+    do {
+      pos += step;
+      if(m_allowed_offset[pos] == 0) {
+        if(m_verbose > 3) 
+  	  printf("EmcDns::LocalSearch: Local key=[%s] not found; go to nameindex search\n", key);
+         return 0; // Reached EndOfList, so NXDOMAIN
+      } 
+    } while(m_allowed_offset[pos] > 0 || strcmp((const char *)key, m_allowed_base - m_allowed_offset[pos]) != 0);
+  // TODO: populate m_value
+
+  return 1;
+}
+
 /*---------------------------------------------------*/
 
 int EmcDns::Tokenize(const char *key, const char *sep2, char **tokens, char *buf) {

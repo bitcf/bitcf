@@ -39,6 +39,7 @@ class EmcDns {
     void HandlePacket();
     uint16_t HandleQuery();
     int  Search(uint8_t *key);
+    int  LocalSearch(const uint8_t *key, uint8_t pos, uint8_t step);
     int  Tokenize(const char *key, const char *sep2, char **tokens, char *buf);
     void Answer_ALL(uint16_t qtype, char *buf);
     void Fill_RD_IP(char *ipddrtxt, int af);
@@ -60,7 +61,8 @@ class EmcDns {
     uint8_t   m_verbose;
     uint8_t   m_allowed_qty;
     char     *m_allowed_base;
-    uint16_t  m_allowed_offset[0x100]; // Hashtable for allowed TLD-suffixes
+    char     *m_local_base;
+    int16_t   m_allowed_offset[0x100]; // Hashtable for allowed TLD-suffixes
     struct sockaddr_in m_clientAddress;
     struct sockaddr_in m_address;
     socklen_t m_addrLen;
