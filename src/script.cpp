@@ -1009,14 +1009,14 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 }
                 break;
 
-                default:
+                default: // unknown opcode
                     return false;
-            }
+            } // switch (opcode)
 
             // Size limits
             if (stack.size() + altstack.size() > 1000)
                 return false;
-        }
+        } // while (pc < pend)
     }
     catch (...)
     {

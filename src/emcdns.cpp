@@ -100,6 +100,7 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
     shutdown(m_sockfd, SHUT_RDWR);
 #endif
     closesocket(m_sockfd);
+    Sleep(100); // Allow 0.1s external thread to exit
 #ifndef WIN32
     // pthread_join(m_thread, NULL);
 #endif
@@ -163,22 +164,37 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
     
     // Create array of allowed suffixes
     if(allowed_len) {
-      for(char *p = strcpy(m_value + VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + 1, allowed_suff); 
-	*p && m_allowed_qty < EMCDNS_MAX_ALLOWED; 
-	p++) {
-	  if(*p == '|' || *p <= 040)
-	      *p = 0;
-	  if(*p == '.') {
-	      *p = 0;
-	      m_allowed[m_allowed_qty++] = p + 1;
+      m_allowed_base = strcpy(m_value + VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + 1, allowed_suff);
+      uint8_t pos = 0, step = 0; // pos, step for double hashing
+      for(char *p = m_allowed_base + allowed_len; p > m_allowed_base; ) {
+	char c = *--p;
+	if(c ==  '|' || c <= 040) {
+	  *p = pos = step = 0;
+	  continue;
+	}
+	if(c == '.') {
+	  if(p[1] > 040) { // if allowed domain is not empty - save it into ht
+	    step |= 1;
+	    if(m_verbose > 3)
+	      printf("\tEmcDns::Reset: Insert TLD=%s: pos=%u step=%u\n", p + 1, pos, step);
+	    do 
+	      pos += step;
+            while(m_allowed_offset[pos] != 0);
+	    m_allowed_offset[pos] = p + 1 - m_allowed_base;
+	    m_allowed_qty++;
 	  }
-      }
+	  *p = pos = step = 0;
+	  continue;
+	}
+        pos  = ((pos >> 7) | (pos << 1)) + c;
+	step = (((uint32_t)step << 5) - step) ^ c; // (step * 31) ^ c
+      } // for
     } // if(allowed_len)
 
     if(m_verbose > 0)
-	 printf("EmcDns::Reset: Created/Attached: %s:%u\n", 
+	 printf("EmcDns::Reset: Created/Attached: %s:%u; TLD_qty=%u\n", 
 		 m_address.sin_addr.s_addr == INADDR_ANY? "INADDR_ANY" : bind_ip, 
-		 port_no);
+		 port_no, m_allowed_qty);
   } // if(port_no != 0)
   
   return m_port = port_no;
@@ -334,22 +350,30 @@ uint16_t EmcDns::HandleQuery() {
   }
 
   if(m_allowed_qty) { // Activate TLD-filter
-    while(*--p != '.')
+    uint8_t pos = 0, step = 0; // pos, step for double hashing
+    while(*--p != '.') {
       if(p <= key + sizeof(DNS_PREFIX)) {
         if(m_verbose > 3) 
 	  printf("EmcDns::HandleQuery: missing TLD-suffix in given key=%s; return NXDOMAIN\n", key);
 	return 3; // No any suffix, so NXDOMAIN
       }
+      pos  = ((pos >> 7) | (pos << 1)) + *p;
+      step = (((uint32_t)step << 5) - step) ^ *p; // (step * 31) ^ c
+    }
+
     p++; // Set PTR after dot, to the suffix
-    for(uint8_t sufndx = 0; ; sufndx++) {
-      if(sufndx >= m_allowed_qty) {
+    step |= 1;
+
+    printf("DEBUG****************Hash:%s pos=%u, step=%u\n", p, pos, step);
+
+    do {
+      pos += step;
+      if(m_allowed_offset[pos] == 0) {
         if(m_verbose > 3) 
 	  printf("EmcDns::HandleQuery: TLD-suffix in given key=%s is not allowed; return NXDOMAIN\n", key);
 	return 3; // Reached EndOfList, so NXDOMAIN
-      }
-      if(strcmp((const char *)p, m_allowed[sufndx]) == 0)
-	break;
-    } // for
+      } 
+    } while(strcmp((const char *)p, m_allowed_base + m_allowed_offset[pos]) != 0);
   } // if(m_allowed_qty)
 
   if(Search(key) <= 0) // Result saved into m_value

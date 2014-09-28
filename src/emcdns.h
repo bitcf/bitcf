@@ -59,7 +59,8 @@ class EmcDns {
     uint16_t  m_gw_suf_len;
     uint8_t   m_verbose;
     uint8_t   m_allowed_qty;
-    char     *m_allowed[EMCDNS_MAX_ALLOWED];
+    char     *m_allowed_base;
+    uint16_t  m_allowed_offset[0x100]; // Hashtable for allowed TLD-suffixes
     struct sockaddr_in m_clientAddress;
     struct sockaddr_in m_address;
     socklen_t m_addrLen;
