@@ -364,8 +364,6 @@ uint16_t EmcDns::HandleQuery() {
     p++; // Set PTR after dot, to the suffix
     step |= 1;
 
-    printf("DEBUG****************Hash:%s pos=%u, step=%u\n", p, pos, step);
-
     do {
       pos += step;
       if(m_allowed_offset[pos] == 0) {
