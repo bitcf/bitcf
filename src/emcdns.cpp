@@ -86,13 +86,14 @@ EmcDns::EmcDns() : m_port(0) {
 /*---------------------------------------------------*/
 
 EmcDns::~EmcDns() {
-  Reset(NULL, 0, NULL, NULL, 0);
+  Reset(NULL, 0, NULL, NULL, NULL, 0);
 } // EmcDns::~EmcDns
 
 
 /*---------------------------------------------------*/
 
-int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, const char *allowed_suff, uint8_t verbose) {
+int EmcDns::Reset(const char *bind_ip, uint16_t port_no, 
+  const char *gw_suffix, const char *allowed_suff, const char *local_fname, uint8_t verbose) {
   if(m_port != 0) {
     // reset current object to initial state
 #ifndef WIN32
@@ -109,10 +110,13 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
 	 printf("EmcDns::Reset: Destroyed OK\n");
   }
 
+  // Initialize new object here
   if(port_no != 0) { 
+    // Set object to a new state
     memset(this, 0, sizeof(this)); // Clear previous state
     m_verbose = verbose;
-    // Create socket
+
+    // Create and socket
     int ret = socket(PF_INET, SOCK_DGRAM, 0);
     if(ret < 0) {
       return -2; // Cannot create socket
@@ -135,36 +139,53 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
       return -3; // Cannot bind socket
     }
 
-    // Create own lostener, only if GUI; 
-    // Otherwise, Run() will be called from AppInit2
-#ifdef QT_GUI
-    // Create listener thread
-    if (!CreateThread(StatRun, this))
-    {
-      perror("EmcDns::Reset: Cannot create thread");
-      closesocket(m_sockfd);
-      return -4; // cannot create inner thread
+    // Create temporary local buf on stack
+    int local_len = 0;
+    char local_tmp[1 << 15]; // max 32Kb
+    FILE *flocal;
+    uint8_t local_qty = 0;
+    if(local_fname != NULL && (flocal = fopen(local_fname, "r")) != NULL) {
+      char *rd = local_tmp;
+      while(rd < local_tmp + (1 << 15) - 200 && fgets(rd, 200, flocal)) {
+	if(*rd < '0' || *rd == ';')
+	  continue;
+	char *p = strchr(rd, '=');
+	if(p == NULL)
+	  continue;
+	rd = strchr(p, 0);
+        while(*--rd < 040) 
+	  *rd = 0;
+	rd += 2;
+	local_qty++;
+      } // while rd
+      local_len = rd - local_tmp;
+      fclose(flocal);
     }
-#endif
+    // TODO: populate HT offsets
 
-    // Set object to a new state
+    // Allocate memory
     int allowed_len = allowed_suff == NULL? 0 : strlen(allowed_suff);
-    m_gw_suf_len = gw_suffix == NULL? 0 : strlen(gw_suffix);
+    m_gw_suf_len    = gw_suffix    == NULL? 0 : strlen(gw_suffix);
 
-    m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + allowed_len + 3);
+    m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2 + 
+	    m_gw_suf_len + allowed_len + local_len + 4);
+ 
     if(m_value == NULL) {
       perror("EmcDns::Reset: Cannot allocate buffer");
       closesocket(m_sockfd);
       return -5; // no memory for buffers
     }
+
     m_buf    = (uint8_t *)(m_value + VAL_SIZE);
     m_bufend = m_buf + MAX_OUT;
+    char *varbufs = m_value + VAL_SIZE + BUF_SIZE + 2;
+
     m_gw_suffix = m_gw_suf_len?
-      strcpy(m_value + VAL_SIZE + BUF_SIZE + 2, gw_suffix) : NULL;
+      strcpy(varbufs, gw_suffix) : NULL;
     
-    // Create array of allowed suffixes
+    // Create array of allowed TLD-suffixes
     if(allowed_len) {
-      m_allowed_base = strcpy(m_value + VAL_SIZE + BUF_SIZE + 2 + m_gw_suf_len + 1, allowed_suff);
+      m_allowed_base = strcpy(varbufs + m_gw_suf_len + 1, allowed_suff);
       uint8_t pos = 0, step = 0; // pos, step for double hashing
       for(char *p = m_allowed_base + allowed_len; p > m_allowed_base; ) {
 	char c = *--p;
@@ -179,8 +200,8 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
 	      printf("\tEmcDns::Reset: Insert TLD=%s: pos=%u step=%u\n", p + 1, pos, step);
 	    do 
 	      pos += step;
-            while(m_allowed_offset[pos] != 0);
-	    m_allowed_offset[pos] = p + 1 - m_allowed_base;
+            while(m_ht_offset[pos] != 0);
+	    m_ht_offset[pos] = p + 1 - m_allowed_base;
 	    m_allowed_qty++;
 	  }
 	  *p = pos = step = 0;
@@ -191,10 +212,48 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, 
       } // for
     } // if(allowed_len)
 
+    if(local_len) {
+      char *p = m_local_base = (char*)memcpy(varbufs + m_gw_suf_len + 1 + allowed_len + 1, local_tmp, local_len) - 1;
+      // and populate hashtable with offsets
+      while(++p < m_local_base + local_len) {
+	char *p_eq = strchr(p, '=');
+	if(p_eq == NULL)
+	  break;
+        char *p_h = p_eq;
+        *p_eq++ = 0; // CLR = and go to data
+        uint8_t pos = 0, step = 0; // pos, step for double hashing
+	while(--p_h >= p) {
+          pos  = ((pos >> 7) | (pos << 1)) + *p_h;
+	  step = ((step << 5) - step) ^ *p_h; // (step * 31) ^ c
+        } // while
+	step |= 1;
+	if(m_verbose > 3)
+	  printf("\tEmcDns::Reset: Insert Local:[%s]->[%s] pos=%u step=%u\n", p, p_eq, pos, step);
+	do 
+	  pos += step;
+        while(m_ht_offset[pos] != 0);
+	m_ht_offset[pos] = m_local_base - p; // negative value - flag LOCAL
+	p = strchr(p_eq, 0); // go to the next local record
+      } // while
+    } //  if(local_len)
+
+    // Create own listener, only if GUI; 
+    // Otherwise, Run() will be called from AppInit2
+#ifdef QT_GUI
+    // Create listener thread
+    if (!CreateThread(StatRun, this))
+    {
+      perror("EmcDns::Reset: Cannot create thread");
+      closesocket(m_sockfd);
+      free(m_value);
+      return -6; // cannot create inner thread
+    }
+#endif
+
     if(m_verbose > 0)
-	 printf("EmcDns::Reset: Created/Attached: %s:%u; TLD_qty=%u\n", 
+	 printf("EmcDns::Reset: Created/Attached: %s:%u; Qty=%u:%u\n", 
 		 m_address.sin_addr.s_addr == INADDR_ANY? "INADDR_ANY" : bind_ip, 
-		 port_no, m_allowed_qty);
+		 port_no, m_allowed_qty, local_qty);
   } // if(port_no != 0)
   
   return m_port = port_no;
@@ -379,7 +438,7 @@ uint16_t EmcDns::HandleQuery() {
 
   step |= 1; // Set even step for 2-hashing
 
-  if(p == keyp) {
+  if(p == keyp && m_local_base != NULL) {
     // no TLD suffix, try to search local 1st
     if(LocalSearch(p, pos, step) > 0)
       p = NULL; // local search is OK, do not perform nameindex search
@@ -397,12 +456,12 @@ uint16_t EmcDns::HandleQuery() {
       p++; // Set PTR after dot, to the suffix
       do {
         pos += step;
-        if(m_allowed_offset[pos] == 0) {
+        if(m_ht_offset[pos] == 0) {
           if(m_verbose > 3) 
   	    printf("EmcDns::HandleQuery: TLD-suffix=[.%s] in given key=%s is not allowed; return NXDOMAIN\n", p, key);
 	  return 3; // Reached EndOfList, so NXDOMAIN
         } 
-      } while(m_allowed_offset[pos] < 0 || strcmp((const char *)p, m_allowed_base + m_allowed_offset[pos]) != 0);
+      } while(m_ht_offset[pos] < 0 || strcmp((const char *)p, m_allowed_base + m_ht_offset[pos]) != 0);
     } // if(m_allowed_qty)
 
     // Search in the nameindex db. Possible to search filtered indexes, or even pure names, like "dns:www"
@@ -427,26 +486,6 @@ uint16_t EmcDns::HandleQuery() {
       Answer_ALL(qtype, m_value);
   return 0;
 } // EmcDns::HandleQuery
-
-/*---------------------------------------------------*/
-
-int EmcDns::LocalSearch(const uint8_t *key, uint8_t pos, uint8_t step) {
-  if(*key == 0)
-    key = (const uint8_t *)"@";
-  if(m_verbose > 1) 
-    printf("EmcDns::LocalSearch(%s, %u, %u) called\n", key, pos, step);
-    do {
-      pos += step;
-      if(m_allowed_offset[pos] == 0) {
-        if(m_verbose > 3) 
-  	  printf("EmcDns::LocalSearch: Local key=[%s] not found; go to nameindex search\n", key);
-         return 0; // Reached EndOfList, so NXDOMAIN
-      } 
-    } while(m_allowed_offset[pos] > 0 || strcmp((const char *)key, m_allowed_base - m_allowed_offset[pos]) != 0);
-  // TODO: populate m_value
-
-  return 1;
-}
 
 /*---------------------------------------------------*/
 
@@ -621,6 +660,26 @@ int EmcDns::Search(uint8_t *key) {
   strcpy(m_value, value.c_str());
   return 1;
 } //  EmcDns::Search
+
+/*---------------------------------------------------*/
+
+int EmcDns::LocalSearch(const uint8_t *key, uint8_t pos, uint8_t step) {
+  if(m_verbose > 1) 
+    printf("EmcDns::LocalSearch(%s, %u, %u) called\n", key, pos, step);
+    do {
+      pos += step;
+      if(m_ht_offset[pos] == 0) {
+        if(m_verbose > 3) 
+  	  printf("EmcDns::LocalSearch: Local key=[%s] not found; go to nameindex search\n", key);
+         return 0; // Reached EndOfList 
+      } 
+    } while(m_ht_offset[pos] > 0 || strcmp((const char *)key, m_local_base - m_ht_offset[pos]) != 0);
+
+  strcpy(m_value, strchr(m_local_base - m_ht_offset[pos], 0) + 1);
+
+  return 1;
+} // EmcDns::LocalSearch
+
 
 /*---------------------------------------------------*/
 

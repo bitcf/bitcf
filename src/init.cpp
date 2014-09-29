@@ -638,7 +638,9 @@ bool AppInit2(int argc, char* argv[])
         string suffix  = GetArg("-emcdnssuffix", "");
         string bind_ip = GetArg("-emcdnsbindip", "");
         string allowed = GetArg("-emcdnsallowed", "");
-        int rc = emcdns->Reset(bind_ip.c_str(), port, suffix.c_str(), allowed.c_str(), verbose);
+        string localcf = GetArg("-emcdnslocalcf", "");
+        int rc = emcdns->Reset(bind_ip.c_str(), port, 
+		suffix.c_str(), allowed.c_str(), localcf.c_str(), verbose);
         printf("dnssrv.Reset executed=%d\n", rc);
         if (rc < 0)
         {

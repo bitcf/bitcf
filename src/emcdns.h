@@ -31,7 +31,8 @@ class EmcDns {
      EmcDns();
     ~EmcDns();
 
-    int Reset(const char *bind_ip, uint16_t port_no, const char *gw_suffix, const char *allowed_suff, uint8_t verbose); 
+    int Reset(const char *bind_ip, uint16_t port_no, 
+	    const char *gw_suffix, const char *allowed_suff, const char *local_fname, uint8_t verbose); 
     void Run();
 
   private:
@@ -62,7 +63,7 @@ class EmcDns {
     uint8_t   m_allowed_qty;
     char     *m_allowed_base;
     char     *m_local_base;
-    int16_t   m_allowed_offset[0x100]; // Hashtable for allowed TLD-suffixes
+    int16_t   m_ht_offset[0x100]; // Hashtable for allowed TLD-suffixes(>0) and local names(<0)
     struct sockaddr_in m_clientAddress;
     struct sockaddr_in m_address;
     socklen_t m_addrLen;
