@@ -546,9 +546,11 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
     if ((int64)tx.nLockTime > std::numeric_limits<int>::max())
         return error("CTxMemPool::accept() : not accepting nLockTime beyond 2038 yet");
 
+#ifdef STANDARD_TX_ONLY
     // Rather not work on nonstandard transactions (unless -testnet)
     if (!fTestNet && !tx.IsStandard() && !hooks->IsStandard(tx))
         return error("CTxMemPool::accept() : nonstandard transaction type");
+#endif
 
     // Do we already have it?
     uint256 hash = tx.GetHash();
@@ -604,8 +606,10 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         }
 
         // Check for non-standard pay-to-script-hash in inputs
+#ifdef STANDARD_TX_ONLY
         if (!tx.AreInputsStandard(mapInputs) && !fTestNet && !hooks->IsStandard(tx))
             return error("CTxMemPool::accept() : nonstandard transaction input");
+#endif
 
         // Note: if you modify this code to accept non-standard transactions, then
         // you should add code here to check that the transaction does a
