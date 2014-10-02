@@ -263,7 +263,7 @@ QVariant NameTableModel::data(const QModelIndex &index, int role) const
             }
             else
             {
-                float days = (rec->nExpiresAt - pindexBest->nHeight) / 144.0;  // 144 = 24 * 60 / 10 - number of blocks per day on average
+                float days = (rec->nExpiresAt - pindexBest->nHeight) / 175.0;  // 175 - number of blocks per day on average
                 return days < 0 ? QString("%1 hours").arg(days * 24, 0, 'f', 1) : QString("%1 days").arg(days, 0, 'f', 1);
             }
         }

@@ -106,7 +106,7 @@ bool GetNameTotalLifeTime(CNameDB& dbName, const vector<unsigned char> &vchName,
         if (!DecodeNameTx(tx, nti, false))      //we don't care about values correctness here
             return error("GetNameTotalLifeTime() : not namecoin tx, this should never happen");
 
-        sum += nti.nRentalDays*144; //days to blocks. 144 = (24*6) - assumping 1 block every 10 minutes
+        sum += nti.nRentalDays * 175; //days to blocks. 175 is average number of blocks per day
     }
     nTotalLifeTime = sum > 1000000000 ? 1000000000 : sum; //upper limit is 1 billion. this should fit in 2^32
     return true;
@@ -175,7 +175,13 @@ int64 GetNameNewFee(const CBlockIndex* pindexBlock, const int nRentalDays)
 
     txMinFee = max(txMinFee, MIN_TX_FEE);
 
-    return txMinFee;
+    if (pindexBlock->nHeight < 62000)
+        return txMinFee;
+    else
+    {
+        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - 62000) * CENT;
+            return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
+    }
 }
 
 int64 GetNameUpdateFee(const CBlockIndex* pindexBlock, const int nRentalDays)
@@ -190,7 +196,13 @@ int64 GetNameUpdateFee(const CBlockIndex* pindexBlock, const int nRentalDays)
 
     txMinFee = max(txMinFee, MIN_TX_FEE);
 
-    return txMinFee;
+    if (pindexBlock->nHeight < 62000)
+        return txMinFee;
+    else
+    {
+        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - 62000) * CENT;
+            return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
+    }
 }
 
 bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight)
@@ -413,8 +425,7 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend, 
 
                     // Check that enough fee is included
                     int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-                    bool fAllowFree = CTransaction::AllowFree(dPriority);
-                    int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+                    int64 nMinFee = wtxNew.GetMinFee(1, false);
                     if (nFeeRet < max(nPayFee, nMinFee))
                     {
                         nFeeRet = max(nPayFee, nMinFee);
