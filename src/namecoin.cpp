@@ -174,14 +174,15 @@ int64 GetNameNewFee(const CBlockIndex* pindexBlock, const int nRentalDays)
     txMinFee = (txMinFee / CENT) * CENT;
 
     txMinFee = max(txMinFee, MIN_TX_FEE);
+    return txMinFee;
 
-    if (pindexBlock->nHeight < 62000)
-        return txMinFee;
-    else
-    {
-        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - 62000) * CENT;
-            return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
-    }
+//    if (pindexBlock->nHeight < 64000)
+//        return txMinFee;
+//    else
+//    {
+//        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - 64000) * CENT;
+//        return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
+//    }
 }
 
 int64 GetNameUpdateFee(const CBlockIndex* pindexBlock, const int nRentalDays)
@@ -196,13 +197,15 @@ int64 GetNameUpdateFee(const CBlockIndex* pindexBlock, const int nRentalDays)
 
     txMinFee = max(txMinFee, MIN_TX_FEE);
 
-    if (pindexBlock->nHeight < 62000)
-        return txMinFee;
-    else
-    {
-        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - 62000) * CENT;
-            return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
-    }
+    return txMinFee;
+
+//    if (pindexBlock->nHeight < 64000)
+//        return txMinFee;
+//    else
+//    {
+//        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - 64000) * CENT;
+//        return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
+//    }
 }
 
 bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight)
