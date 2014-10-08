@@ -242,8 +242,14 @@ void ManageNamesPage::on_submitNameButton_clicked()
         }
     }
 
+    int64 txFee = 0;
+    if (txType == "NAME_NEW")
+        txFee = GetNameNewFee(pindexBest, days);
+    else if (txType == "NAME_UPDATE")
+        txFee = GetNameUpdateFee(pindexBest, days);
+
     if (QMessageBox::Yes != QMessageBox::question(this, tr("Confirm name registration"),
-          tr("This will issue a %1.").arg(txType),
+          tr("This will issue a %1. Tx fee is at least %2 emc.").arg(txType).arg(txFee / (float)COIN, 0, 'f', 2),
           QMessageBox::Yes | QMessageBox::Cancel,
           QMessageBox::Cancel))
     {

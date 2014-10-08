@@ -86,6 +86,9 @@ std::string stringFromVch(const std::vector<unsigned char> &vch);
 bool GetNameHeight(CNameDB& dbName, std::vector<unsigned char> vchName, int& nHeight);
 std::vector<unsigned char> vchFromString(const std::string &str);
 
+int64 GetNameNewFee(const CBlockIndex* pindexBlock, const int nRentalDays);
+int64 GetNameUpdateFee(const CBlockIndex* pindexBlock, const int nRentalDays);
+
 struct NameTxInfo
 {
     std::vector<unsigned char> vchName;
