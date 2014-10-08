@@ -1,7 +1,9 @@
 #ifndef EMCDNS_H
 #define EMCDNS_H
 
-#define EMCDNS_MAX_ALLOWED 32
+
+#define EMCDNS_DAPSIZE     (8 * 1024)
+#define EMCDNS_DAPTRESHOLD 300 // 20K/min limit answer
 
 struct DNSHeader {
   static const uint32_t QR_MASK = 0x8000;
@@ -26,6 +28,11 @@ struct DNSHeader {
 } __attribute__((packed)); // struct DNSHeader
 
 
+struct DNSAP {		// DNS Amplifier Protector ExpDecay structure
+  uint16_t timestamp;	// Time in 64s ticks
+  uint16_t ed_size;	// ExpDecay output size in 64-byte units
+} __attribute__((packed));
+
 class EmcDns {
   public:
      EmcDns();
@@ -46,15 +53,20 @@ class EmcDns {
     void Fill_RD_IP(char *ipddrtxt, int af);
     void Fill_RD_DName(char *txt, uint8_t mxsz, int8_t txtcor);
 
+    // Returns x = hash index to update size; x==NULL = disable;
+    DNSAP  *CheckDAP(uint32_t ip_addr);
+
     inline void Out2(uint16_t x) { memcpy(m_snd, &x, 2); m_snd += 2; }
     inline void Out4(uint32_t x) { memcpy(m_snd, &x, 4); m_snd += 4; }
 
     DNSHeader *m_hdr;
+    DNSAP    *m_dap_ht;	// Hashtable for DAP; index is hash(IP)
     char     *m_value;
     const char *m_gw_suffix;
     uint8_t  *m_buf, *m_bufend, *m_snd, *m_rcv, *m_rcvend;
     SOCKET    m_sockfd;
     int       m_rcvlen;
+    uint32_t  m_daprand;	// DAP random value for universal hashing
     uint32_t  m_ttl;
     uint16_t  m_port;
     uint16_t  m_label_ref;
