@@ -1710,21 +1710,14 @@ bool DecodeNameTx(const CTransaction& tx, NameTxInfo& nti, bool checkValuesCorre
     return found;
 }
 
-bool GetTxFee(CTxDB& txdb, const CTransaction& tx, bool fBlock, bool fMiner, int64& txFee)
+bool GetTxFee(CTxDB& txdb, const map<uint256, CTxIndex>& mapTestPool, const CTransaction& tx, bool fBlock, bool fMiner, int64& txFee)
 {
     MapPrevTx mapInputs;
-    map<uint256, CTxIndex> mapUnused;
     bool fInvalid = false;
-    if (!tx.FetchInputs(txdb, mapUnused, fBlock, fMiner, mapInputs, fInvalid))
+    if (!tx.FetchInputs(txdb, mapTestPool, fBlock, fMiner, mapInputs, fInvalid))
         return false;
     txFee = tx.GetValueIn(mapInputs) - tx.GetValueOut();
     return true;
-}
-
-bool GetTxFee(const CTransaction& tx, bool fBlock, bool fMiner, int64& txFee)
-{
-    CTxDB txdb("r");
-    return GetTxFee(txdb, tx, fBlock, fMiner, txFee);
 }
 
 int IndexOfNameOutput(const CTransaction& tx)
@@ -1826,7 +1819,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
                 bool txFeePass = false;
                 int64 txFee;
-                if (!GetTxFee(txdb, tx, fBlock, fMiner, txFee))
+                if (!GetTxFee(txdb, mapTestPool, tx, fBlock, fMiner, txFee))
                     return error("ConnectInputsHook() : could not read fee from database.");
 
                 for (int i = 1; i <= 10; i++)
@@ -1856,7 +1849,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
                 bool txFeePass = false;
                 int64 txFee;
-                if (!GetTxFee(txdb, tx, fBlock, fMiner, txFee))
+                if (!GetTxFee(txdb, mapTestPool, tx, fBlock, fMiner, txFee))
                     return error("ConnectInputsHook() : could not read fee from database.");
 
                 for (int i = 1; i <= 10; i++)
@@ -2117,100 +2110,6 @@ bool CNamecoinHooks::IsNameScript(CScript scr)
     NameTxInfo nti;
     return DecodeNameScript(scr, nti, false);
 }
-
-
-//#include <boost/assign/list_of.hpp>
-//using namespace boost::assign;
-
-//void sha256(const uint256& input, uint256& output)
-//{
-//    SHA256((unsigned char*)&input, sizeof(input), (unsigned char*)&output);
-//}
-
-//string stringFromCKeyingMaterial(const CKeyingMaterial &vch) {
-//    string res;
-//    CKeyingMaterial::const_iterator vi = vch.begin();
-//    while (vi != vch.end()) {
-//        res += (char)(*vi);
-//        vi++;
-//    }
-//    return res;
-//}
-
-//Value name_encrypt(const Array& params, bool fHelp)
-//{
-//    if (fHelp || params.size() < 2 || params.size() > 3)
-//        throw runtime_error(
-//            "name_encrypt <msg> <sign> [to]\n"
-//            "Encrypts a string and returns a hex string. Does not alter wallet or blockchain.\n"
-//            "  msg: message to be signed\n"
-//            "  sign: key from key->value pair that belongs to you\n"
-//            "  to: [username1, username2..usernameN]\n");
-
-//    RPCTypeCheck(params, list_of(str_type)(str_type)(array_type), true);
-
-//    vector<unsigned char> msg = vchFromValue(params[0]);
-//    if (msg.size() == 0)
-//        throw JSONRPCError(RPC_INVALID_PARAMETER, "message is too short");
-
-//    uint256 hash;
-//    SHA256(&msg[0], msg.size(), (unsigned char*)&hash);
-
-//    CCrypter crypter;
-
-////set pass
-//    SecureString value;
-//    value = "value1";
-//    string str = "aaaabbbb"; //needs to be 8 byte size
-//    vector<unsigned char> salt(str.begin(), str.end());
-//    bool res1 = crypter.SetKeyFromPassphrase(value, salt, 25000, 0);
-
-////encrypt
-//    str = "value1 value2 value3 value4";
-//    CKeyingMaterial message(str.begin(), str.end());
-//    vector<unsigned char> cipher;
-//    bool res2 = crypter.Encrypt(message, cipher);
-
-//    //printf("cipher text = %s", stringFromVch(cipher).c_str());
-
-////decrypt
-//    CKeyingMaterial decryptedText;
-//    crypter.Decrypt(cipher, decryptedText);
-
-
-//    //printf("decrypted text = %s", stringFromCKeyingMaterial(decryptedText).c_str());
-
-
-
-
-//    Object result;
-//    result.push_back(Pair("msg", stringFromVch(msg)));
-//    result.push_back(Pair("hash", HexStr(BEGIN(hash), END(hash))));
-//    //result.push_back(Pair("crypter cipher hex", HexStr(cipher)));
-//    string t1 = EncodeBase58(cipher);
-//    vector<unsigned char> decoded;; DecodeBase58(t1,decoded);
-//    result.push_back(Pair("crypter cipher base58", t1));
-//    result.push_back(Pair("decoded == cipher", decoded == cipher));
-//    result.push_back(Pair("crypter pass", res1));
-//    result.push_back(Pair("crypter encrypt", res2));
-//    return result;
-//}
-
-
-//Value name_decrypt(const Array& params, bool fHelp)
-//{
-//    if (fHelp || params.size() < 2 || params.size() > 2)
-//        throw runtime_error(
-//            "name_decrypt <hexstring> [msg]\n"
-//            "Decrypts a hex string and returns string. Does not alter wallet or blockchain.\n"
-//            "hexstring: encrypted message\n"
-//            "to: [username1, username2..usernameN]\n"
-//            "sign: key from key->value pair that belongs to you.\n");
-
-//    Object result;
-//    return result;
-//}
-
 
 bool CNamecoinHooks::deletePendingName(const CTransaction& tx)
 {
