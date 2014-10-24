@@ -105,6 +105,7 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no,
     // pthread_join(m_thread, NULL);
 #endif
     free(m_value);
+    free(m_dap_ht);
     m_port = 0;
     if(m_verbose > 0)
 	 printf("EmcDns::Reset: Destroyed OK\n");
@@ -113,7 +114,7 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no,
   // Initialize new object here
   if(port_no != 0) { 
     // Set object to a new state
-    memset(this, 0, sizeof(this)); // Clear previous state
+    memset(this, 0, sizeof(EmcDns)); // Clear previous state
     m_verbose = verbose;
 
     // Create and socket
@@ -161,11 +162,14 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no,
       local_len = rd - local_tmp;
       fclose(flocal);
     }
-    // TODO: populate HT offsets
 
     // Allocate memory
     int allowed_len = allowed_suff == NULL? 0 : strlen(allowed_suff);
     m_gw_suf_len    = gw_suffix    == NULL? 0 : strlen(gw_suffix);
+
+    // If no memory, DAP inactive - this is not critical problem
+    m_dap_ht  = (allowed_len | m_gw_suf_len)? (DNSAP*)calloc(EMCDNS_DAPSIZE, sizeof(DNSAP)) : NULL; 
+    m_daprand = GetRand(0xffffffff) | 1; 
 
     m_value  = (char *)malloc(VAL_SIZE + BUF_SIZE + 2 + 
 	    m_gw_suf_len + allowed_len + local_len + 4);
@@ -277,12 +281,18 @@ void EmcDns::Run() {
     if(m_rcvlen <= 0)
 	break;
 
-    m_buf[BUF_SIZE] = 0; // Set terminal for infinity QNAME
+    DNSAP *dap = NULL;
 
-    HandlePacket();
+    if(m_dap_ht == NULL || (dap = CheckDAP(m_clientAddress.sin_addr.s_addr)) != NULL) {
+      m_buf[BUF_SIZE] = 0; // Set terminal for infinity QNAME
+      HandlePacket();
 
-    sendto(m_sockfd, (const char *)m_buf, m_snd - m_buf, MSG_NOSIGNAL,
+      sendto(m_sockfd, (const char *)m_buf, m_snd - m_buf, MSG_NOSIGNAL,
 	             (struct sockaddr *) &m_clientAddress, m_addrLen);
+
+      if(dap != NULL)
+        dap->ed_size += (m_snd - m_buf) >> 6;
+    } // dap check
   } // for
 
   if(m_verbose > 2) printf("EmcDns::Run: Received Exit packet_len=%d\n", m_rcvlen);
@@ -682,4 +692,16 @@ int EmcDns::LocalSearch(const uint8_t *key, uint8_t pos, uint8_t step) {
 
 
 /*---------------------------------------------------*/
+// Returns x>0 = hash index to update size; x<0 = disable;
+DNSAP *EmcDns::CheckDAP(uint32_t ip_addr) { 
+  uint32_t hash = ip_addr * m_daprand;
+  hash ^= hash >> 16;
+  hash += hash >> 8;
+  DNSAP *dap = m_dap_ht + (hash & (EMCDNS_DAPSIZE - 1));
+  uint16_t timestamp = time(NULL) >> 6; // time in 64s ticks
+  uint16_t dt = timestamp - dap->timestamp;
+  dap->ed_size = (dt > 15? 0 : dap->ed_size >> dt) + 1;
+  dap->timestamp = timestamp;
+  return (dap->ed_size <= EMCDNS_DAPTRESHOLD)? dap : NULL;
+} // EmcDns::CheckDAP 
 
