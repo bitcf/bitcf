@@ -1801,7 +1801,10 @@ void CWallet::FixSpentCoins(int& nMismatchFound, int64& nBalanceInQuestion, bool
     nMismatchFound = 0;
     nBalanceInQuestion = 0;
 
-    LOCK(cs_wallet);
+    // cs_main lock was added here because later it might try to lock cs_main anyway (in CDB::Close()).
+    // In some rare cases locking cs_wallet and then cs_main will causes hanging.
+    // order should be cs_main, and then cs_wallet.
+    LOCK2(cs_main, cs_wallet);
     vector<CWalletTx*> vCoins;
     vCoins.reserve(mapWallet.size());
     for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
