@@ -325,7 +325,7 @@ void EmcDns::HandlePacket() {
 
   // Clear answer counters - maybe contains junk from client
   //* m_hdr->ANCount = m_hdr->NSCount = m_hdr->ARCount = 0;
-  m_hdr->ARCount = m_hdr->ANCount = m_hdr->NSCount = m_hdr->ARCount = 0;
+  m_hdr->ANCount = m_hdr->NSCount = m_hdr->ARCount = 0;
   m_hdr->Bits   |= m_hdr->QR_MASK; // Change Q->R
 
   do {
@@ -419,9 +419,9 @@ uint16_t EmcDns::HandleQuery() {
   if(m_gw_suf_len) { // suffix defined [public DNS], need to cut
     p -= m_gw_suf_len;
     int d = p - keyp;
-    if(d >=  0 && strcmp((const char *)p, m_gw_suffix) != 0
-    || d == -1 && strcmp((const char *)p + 1, m_gw_suffix + 1) != 0
-    || d <  -1) {
+    if((d >=  0 && strcmp((const char *)p, m_gw_suffix) != 0)
+    || (d == -1 && strcmp((const char *)p + 1, m_gw_suffix + 1) != 0)
+    || (d <  -1)) {
         if(m_verbose > 3) 
 	    printf("EmcDns::HandleQuery: missing GW-suffix=%s in given key=%s; return NXDOMAIN\n", 
 		  m_gw_suffix, key);
@@ -534,7 +534,7 @@ int EmcDns::Tokenize(const char *key, const char *sep2, char **tokens, char *buf
       // if needed. redefine sep2
       char sepulka[2];
       if(*val == '~') {
-	  *val++;
+	  val++;
 	  sepulka[0] = *val++;
 	  sepulka[1] = 0;
 	  sep2 = sepulka;
