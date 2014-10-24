@@ -114,7 +114,7 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no,
   // Initialize new object here
   if(port_no != 0) { 
     // Set object to a new state
-    memset(this, 0, sizeof(this)); // Clear previous state
+    memset(this, 0, sizeof(EmcDns)); // Clear previous state
     m_verbose = verbose;
 
     // Create and socket
