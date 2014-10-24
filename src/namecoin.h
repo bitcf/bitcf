@@ -34,15 +34,29 @@ public:
     CNameDB(const char* pszMode="r+") : CDB("nameindex.dat", pszMode) {}
 
     //bool WriteName(std::vector<unsigned char>& name, std::vector<CDiskTxPos> vtxPos)
-    bool WriteName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos)
+//    bool WriteName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos)
+//    {
+//        return Write(make_pair(std::string("namei"), name), vtxPos);
+//    }
+
+    bool WriteName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos, int nExpiresAt)
     {
-        return Write(make_pair(std::string("namei"), name), vtxPos);
+        return Write(make_pair(std::string("namei"), name), make_pair(vtxPos, nExpiresAt));
     }
 
     //bool ReadName(std::vector<unsigned char>& name, std::vector<CDiskTxPos>& vtxPos)
-    bool ReadName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos)
+//    bool ReadName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos)
+//    {
+//        return Read(make_pair(std::string("namei"), name), vtxPos);
+//    }
+
+    bool ReadName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos, int &nExpiresAt)
     {
-        return Read(make_pair(std::string("namei"), name), vtxPos);
+        std::pair< std::vector<CNameIndex>, int > v;
+        bool ret = Read(make_pair(std::string("namei"), name), v);
+        vtxPos = v.first;
+        nExpiresAt = v.second;
+        return ret;
     }
 
     bool ExistsName(const std::vector<unsigned char>& name)
@@ -79,11 +93,9 @@ extern std::map<std::vector<unsigned char>, std::set<uint256> > mapNamePending;
 int IndexOfNameOutput(const CTransaction& tx);
 
 bool GetNameCurrentAddress(const std::vector<unsigned char> &vchName, CBitcoinAddress &address, std::string &error);
-bool GetNameTotalLifeTime(const std::vector<unsigned char> &vchName, int &nTotalLifeTime);
-bool GetExpirationData(const std::vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight);
+bool GetExpirationData(CNameDB& dbName, const std::vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight);
 bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight);
 std::string stringFromVch(const std::vector<unsigned char> &vch);
-bool GetNameHeight(CNameDB& dbName, std::vector<unsigned char> vchName, int& nHeight);
 std::vector<unsigned char> vchFromString(const std::string &str);
 
 int64 GetNameNewFee(const CBlockIndex* pindexBlock, const int nRentalDays);

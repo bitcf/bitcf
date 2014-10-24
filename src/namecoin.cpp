@@ -86,72 +86,56 @@ string stringFromVch(const vector<unsigned char> &vch) {
     return res;
 }
 
-//how much time (in blocks) this name can still be used
-bool GetNameTotalLifeTime(CNameDB& dbName, const vector<unsigned char> &vchName, int& nTotalLifeTime)
+// Calculate at which block will expire.
+bool CalculateExpiresAt(CNameDB& dbName, const vector<CNameIndex>& vtxPos, int& nExpiresAt)
 {
-    vector<CNameIndex> vtxPos;
-    if (!dbName.ExistsName(vchName))
-        return error("GetNameTotalLifeTime() : name - %s - does not exist in name DB", stringFromVch(vchName).c_str());
-    if (!dbName.ReadName(vchName, vtxPos))
-        return error("GetNameTotalLifeTime() : failed to read from name DB");
-
     int64 sum = 0;
     BOOST_FOREACH(const CNameIndex& txPos, vtxPos)
     {
         CTransaction tx;
         if (!tx.ReadFromDisk(txPos.txPos))
-            return error("GetNameTotalLifeTime() : could not read tx from disk");
+            return error("CalculateNameTotalLifeTime() : could not read tx from disk");
 
         NameTxInfo nti;
-        if (!DecodeNameTx(tx, nti, false))      //we don't care about values correctness here
-            return error("GetNameTotalLifeTime() : not namecoin tx, this should never happen");
+        if (!DecodeNameTx(tx, nti, false))
+            return error("CalculateNameTotalLifeTime() : not namecoin tx, this should never happen");
 
         sum += nti.nRentalDays * 175; //days to blocks. 175 is average number of blocks per day
     }
-    nTotalLifeTime = sum > 1000000000 ? 1000000000 : sum; //upper limit is 1 billion. this should fit in 2^32
-    return true;
-}
 
-bool GetNameTotalLifeTime(const vector<unsigned char> &vchName, int& nTotalLifeTime)
-{
-    CNameDB dbName("r");
-    return GetNameTotalLifeTime(dbName, vchName, nTotalLifeTime);
+    nExpiresAt = vtxPos.front().nHeight + sum > INT_MAX ? INT_MAX : vtxPos.front().nHeight + sum; //limit to integer value
+
+    return true;
 }
 
 //name total lifetime (nTotalLifeTime) and block number at which name was registered (nHeight)
 bool GetExpirationData(CNameDB& dbName, const vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight)
 {
-    if (!GetNameTotalLifeTime(dbName, vchName, nTotalLifeTime))
-        return false;
+    vector<CNameIndex> vtxPos;
+    int nExpiresAt;
+    if (!dbName.ExistsName(vchName))
+        return error("GetNameTotalLifeTime() : name - %s - does not exist in name DB", stringFromVch(vchName).c_str());
+    if (!dbName.ReadName(vchName, vtxPos, nExpiresAt))
+        return error("GetNameTotalLifeTime() : failed to read from name DB");
 
-    if (!GetNameHeight(dbName, vchName, nHeight))
-        return false;
+    nHeight = vtxPos.front().nHeight;
+    nTotalLifeTime = nExpiresAt - nHeight;
 
     return true;
-}
-
-bool GetExpirationData(const vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight)
-{
-    CNameDB dbName("r");
-    return GetExpirationData(dbName, vchName, nTotalLifeTime, nHeight);
 }
 
 // Tests if name is active. You can optionaly specify at which height it is/was active.
 bool NameActive(CNameDB& dbName, const vector<unsigned char> &vchName, int currentBlockHeight = -1)
 {
-    if (dbName.ExistsName(vchName))
-    {
-        int nTotalLifeTime, nHeight;
-        if (!GetExpirationData(dbName, vchName, nTotalLifeTime, nHeight))
-            return error("NameActive(): failed to get expiration data");
+    vector<CNameIndex> vtxPos;
+    int nExpiresAt;
+    if (!dbName.ReadName(vchName, vtxPos, nExpiresAt))
+        return false;
 
-        if (currentBlockHeight < 0)
-            currentBlockHeight = pindexBest->nHeight;
+    if (currentBlockHeight < 0)
+        currentBlockHeight = pindexBest->nHeight;
 
-        if (currentBlockHeight - nHeight < nTotalLifeTime)
-            return true;
-    }
-    return false;
+    return currentBlockHeight <= nExpiresAt;
 }
 
 bool NameActive(const vector<unsigned char> &vchName, int currentBlockHeight = -1)
@@ -223,35 +207,6 @@ bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight)
         return false;
     nHeight = pindex->nHeight;
     return true;
-}
-
-bool GetNameHeight(CTxDB& txdb, vector<unsigned char> vchName, int& nHeight) {
-    CNameDB dbName("r");
-    vector<CNameIndex> vtxPos;
-    if (dbName.ExistsName(vchName))
-    {
-        if (!dbName.ReadName(vchName, vtxPos))
-            return error("GetNameHeight() : failed to read from name DB");
-        if (vtxPos.empty())
-            return error("GetNameHeight() : failed to read from name DB");
-        nHeight = vtxPos.front().nHeight;
-        return true;
-    }
-    return false;
-}
-
-bool GetNameHeight(CNameDB& dbName, vector<unsigned char> vchName, int& nHeight) {
-    vector<CNameIndex> vtxPos;
-    if (dbName.ExistsName(vchName))
-    {
-        if (!dbName.ReadName(vchName, vtxPos))
-            return error("GetNameHeight() : failed to read from name DB");
-        if (vtxPos.empty())
-            return error("GetNameHeight() : failed to read from name DB");
-        nHeight = vtxPos.front().nHeight;
-        return true;
-    }
-    return false;
 }
 
 bool RemoveNameScriptPrefix(const CScript& scriptIn, CScript& scriptOut)
@@ -484,17 +439,6 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, C
         return _("SendMoneyWithInputTx(): The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 
     return "";
-}
-
-// returns last known value for this name
-bool GetNameValue(CNameDB& dbName, const vector<unsigned char>& vchName, vector<unsigned char>& vchValue)
-{
-    vector<CNameIndex> vtxPos;
-    if (!dbName.ReadName(vchName, vtxPos) || vtxPos.empty())
-        return false;
-
-    vchValue = vtxPos.back().vValue;
-    return true;
 }
 
 // scans nameindex.dat and return names with their last CNameIndex
@@ -769,7 +713,8 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
 bool GetFirstTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTransaction& tx)
 {
     vector<CNameIndex> vtxPos;
-    if (!dbName.ReadName(vchName, vtxPos) || vtxPos.empty())
+    int nExpiresAt;
+    if (!dbName.ReadName(vchName, vtxPos, nExpiresAt) || vtxPos.empty())
         return false;
     CNameIndex& txPos = vtxPos.front();
 
@@ -781,7 +726,8 @@ bool GetFirstTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTr
 bool GetLastTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTransaction& tx)
 {
     vector<CNameIndex> vtxPos;
-    if (!dbName.ReadName(vchName, vtxPos) || vtxPos.empty())
+    int nExpiresAt;
+    if (!dbName.ReadName(vchName, vtxPos, nExpiresAt) || vtxPos.empty())
         return false;
     CNameIndex& txPos = vtxPos.back();
 
@@ -899,7 +845,7 @@ Value name_list(const Array& params, bool fHelp)
             oName.push_back(Pair("transferred", true));
         oName.push_back(Pair("address", item.second.strAddress));
         oName.push_back(Pair("expires_in", item.second.nExpiresAt - pindexBest->nHeight));
-        if (item.second.nExpiresAt <= 0)
+        if (item.second.nExpiresAt - pindexBest->nHeight <= 0)
             oName.push_back(Pair("expired", true));
 
         oRes.push_back(oName);
@@ -931,10 +877,9 @@ void GetNameList(const vector<unsigned char> &vchNameUniq, map<vector<unsigned c
         if (vchNameUniq.size() > 0 && vchNameUniq != nti.vchName)
             continue;
 
-        int nTotalLifeTime, nNameHeight;
-        if (!GetExpirationData(dbName, nti.vchName, nTotalLifeTime, nNameHeight))
+        vector<CNameIndex> vtxPos;
+        if (!dbName.ReadName(nti.vchName, vtxPos, nti.nExpiresAt))
             continue;
-        nti.nExpiresAt = nTotalLifeTime + nNameHeight;
 
         mapNames[nti.vchName] = nti;
     }
@@ -1019,10 +964,10 @@ Value name_show(const Array& params, bool fHelp)
     string name = stringFromVch(vchName);
     {
         LOCK(cs_main);
-        //vector<CDiskTxPos> vtxPos;
         vector<CNameIndex> vtxPos;
+        int nExpiresAt;
         CNameDB dbName("r");
-        if (!dbName.ReadName(vchName, vtxPos))
+        if (!dbName.ReadName(vchName, vtxPos, nExpiresAt))
             throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from name DB");
 
         if (vtxPos.size() < 1)
@@ -1040,23 +985,15 @@ Value name_show(const Array& params, bool fHelp)
         if (!DecodeNameTx(tx, nti, false, true))
             throw JSONRPCError(RPC_WALLET_ERROR, "failed to decode name");
 
-        int nTotalLifeTime, nHeight;
-        if (!GetExpirationData(dbName, vchName, nTotalLifeTime, nHeight))
-            throw JSONRPCError(RPC_WALLET_ERROR, "failed to get expiration data");
-
         Object oName;
         oName.push_back(Pair("name", name));
         string value = stringFromVch(nti.vchValue);
         oName.push_back(Pair("value", value));
         oName.push_back(Pair("txid", tx.GetHash().GetHex()));
         oName.push_back(Pair("address", nti.strAddress));
-
-
-        oName.push_back(Pair("expires_in", nHeight + nTotalLifeTime - pindexBest->nHeight));
-        if(nHeight + nTotalLifeTime - pindexBest->nHeight <= 0)
-        {
+        oName.push_back(Pair("expires_in", nExpiresAt - pindexBest->nHeight));
+        if (nExpiresAt - pindexBest->nHeight <= 0)
             oName.push_back(Pair("expired", true));
-        }
         oLastName = oName;
     }
     return oLastName;
@@ -1127,11 +1064,13 @@ Value name_filter(const Array& params, bool fHelp)
 
         CNameIndex txName = pairScan.second;
 
-        int nTotalLifeTime, nHeight;
-        if (!GetExpirationData(vchName, nTotalLifeTime, nHeight))
+        vector<CNameIndex> vtxPos;
+        int nExpiresAt;
+        if (!dbName.ReadName(pairScan.first, vtxPos, nExpiresAt))
             continue;
 
         // max age
+        int nHeight = vtxPos.front().nHeight;
         if(nMaxAge != 0 && pindexBest->nHeight - nHeight >= nMaxAge)
             continue;
 
@@ -1144,11 +1083,9 @@ Value name_filter(const Array& params, bool fHelp)
         if (!fStat) {
             oName.push_back(Pair("name", name));
 
-            int nExpiresIn = nHeight + nTotalLifeTime - pindexBest->nHeight;
+            int nExpiresIn = nExpiresAt - pindexBest->nHeight;
             if (nExpiresIn <= 0)
-            {
-                oName.push_back(Pair("expired", 1));
-            }
+                oName.push_back(Pair("expired", true));
             else
             {
                 string value = stringFromVch(txName.vValue);
@@ -1218,15 +1155,16 @@ Value name_scan(const Array& params, bool fHelp)
 
         vector<unsigned char> vchValue = txName.vValue;
 
-        int nTotalLifeTime, nHeight;
-        if (!GetExpirationData(dbName, pairScan.first, nTotalLifeTime, nHeight))
+        vector<CNameIndex> vtxPos;
+        int nExpiresAt;
+        if (!dbName.ReadName(pairScan.first, vtxPos, nExpiresAt))
             continue;
 
-        if ((nHeight + nTotalLifeTime - pindexBest->nHeight <= 0)
+        if ((nExpiresAt - pindexBest->nHeight <= 0)
             || txPos.IsNull()
             || !tx.ReadFromDisk(txPos))
         {
-            oName.push_back(Pair("expired", 1));
+            oName.push_back(Pair("expired", true));
         }
         else
         {
@@ -1236,7 +1174,7 @@ Value name_scan(const Array& params, bool fHelp)
             oName.push_back(Pair("value", value));
             //oName.push_back(Pair("txid", tx.GetHash().GetHex()));
             //oName.push_back(Pair("address", strAddress));
-            oName.push_back(Pair("expires_in", nHeight + nTotalLifeTime - pindexBest->nHeight));
+            oName.push_back(Pair("expires_in", nExpiresAt - pindexBest->nHeight));
         }
         oRes.push_back(oName);
     }
@@ -1894,7 +1832,8 @@ bool ConnectInputsInner(CTxDB& txdb,
     }
 
     vector<CNameIndex> vtxPos;
-    if (dbName.ExistsName(vchName) && !dbName.ReadName(vchName, vtxPos))
+    int nExpiresAt;
+    if (dbName.ExistsName(vchName) && !dbName.ReadName(vchName, vtxPos, nExpiresAt))
         return error("ConnectInputsHook() : failed to read from name DB");
 
     if ((op == OP_NAME_UPDATE || op == OP_NAME_DELETE) && !CheckNameTxPos(vtxPos, vTxindex[nInput].pos))
@@ -1938,11 +1877,6 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 
     if (!ConnectInputsInner(txdb, mapTestPool, tx, vTxPrev, vTxindex, pindexBlock, txPos, fBlock, fMiner) && fMiner == true)
     {
-        //name TX is invalid - remove it.
-        LOCK2(cs_main, pwalletMain->cs_wallet);
-        pwalletMain->EraseFromWallet(tx.GetHash());
-        mempool.remove(tx);
-
         NameTxInfo nti;
         if (DecodeNameTx(tx, nti, false))
         {
@@ -1952,6 +1886,12 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
             if (mi->second.empty())
                 mapNamePending.erase(nti.vchName);
         }
+
+        //name TX is invalid - remove it.
+        LOCK2(cs_main, pwalletMain->cs_wallet);
+        pwalletMain->EraseFromWallet(tx.GetHash());
+        mempool.remove(tx);
+
         return false;
     }
 
@@ -1977,7 +1917,8 @@ bool CNamecoinHooks::DisconnectInputs(CTxDB& txdb,
 
         //vector<CDiskTxPos> vtxPos;
         vector<CNameIndex> vtxPos;
-        if (!dbName.ReadName(nti.vchName, vtxPos))
+        int nExpiresAt;
+        if (!dbName.ReadName(nti.vchName, vtxPos, nExpiresAt))
             return error("DisconnectInputsHook() : failed to read from name DB");
         // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
         // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
@@ -1992,7 +1933,9 @@ bool CNamecoinHooks::DisconnectInputs(CTxDB& txdb,
 
             // TODO validate that the first pos is the current tx pos
         }
-        if (!dbName.WriteName(nti.vchName, vtxPos))
+        if (!CalculateExpiresAt(dbName, vtxPos, nExpiresAt))
+            return error("DisconnectInputsHook() : failed to calculate expiration time before writing to name DB");
+        if (!dbName.WriteName(nti.vchName, vtxPos, nExpiresAt))
             return error("DisconnectInputsHook() : failed to write to name DB");
 
         dbName.TxnCommit();
@@ -2059,7 +2002,8 @@ bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     BOOST_FOREACH(const nameTempProxy &i, vNameTemp)
     {
         vector<CNameIndex> vtxPos;
-        if (dbName.ExistsName(i.vchName) && !dbName.ReadName(i.vchName, vtxPos))
+        int nExpiresAt;
+        if (dbName.ExistsName(i.vchName) && !dbName.ReadName(i.vchName, vtxPos, nExpiresAt))
             return error("ConnectInputsHook() : failed to read from name DB");
 
         // try to write changes to NameDB
@@ -2067,13 +2011,15 @@ bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         if (i.op == OP_NAME_NEW || i.op == OP_NAME_DELETE)
         {//try to delete previous chain of new->update->update->... from nameindex.dat
             if (!dbName.EraseName(i.vchName))
-                return error("ConnectInputsHook() : failed to write to name DB");
+                return error("ConnectInputsHook() : failed to erase name after name_delete");
             vtxPos.clear();
         }
         if (i.op == OP_NAME_NEW || i.op == OP_NAME_UPDATE)
         {
             vtxPos.push_back(i.ind); // fin add
-            if (!dbName.WriteName(i.vchName, vtxPos))
+            if (!CalculateExpiresAt(dbName, vtxPos, nExpiresAt))
+                return error("ConnectInputsHook() : failed to calculate expiration time before writing to name DB");
+            if (!dbName.WriteName(i.vchName, vtxPos, nExpiresAt))
                 return error("ConnectInputsHook() : failed to write to name DB");
             printf("connectInputs(): writing %s to nameindex.dat\n", stringFromVch(i.vchName).c_str());
         }
