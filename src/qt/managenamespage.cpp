@@ -242,11 +242,18 @@ void ManageNamesPage::on_submitNameButton_clicked()
         }
     }
 
-    int64 txFee = 0;
-    if (txType == "NAME_NEW")
-        txFee = GetNameNewFee(pindexBest, days);
-    else if (txType == "NAME_UPDATE")
-        txFee = GetNameUpdateFee(pindexBest, days);
+    int64 txFee = MIN_TX_FEE;
+    {
+        string strName = name.toStdString();
+        vector<unsigned char> vchName(strName.begin(), strName.end());
+        string strValue = value.toStdString();
+        vector<unsigned char> vchValue(strValue.begin(), strValue.end());
+
+        if (txType == "NAME_NEW")
+            txFee = GetNameOpFee(pindexBest, days, OP_NAME_NEW, vchName, vchValue);
+        else if (txType == "NAME_UPDATE")
+            txFee = GetNameOpFee(pindexBest, days, OP_NAME_UPDATE, vchName, vchValue);
+    }
 
     if (QMessageBox::Yes != QMessageBox::question(this, tr("Confirm name registration"),
           tr("This will issue a %1. Tx fee is at least %2 emc.").arg(txType).arg(txFee / (float)COIN, 0, 'f', 2),

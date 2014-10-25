@@ -144,43 +144,28 @@ bool NameActive(const vector<unsigned char> &vchName, int currentBlockHeight = -
     return NameActive(dbName, vchName, currentBlockHeight);
 }
 
-//returns minimum name_new fee rounded down to cents
-int64 GetNameNewFee(const CBlockIndex* pindexBlock, const int nRentalDays)
+//returns minimum name operation fee rounded down to cents
+int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op, const vector<unsigned char> &vchName, const vector<unsigned char> &vchValue)
 {
+    if (op == OP_NAME_DELETE)
+        return MIN_TX_FEE;
+
     const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
 
-    int64 txMinFee = nRentalDays * lastPoW->nMint / (365 * 100); //1% per 365 days
-    txMinFee += lastPoW->nMint / 100; //+1% per operation itself
-    txMinFee = sqrt(txMinFee / CENT) * CENT; //Square root is taken of the number of cents. This means that txMinFeee should be at least 1 cent.
+    int64 txMinFee = nRentalDays * lastPoW->nMint / (365 * 100); // 1% PoW per 365 days
+
+    if (op == OP_NAME_NEW)
+        txMinFee += lastPoW->nMint / 100; // +1% PoW per operation itself
+
+    txMinFee = sqrt(txMinFee / CENT) * CENT; // square root is taken of the number of cents.
+    txMinFee += (int)((vchName.size() + vchValue.size()) / 128) * CENT; // 1 cent per 128 bytes
 
     // Round up to CENT
     txMinFee += CENT - 1;
     txMinFee = (txMinFee / CENT) * CENT;
 
+    // Fee should be at least MIN_TX_FEE
     txMinFee = max(txMinFee, MIN_TX_FEE);
-    return txMinFee;
-
-//    if (pindexBlock->nHeight < 64000)
-//        return txMinFee;
-//    else
-//    {
-//        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - 64000) * CENT;
-//        return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
-//    }
-}
-
-int64 GetNameUpdateFee(const CBlockIndex* pindexBlock, const int nRentalDays)
-{
-    const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
-    int64 txMinFee = nRentalDays * lastPoW->nMint / (365 * 100); //1% per 365 days
-    txMinFee = sqrt(txMinFee / CENT) * CENT; //Square root is taken of the number of cents. This means that txMinFeee should be at least 1 cent.
-
-    // Round up to CENT
-    txMinFee += CENT - 1;
-    txMinFee = (txMinFee / CENT) * CENT;
-
-    txMinFee = max(txMinFee, MIN_TX_FEE);
-
     return txMinFee;
 
 //    if (pindexBlock->nHeight < 64000)
@@ -1278,7 +1263,7 @@ NameTxReturn name_new(const vector<unsigned char> &vchName,
         nameScript += scriptPubKey;
 
         int64 prevFee = nTransactionFee;
-        nTransactionFee = GetNameNewFee(pindexBest, nRentalDays);
+        nTransactionFee = GetNameOpFee(pindexBest, nRentalDays, OP_NAME_NEW, vchName, vchValue);
         string strError = pwalletMain->SendMoney(nameScript, CENT, wtx, false);
         nTransactionFee = prevFee;
 
@@ -1432,7 +1417,7 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
         CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 
         int64 prevFee = nTransactionFee;
-        nTransactionFee = GetNameUpdateFee(pindexBest, nRentalDays);
+        nTransactionFee = GetNameOpFee(pindexBest, nRentalDays, OP_NAME_UPDATE, vchName, vchValue);
         string strError = SendMoneyWithInputTx(nameScript, CENT, 0, wtxIn, wtx, false);
         nTransactionFee = prevFee;
 
@@ -1748,7 +1733,7 @@ bool ConnectInputsInner(CTxDB& txdb,
 
                 for (int i = 1; i <= 10; i++)
                 {
-                    int64 netFee = GetNameNewFee(lastPoW, nRentalDays);
+                    int64 netFee = GetNameOpFee(lastPoW, nRentalDays, op, vchName, vchValue);
                     //printf("op == name_new, txFee = %"PRI64d", netFee = %"PRI64d", nRentalDays = %d\n", txFee, netFee, nRentalDays);
                     if (txFee >= netFee)
                     {
@@ -1778,7 +1763,7 @@ bool ConnectInputsInner(CTxDB& txdb,
 
                 for (int i = 1; i <= 10; i++)
                 {
-                    int64 netFee = GetNameUpdateFee(lastPoW, nRentalDays);
+                    int64 netFee = GetNameOpFee(lastPoW, nRentalDays, op, vchName, vchValue);
                     //printf("op == update, txFee = %"PRI64d", netFee = %"PRI64d", nRentalDays = %d\n", txFee, netFee, nRentalDays);
                     if (txFee >= netFee)
                     {

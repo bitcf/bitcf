@@ -103,8 +103,7 @@ bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight);
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromString(const std::string &str);
 
-int64 GetNameNewFee(const CBlockIndex* pindexBlock, const int nRentalDays);
-int64 GetNameUpdateFee(const CBlockIndex* pindexBlock, const int nRentalDays);
+int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op, const std::vector<unsigned char> &vchName, const std::vector<unsigned char> &vchValue);
 
 struct NameTxInfo
 {
