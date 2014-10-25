@@ -1687,7 +1687,7 @@ bool ConnectInputsInner(CTxDB& txdb,
         if (DecodeNameScript(out.scriptPubKey, prev_nti))
         {
             if (found)
-                return error("ConnectInputHook() : multiple previous name transactions");
+                return error("ConnectInputHook() : multiple previous name transactions in %s", tx.GetHash().GetHex().c_str());
             found = true;
             nInput = i;
         }
@@ -1695,9 +1695,10 @@ bool ConnectInputsInner(CTxDB& txdb,
 
     NameTxInfo nti;
     if (!DecodeNameTx(tx, nti))
-        return error("ConnectInputsHook() : could not decode a namecoin tx");
+        return error("ConnectInputsHook() : could not decode a namecoin tx - %s", tx.GetHash().GetHex().c_str());
 
     vector<unsigned char> vchName = nti.vchName;
+    string sName = stringFromVch(vchName);
     vector<unsigned char> vchValue = nti.vchValue;
     int nRentalDays = nti.nRentalDays;
     int op = nti.op;
@@ -1710,12 +1711,12 @@ bool ConnectInputsInner(CTxDB& txdb,
         BOOST_FOREACH(const PAIRTYPE(uint256, CTxIndex)& s, mapTestPool)
         {
             if (setPending.count(s.first))
-                return error("ConnectInputsHook() : will not mine %s because it clashes with %s", tx.GetHash().GetHex().c_str(), s.first.GetHex().c_str());
+                return error("ConnectInputsHook() : will not mine name %s in tx %s because it clashes with tx %s", sName.c_str(), tx.GetHash().GetHex().c_str(), s.first.GetHex().c_str());
         }
     }
 
     if (GetBoolArg("-printNamecoinConnectInputs"))
-        printf("name = %s, value = %s, fBlock = %d, fMiner = %d, hex = %s\n", stringFromVch(vchName).c_str(), stringFromVch(vchValue).c_str(), fBlock, fMiner, tx.GetHash().GetHex().c_str());
+        printf("name = %s, value = %s, fBlock = %d, fMiner = %d, hex = %s\n", sName.c_str(), stringFromVch(vchValue).c_str(), fBlock, fMiner, tx.GetHash().GetHex().c_str());
 
     CNameDB dbName("r");
 
@@ -1729,7 +1730,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 bool txFeePass = false;
                 int64 txFee;
                 if (!GetTxFee(txdb, mapTestPool, tx, fBlock, fMiner, txFee))
-                    return error("ConnectInputsHook() : could not read fee from database.");
+                    return error("ConnectInputsHook() : could not read fee from database for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
                 for (int i = 1; i <= 10; i++)
                 {
@@ -1743,11 +1744,11 @@ bool ConnectInputsInner(CTxDB& txdb,
                     lastPoW = GetLastBlockIndex(lastPoW->pprev, false);
                 }
                 if (!txFeePass)
-                    return error("ConnectInputsHook() : got tx %s with fee too low %d.", tx.GetHash().GetHex().c_str(), txFee);
+                    return error("ConnectInputsHook() : got name %s in tx %s with fee too low %d.", sName.c_str(), tx.GetHash().GetHex().c_str(), txFee);
             }
 
             if (NameActive(dbName, vchName, pindexBlock->nHeight))
-                return error("ConnectInputsHook() : name_new on an unexpired name");
+                return error("ConnectInputsHook() : name_new on an unexpired name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
             break;
         }
@@ -1759,7 +1760,7 @@ bool ConnectInputsInner(CTxDB& txdb,
                 bool txFeePass = false;
                 int64 txFee;
                 if (!GetTxFee(txdb, mapTestPool, tx, fBlock, fMiner, txFee))
-                    return error("ConnectInputsHook() : could not read fee from database.");
+                    return error("ConnectInputsHook() : could not read fee from database for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
                 for (int i = 1; i <= 10; i++)
                 {
@@ -1773,42 +1774,42 @@ bool ConnectInputsInner(CTxDB& txdb,
                     lastPoW = GetLastBlockIndex(lastPoW->pprev, false);
                 }
                 if (!txFeePass)
-                    return error("ConnectInputsHook() : got tx %s with fee too low %d", tx.GetHash().GetHex().c_str(), txFee);
+                    return error("ConnectInputsHook() : got name %s in tx %s with fee too low %d.", sName.c_str(), tx.GetHash().GetHex().c_str(), txFee);
             }
 
             if (!found || (prev_nti.op != OP_NAME_NEW && prev_nti.op != OP_NAME_UPDATE))
-                return error("name_update tx without previous new or update tx");
+                return error("name_update without previous new or update tx, for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
             if (prev_nti.vchName != vchName)
-                return error("ConnectInputsHook() : name_update name mismatch");
+                return error("ConnectInputsHook() : name_update name mismatch for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
             if (!NameActive(dbName, vchName, pindexBlock->nHeight))
-                return error("ConnectInputsHook() : name_update on expired name");
+                return error("ConnectInputsHook() : name_update on an unexpired name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
             break;
         }
         case OP_NAME_DELETE:
         {
             if (!found || (prev_nti.op != OP_NAME_NEW && prev_nti.op != OP_NAME_UPDATE))
-                return error("name_delete tx without previous new or update tx");
+                return error("name_delete without previous new or update tx, for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
             if (prev_nti.vchName != vchName)
-                return error("ConnectInputsHook() : name_delete name mismatch");
+                return error("ConnectInputsHook() : name_delete name mismatch for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
             if (!NameActive(dbName, vchName, pindexBlock->nHeight))
-                return error("ConnectInputsHook() : name_delete on expired name");
+                return error("ConnectInputsHook() : name_delete on expired name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
             break;
         }
         default:
-            return error("ConnectInputsHook() : name transaction has unknown op");
+            return error("ConnectInputsHook() : name %s in tx %s has unknown name operation", sName.c_str(), tx.GetHash().GetHex().c_str());
     }
 
     vector<CNameIndex> vtxPos;
     int nExpiresAt;
     if (dbName.ExistsName(vchName) && !dbName.ReadName(vchName, vtxPos, nExpiresAt))
-        return error("ConnectInputsHook() : failed to read from name DB");
+        return error("ConnectInputsHook() : failed to read from name DB for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
     if ((op == OP_NAME_UPDATE || op == OP_NAME_DELETE) && !CheckNameTxPos(vtxPos, vTxindex[nInput].pos))
-        return error("ConnectInputsHook() : tx %s rejected, since previous tx (%s) is not in the name DB\n", tx.GetHash().ToString().c_str(), vTxPrev[nInput].GetHash().ToString().c_str());
+        return error("ConnectInputsHook() : name %s in tx %s rejected, since previous tx (%s) is not in the name DB\n", sName.c_str(), tx.GetHash().ToString().c_str(), vTxPrev[nInput].GetHash().ToString().c_str());
 
     // all checks passed - record tx information to vNameTemp. It will be sorted by nTime and writen to nameindex.dat at the end of ConnectBlock
     if (fBlock)
