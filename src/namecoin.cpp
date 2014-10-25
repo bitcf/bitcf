@@ -445,7 +445,12 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, C
 bool CNameDB::ScanNames(
         const vector<unsigned char>& vchName,
         int nMax,
-        vector<pair<vector<unsigned char>, CNameIndex> >& nameScan)
+        vector<
+            pair<
+                vector<unsigned char>,
+                pair<CNameIndex, int>
+            >
+        >& nameScan)
 {
     Dbc* pcursor = GetCursor();
     if (!pcursor)
@@ -473,14 +478,14 @@ bool CNameDB::ScanNames(
         {
             vector<unsigned char> vchName;
             ssKey >> vchName;
-            vector<CNameIndex> vtxPos;
-            ssValue >> vtxPos;
+            pair< vector<CNameIndex>, int > val;
+            ssValue >> val;
             CNameIndex txPos;
-            if (!vtxPos.empty())
+            if (!val.first.empty())
             {
-                txPos = vtxPos.back();
+                txPos = val.first.back();
             }
-            nameScan.push_back(make_pair(vchName, txPos));
+            nameScan.push_back(make_pair(vchName, make_pair(txPos, val.second)));
         }
 
         if (nameScan.size() >= nMax)
@@ -1044,7 +1049,7 @@ Value name_filter(const Array& params, bool fHelp)
     Array oRes;
 
     vector<unsigned char> vchName;
-    vector<pair<vector<unsigned char>, CNameIndex> > nameScan;
+    vector<pair<vector<unsigned char>, pair<CNameIndex,int> > > nameScan;
     if (!dbName.ScanNames(vchName, 100000000, nameScan))
         throw JSONRPCError(RPC_WALLET_ERROR, "scan failed");
 
@@ -1053,7 +1058,7 @@ Value name_filter(const Array& params, bool fHelp)
     smatch nameparts;
     sregex cregex = sregex::compile(strRegexp);
 
-    pair<vector<unsigned char>, CNameIndex> pairScan;
+    pair<vector<unsigned char>, pair<CNameIndex,int> > pairScan;
     BOOST_FOREACH(pairScan, nameScan)
     {
         string name = stringFromVch(pairScan.first);
@@ -1062,7 +1067,7 @@ Value name_filter(const Array& params, bool fHelp)
         if(strRegexp != "" && !regex_search(name, nameparts, cregex))
             continue;
 
-        CNameIndex txName = pairScan.second;
+        CNameIndex txName = pairScan.second.first;
 
         vector<CNameIndex> vtxPos;
         int nExpiresAt;
@@ -1083,15 +1088,13 @@ Value name_filter(const Array& params, bool fHelp)
         if (!fStat) {
             oName.push_back(Pair("name", name));
 
+            string value = stringFromVch(txName.vValue);
+            oName.push_back(Pair("value", value));
+
             int nExpiresIn = nExpiresAt - pindexBest->nHeight;
+            oName.push_back(Pair("expires_in", nExpiresIn));
             if (nExpiresIn <= 0)
                 oName.push_back(Pair("expired", true));
-            else
-            {
-                string value = stringFromVch(txName.vValue);
-                oName.push_back(Pair("value", value));
-                oName.push_back(Pair("expires_in", nExpiresIn));
-            }
         }
         oRes.push_back(oName);
 
@@ -1138,44 +1141,27 @@ Value name_scan(const Array& params, bool fHelp)
     CNameDB dbName("r");
     Array oRes;
 
-    vector<pair<vector<unsigned char>, CNameIndex> > nameScan;
+    vector<pair<vector<unsigned char>, pair<CNameIndex,int> > > nameScan;
     if (!dbName.ScanNames(vchName, nMax, nameScan))
         throw JSONRPCError(RPC_WALLET_ERROR, "scan failed");
 
-    pair<vector<unsigned char>, CNameIndex> pairScan;
+    pair<vector<unsigned char>, pair<CNameIndex,int> > pairScan;
     BOOST_FOREACH(pairScan, nameScan)
     {
         Object oName;
         string name = stringFromVch(pairScan.first);
         oName.push_back(Pair("name", name));
 
-        CTransaction tx;
-        CNameIndex txName = pairScan.second;
-        CDiskTxPos txPos = txName.txPos;
-
+        CNameIndex txName = pairScan.second.first;
+        int nExpiresAt    = pairScan.second.second;
         vector<unsigned char> vchValue = txName.vValue;
 
-        vector<CNameIndex> vtxPos;
-        int nExpiresAt;
-        if (!dbName.ReadName(pairScan.first, vtxPos, nExpiresAt))
-            continue;
-
-        if ((nExpiresAt - pindexBest->nHeight <= 0)
-            || txPos.IsNull()
-            || !tx.ReadFromDisk(txPos))
-        {
+        string value = stringFromVch(vchValue);
+        oName.push_back(Pair("value", value));
+        oName.push_back(Pair("expires_in", nExpiresAt - pindexBest->nHeight));
+        if (nExpiresAt - pindexBest->nHeight <= 0)
             oName.push_back(Pair("expired", true));
-        }
-        else
-        {
-            string value = stringFromVch(vchValue);
-            //string strAddress = "";
-            //GetNameAddress(tx, strAddress);
-            oName.push_back(Pair("value", value));
-            //oName.push_back(Pair("txid", tx.GetHash().GetHex()));
-            //oName.push_back(Pair("address", strAddress));
-            oName.push_back(Pair("expires_in", nExpiresAt - pindexBest->nHeight));
-        }
+
         oRes.push_back(oName);
     }
 

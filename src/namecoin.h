@@ -72,8 +72,13 @@ public:
     bool ScanNames(
             const std::vector<unsigned char>& vchName,
             int nMax,
-            std::vector<std::pair<std::vector<unsigned char>, CNameIndex> >& nameScan);
-            //std::vector<std::pair<std::vector<unsigned char>, CDiskTxPos> >& nameScan);
+            std::vector<
+                std::pair<
+                    std::vector<unsigned char>,
+                    std::pair<CNameIndex, int>
+                >
+            >& nameScan
+            );
 
     bool ReconstructNameIndex();
 };
