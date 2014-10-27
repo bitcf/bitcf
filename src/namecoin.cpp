@@ -165,7 +165,6 @@ int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op
 
     // Fee should be at least MIN_TX_FEE
     txMinFee = max(txMinFee, MIN_TX_FEE);
-    return txMinFee;
 
     if (pindexBlock->nHeight < RELEASE_HEIGHT)
         return txMinFee;
