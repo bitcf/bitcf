@@ -547,8 +547,9 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         return error("CTxMemPool::accept() : not accepting nLockTime beyond 2038 yet");
 
 #ifdef STANDARD_TX_ONLY
+    bool isNameTx = hooks->IsStandardNameTx(txdb, tx, true); //accept name tx with correct fee.
     // Rather not work on nonstandard transactions (unless -testnet)
-    if (!fTestNet && !tx.IsStandard() && !hooks->IsStandard(tx))
+    if (!fTestNet && !tx.IsStandard() && !isNameTx)
         return error("CTxMemPool::accept() : nonstandard transaction type");
 #endif
 
@@ -607,7 +608,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
         // Check for non-standard pay-to-script-hash in inputs
 #ifdef STANDARD_TX_ONLY
-        if (!tx.AreInputsStandard(mapInputs) && !fTestNet && !hooks->IsStandard(tx))
+        if (!tx.AreInputsStandard(mapInputs) && !fTestNet && !isNameTx) //TODO: maybe add check for standardtness of name tx inputs here?
             return error("CTxMemPool::accept() : nonstandard transaction input");
 #endif
 
@@ -669,7 +670,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
             addUnchecked(tx);
         }
 
-        hooks->AcceptToMemoryPool(txdb, tx);
+        hooks->AddToPendingNames(tx);
 
         ///// are we sure this is ok when loading transactions or restoring block txes
         // If updated, erase old tx from wallet

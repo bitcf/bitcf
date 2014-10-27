@@ -24,8 +24,7 @@ using namespace std;
 class CHooks
 {
 public:
-    virtual bool IsStandard(const CTransaction& tx) = 0;
-    virtual bool CheckTransaction(const CTransaction& tx) = 0;
+    virtual bool IsStandardNameTx(CTxDB& txdb, const CTransaction& tx, bool fCheckNameFee) = 0;
     virtual bool ConnectInputs(CTxDB& txdb,
             std::map<uint256, CTxIndex>& mapTestPool,
             const CTransaction& tx,
@@ -41,7 +40,7 @@ public:
     virtual bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex) = 0;
     virtual bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex) = 0;
     virtual bool ExtractAddress(const CScript& script, std::string& address) = 0;
-    virtual void AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx) = 0;
+    virtual void AddToPendingNames(const CTransaction& tx) = 0;
     virtual bool IsMine(const CTxOut& txout) = 0;
     virtual bool IsNameTx(int nVersion) = 0;
     virtual bool IsNameScript(CScript scr) = 0;

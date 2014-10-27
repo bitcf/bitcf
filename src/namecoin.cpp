@@ -40,8 +40,7 @@ extern bool ThreadSafeAskFee(int64 nFeeRequired, const std::string& strCaption);
 class CNamecoinHooks : public CHooks
 {
 public:
-    virtual bool IsStandard(const CTransaction &tx);
-    virtual bool CheckTransaction(const CTransaction& tx);
+    virtual bool IsStandardNameTx(CTxDB& txdb, const CTransaction &tx, bool fCheckNameFee);
     virtual bool ConnectInputs(CTxDB& txdb,
             map<uint256, CTxIndex>& mapTestPool,
             const CTransaction& tx,
@@ -57,7 +56,7 @@ public:
     virtual bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     virtual bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     virtual bool ExtractAddress(const CScript& script, string& address);
-    virtual void AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx);
+    virtual void AddToPendingNames(const CTransaction& tx);
     virtual bool IsMine(const CTxOut& txout);
     virtual bool IsNameTx(int nVersion);
     virtual bool IsNameScript(CScript scr);
@@ -536,11 +535,54 @@ CHooks* InitHook()
     return new CNamecoinHooks();
 }
 
-bool CNamecoinHooks::IsStandard(const CTransaction &tx)
+// version for connectInputs. Used when accepting blocks.
+bool IsNameFeeEnough(CTxDB& txdb, const CTransaction& tx, const NameTxInfo& nti, const CBlockIndex* pindexBlock, const map<uint256, CTxIndex>& mapTestPool, bool fBlock, bool fMiner)
 {
-    NameTxInfo nxi;
-    if (!DecodeNameTx(tx, nxi))
+// get tx fee
+// Note: if fBlock and fMiner equal false then FetchInputs will search mempool
+    int64 txFee;
+    MapPrevTx mapInputs;
+    bool fInvalid = false;
+    if (!tx.FetchInputs(txdb, mapTestPool, fBlock, fMiner, mapInputs, fInvalid))
         return false;
+    txFee = tx.GetValueIn(mapInputs) - tx.GetValueOut();
+
+
+// scan last 10 PoW block for tx fee that matches the one specified in tx
+    const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
+    bool txFeePass = false;
+    for (int i = 1; i <= 10; i++)
+    {
+        int64 netFee = GetNameOpFee(lastPoW, nti.nRentalDays, nti.op, nti.vchName, nti.vchValue);
+        //printf("op == name_new, txFee = %"PRI64d", netFee = %"PRI64d", nRentalDays = %d\n", txFee, netFee, nRentalDays);
+        if (txFee >= netFee)
+        {
+            txFeePass = true;
+            break;
+        }
+        lastPoW = GetLastBlockIndex(lastPoW->pprev, false);
+    }
+    return txFeePass;
+}
+// version for mempool::accept. Used to check newly submited transaction that has yet to get in a block.
+bool IsNameFeeEnough(CTxDB& txdb, const CTransaction& tx, const NameTxInfo& nti)
+{
+    map<uint256, CTxIndex> unused;
+    return IsNameFeeEnough(txdb, tx, nti, pindexBest, unused, false, false);
+}
+
+bool CNamecoinHooks::IsStandardNameTx(CTxDB& txdb, const CTransaction &tx, bool fCheckNameFee)
+{
+    if (tx.nVersion != NAMECOIN_TX_VERSION)
+        return false;
+
+    NameTxInfo nti;
+    if (!DecodeNameTx(tx, nti))
+        return false;
+
+    if (fCheckNameFee)
+        return IsNameFeeEnough(txdb, tx, nti);
+
     return true;
 }
 
@@ -1619,16 +1661,6 @@ bool DecodeNameTx(const CTransaction& tx, NameTxInfo& nti, bool checkValuesCorre
     return found;
 }
 
-bool GetTxFee(CTxDB& txdb, const map<uint256, CTxIndex>& mapTestPool, const CTransaction& tx, bool fBlock, bool fMiner, int64& txFee)
-{
-    MapPrevTx mapInputs;
-    bool fInvalid = false;
-    if (!tx.FetchInputs(txdb, mapTestPool, fBlock, fMiner, mapInputs, fInvalid))
-        return false;
-    txFee = tx.GetValueIn(mapInputs) - tx.GetValueOut();
-    return true;
-}
-
 int IndexOfNameOutput(const CTransaction& tx)
 {
     NameTxInfo nti;
@@ -1639,14 +1671,14 @@ int IndexOfNameOutput(const CTransaction& tx)
     return nti.nOut;
 }
 
-void CNamecoinHooks::AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx)
+void CNamecoinHooks::AddToPendingNames(const CTransaction& tx)
 {
     if (tx.nVersion != NAMECOIN_TX_VERSION)
         return;
 
     if (tx.vout.size() < 1)
     {
-        error("AcceptToMemoryPool() : no output in name tx %s\n", tx.ToString().c_str());
+        error("AcceptToMemoryPool() : no output in tx %s\n", tx.ToString().c_str());
         return;
     }
 
@@ -1655,7 +1687,7 @@ void CNamecoinHooks::AcceptToMemoryPool(CTxDB& txdb, const CTransaction& tx)
 
     if (!good)
     {
-        error("AcceptToMemoryPool() : no output out script in name tx %s", tx.ToString().c_str());
+        error("AcceptToMemoryPool() : could not decode name script in tx %s", tx.ToString().c_str());
         return;
     }
 
@@ -1704,8 +1736,6 @@ bool ConnectInputsInner(CTxDB& txdb,
     vector<unsigned char> vchName = nti.vchName;
     string sName = stringFromVch(vchName);
     vector<unsigned char> vchValue = nti.vchValue;
-    int nRentalDays = nti.nRentalDays;
-    int op = nti.op;
 
     if (fMiner)
     {
@@ -1724,35 +1754,16 @@ bool ConnectInputsInner(CTxDB& txdb,
 
     CNameDB dbName("r");
 
-    switch (op)
+    switch (nti.op)
     {
         case OP_NAME_NEW:
         {
+            //scan last 10 PoW block for tx fee that matches the one specified in tx
+            if (!IsNameFeeEnough(txdb, tx, nti, pindexBlock, mapTestPool, fBlock, fMiner))
             {
-                //scan last 10 PoW block for tx fee that matches the one specified in tx
-                const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
-                bool txFeePass = false;
-                int64 txFee;
-                if (!GetTxFee(txdb, mapTestPool, tx, fBlock, fMiner, txFee))
-                    return error("ConnectInputsHook() : could not read fee from database for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
-
-                for (int i = 1; i <= 10; i++)
-                {
-                    int64 netFee = GetNameOpFee(lastPoW, nRentalDays, op, vchName, vchValue);
-                    //printf("op == name_new, txFee = %"PRI64d", netFee = %"PRI64d", nRentalDays = %d\n", txFee, netFee, nRentalDays);
-                    if (txFee >= netFee)
-                    {
-                        txFeePass = true;
-                        break;
-                    }
-                    lastPoW = GetLastBlockIndex(lastPoW->pprev, false);
-                }
-                if (!txFeePass)
-                {
-                    if (pindexBlock->nHeight > RELEASE_HEIGHT)
-                        return error("ConnectInputsHook() : rejected name_new %s in tx %s with fee too low %d.", sName.c_str(), tx.GetHash().GetHex().c_str(), txFee);
-                    return false;
-                }
+                if (pindexBlock->nHeight > RELEASE_HEIGHT)
+                    return error("ConnectInputsHook() : rejected name_new %s in tx %s because not enough fee.", sName.c_str(), tx.GetHash().GetHex().c_str());
+                return false;
             }
 
             if (NameActive(dbName, vchName, pindexBlock->nHeight))
@@ -1761,36 +1772,16 @@ bool ConnectInputsInner(CTxDB& txdb,
                     return error("ConnectInputsHook() : name_new on an unexpired name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
                 return false;
             }
-
             break;
         }
         case OP_NAME_UPDATE:
         {
+            //scan last 10 PoW block for tx fee that matches the one specified in tx
+            if (!IsNameFeeEnough(txdb, tx, nti, pindexBlock, mapTestPool, fBlock, fMiner))
             {
-                //scan last 10 PoW block for tx fee that matches the one specified in tx
-                const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
-                bool txFeePass = false;
-                int64 txFee;
-                if (!GetTxFee(txdb, mapTestPool, tx, fBlock, fMiner, txFee))
-                    return error("ConnectInputsHook() : could not read fee from database for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
-
-                for (int i = 1; i <= 10; i++)
-                {
-                    int64 netFee = GetNameOpFee(lastPoW, nRentalDays, op, vchName, vchValue);
-                    //printf("op == update, txFee = %"PRI64d", netFee = %"PRI64d", nRentalDays = %d\n", txFee, netFee, nRentalDays);
-                    if (txFee >= netFee)
-                    {
-                        txFeePass = true;
-                        break;
-                    }
-                    lastPoW = GetLastBlockIndex(lastPoW->pprev, false);
-                }
-                if (!txFeePass)
-                {
-                    if (pindexBlock->nHeight > RELEASE_HEIGHT)
-                        return error("ConnectInputsHook() : rejected name_update %s in tx %s with fee too low %d.", sName.c_str(), tx.GetHash().GetHex().c_str(), txFee);
-                    return false;
-                }
+                if (pindexBlock->nHeight > RELEASE_HEIGHT)
+                    return error("ConnectInputsHook() : rejected name_update %s in tx %s because not enough fee.", sName.c_str(), tx.GetHash().GetHex().c_str());
+                return false;
             }
 
             if (!found || (prev_nti.op != OP_NAME_NEW && prev_nti.op != OP_NAME_UPDATE))
@@ -1824,7 +1815,7 @@ bool ConnectInputsInner(CTxDB& txdb,
     if (dbName.ExistsName(vchName) && !dbName.ReadName(vchName, vtxPos, nExpiresAt))
         return error("ConnectInputsHook() : failed to read from name DB for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
-    if ((op == OP_NAME_UPDATE || op == OP_NAME_DELETE) && !CheckNameTxPos(vtxPos, vTxindex[nInput].pos))
+    if ((nti.op == OP_NAME_UPDATE || nti.op == OP_NAME_DELETE) && !CheckNameTxPos(vtxPos, vTxindex[nInput].pos))
     {
         if (pindexBlock->nHeight > RELEASE_HEIGHT)
             return error("ConnectInputsHook() : name %s in tx %s rejected, since previous tx (%s) is not in the name DB\n", sName.c_str(), tx.GetHash().ToString().c_str(), vTxPrev[nInput].GetHash().ToString().c_str());
@@ -1842,7 +1833,7 @@ bool ConnectInputsInner(CTxDB& txdb,
         nameTempProxy tmp;
         tmp.nTime = tx.nTime;
         tmp.vchName = vchName;
-        tmp.op = op;
+        tmp.op = nti.op;
         tmp.hash = tx.GetHash();
         tmp.ind = txPos2;
 
@@ -1933,19 +1924,6 @@ bool CNamecoinHooks::DisconnectInputs(CTxDB& txdb,
         dbName.TxnCommit();
     }
 
-    return true;
-}
-
-bool CNamecoinHooks::CheckTransaction(const CTransaction& tx)
-{
-    if (tx.nVersion != NAMECOIN_TX_VERSION)
-        return true;
-
-    NameTxInfo nti;
-    bool good = DecodeNameTx(tx, nti);
-
-    if (!good)
-        return error("name transaction has unknown script format");
     return true;
 }
 
