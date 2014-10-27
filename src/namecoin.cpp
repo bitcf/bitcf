@@ -167,13 +167,13 @@ int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op
     txMinFee = max(txMinFee, MIN_TX_FEE);
     return txMinFee;
 
-//    if (pindexBlock->nHeight < 64000)
-//        return txMinFee;
-//    else
-//    {
-//        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - 64000) * CENT;
-//        return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
-//    }
+    if (pindexBlock->nHeight < RELEASE_HEIGHT)
+        return txMinFee;
+    else
+    {
+        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - RELEASE_HEIGHT) * CENT;
+        return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
+    }
 }
 
 bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight)
