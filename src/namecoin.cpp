@@ -1695,7 +1695,11 @@ bool ConnectInputsInner(CTxDB& txdb,
 
     NameTxInfo nti;
     if (!DecodeNameTx(tx, nti))
-        return error("ConnectInputsHook() : could not decode a namecoin tx - %s", tx.GetHash().GetHex().c_str());
+    {
+        if (pindexBlock->nHeight > RELEASE_HEIGHT)
+            return error("ConnectInputsHook() : could not decode a namecoin tx - %s", tx.GetHash().GetHex().c_str());
+        return false;
+    }
 
     vector<unsigned char> vchName = nti.vchName;
     string sName = stringFromVch(vchName);
@@ -1744,11 +1748,19 @@ bool ConnectInputsInner(CTxDB& txdb,
                     lastPoW = GetLastBlockIndex(lastPoW->pprev, false);
                 }
                 if (!txFeePass)
-                    return error("ConnectInputsHook() : got name %s in tx %s with fee too low %d.", sName.c_str(), tx.GetHash().GetHex().c_str(), txFee);
+                {
+                    if (pindexBlock->nHeight > RELEASE_HEIGHT)
+                        return error("ConnectInputsHook() : rejected name_new %s in tx %s with fee too low %d.", sName.c_str(), tx.GetHash().GetHex().c_str(), txFee);
+                    return false;
+                }
             }
 
             if (NameActive(dbName, vchName, pindexBlock->nHeight))
-                return error("ConnectInputsHook() : name_new on an unexpired name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
+            {
+                if (pindexBlock->nHeight > RELEASE_HEIGHT)
+                    return error("ConnectInputsHook() : name_new on an unexpired name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
+                return false;
+            }
 
             break;
         }
@@ -1774,7 +1786,11 @@ bool ConnectInputsInner(CTxDB& txdb,
                     lastPoW = GetLastBlockIndex(lastPoW->pprev, false);
                 }
                 if (!txFeePass)
-                    return error("ConnectInputsHook() : got name %s in tx %s with fee too low %d.", sName.c_str(), tx.GetHash().GetHex().c_str(), txFee);
+                {
+                    if (pindexBlock->nHeight > RELEASE_HEIGHT)
+                        return error("ConnectInputsHook() : rejected name_update %s in tx %s with fee too low %d.", sName.c_str(), tx.GetHash().GetHex().c_str(), txFee);
+                    return false;
+                }
             }
 
             if (!found || (prev_nti.op != OP_NAME_NEW && prev_nti.op != OP_NAME_UPDATE))
@@ -1809,7 +1825,11 @@ bool ConnectInputsInner(CTxDB& txdb,
         return error("ConnectInputsHook() : failed to read from name DB for name %s in tx %s", sName.c_str(), tx.GetHash().GetHex().c_str());
 
     if ((op == OP_NAME_UPDATE || op == OP_NAME_DELETE) && !CheckNameTxPos(vtxPos, vTxindex[nInput].pos))
-        return error("ConnectInputsHook() : name %s in tx %s rejected, since previous tx (%s) is not in the name DB\n", sName.c_str(), tx.GetHash().ToString().c_str(), vTxPrev[nInput].GetHash().ToString().c_str());
+    {
+        if (pindexBlock->nHeight > RELEASE_HEIGHT)
+            return error("ConnectInputsHook() : name %s in tx %s rejected, since previous tx (%s) is not in the name DB\n", sName.c_str(), tx.GetHash().ToString().c_str(), vTxPrev[nInput].GetHash().ToString().c_str());
+        return false;
+    }
 
     // all checks passed - record tx information to vNameTemp. It will be sorted by nTime and writen to nameindex.dat at the end of ConnectBlock
     if (fBlock)

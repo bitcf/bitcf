@@ -92,6 +92,8 @@ static const int OP_NAME_UPDATE = 0x02;
 static const int OP_NAME_DELETE = 0x03;
 static const int MIN_FIRSTUPDATE_DEPTH = 12;
 
+static const int RELEASE_HEIGHT = 1; //change me to 1<<16
+
 extern std::map<std::vector<unsigned char>, uint256> mapMyNames;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapNamePending;
 
