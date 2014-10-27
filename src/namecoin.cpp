@@ -365,7 +365,7 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend, 
                     dPriority /= nBytes;
 
                     // Check that enough fee is included
-                    int64 nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+                    int64 nPayFee = nTransactionFee + MIN_TX_FEE * (1 + (int64)nBytes / 1000);
                     int64 nMinFee = wtxNew.GetMinFee(1, false);
                     if (nFeeRet < max(nPayFee, nMinFee))
                     {

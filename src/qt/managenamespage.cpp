@@ -60,6 +60,27 @@ bool NameFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &so
         && address.startsWith(addressSearch, Qt::CaseSensitive);   // Address is always case-sensitive
 }
 
+bool NameFilterProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
+{
+    NameTableEntry *rec1 = static_cast<NameTableEntry*>(left.internalPointer());
+    NameTableEntry *rec2 = static_cast<NameTableEntry*>(right.internalPointer());
+
+    switch (left.column())
+    {
+    case NameTableModel::Name:
+        return QString::localeAwareCompare(rec1->name, rec2->name) < 0;
+    case NameTableModel::Value:
+        return QString::localeAwareCompare(rec1->value, rec2->value) < 0;
+    case NameTableModel::Address:
+        return QString::localeAwareCompare(rec1->address, rec2->address) < 0;
+    case NameTableModel::ExpiresIn:
+        return rec1->nExpiresAt < rec2->nExpiresAt;
+    }
+
+    // should never reach here
+    return QString::localeAwareCompare(rec1->name, rec2->name) < 0;
+}
+
 //
 // ManageNamesPage
 //
