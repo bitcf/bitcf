@@ -1114,7 +1114,7 @@ Value name_filter(const Array& params, bool fHelp)
         if (!fStat) {
             oName.push_back(Pair("name", name));
 
-            string value = stringFromVch(txName.vValue);
+            string value = stringFromVch(txName.vchValue);
             oName.push_back(Pair("value", value));
 
             int nExpiresIn = nExpiresAt - pindexBest->nHeight;
@@ -1180,7 +1180,7 @@ Value name_scan(const Array& params, bool fHelp)
 
         CNameIndex txName = pairScan.second.first;
         int nExpiresAt    = pairScan.second.second;
-        vector<unsigned char> vchValue = txName.vValue;
+        vector<unsigned char> vchValue = txName.vchValue;
 
         string value = stringFromVch(vchValue);
         oName.push_back(Pair("value", value));
@@ -1826,7 +1826,7 @@ bool ConnectInputsInner(CTxDB& txdb,
     {
         CNameIndex txPos2;
         txPos2.nHeight = pindexBlock->nHeight;
-        txPos2.vValue = vchValue;
+        txPos2.vchValue = vchValue;
         txPos2.txPos = txPos;
 
         nameTempProxy tmp;
@@ -2060,4 +2060,60 @@ bool CNamecoinHooks::getNameValue(const string& name, string& value)
     value = stringFromVch(nti.vchValue);
 
     return true;
+}
+
+bool GetPendingNameValue(const vector<unsigned char> &vchName, vector<unsigned char> &vchValue)
+{
+    if (!mapNamePending.count(vchName))
+        return false;
+    if (mapNamePending[vchName].empty())
+        return false;
+
+    // if there is a set of pending op on a single name - select last one, by nTime
+    CTransaction tx;
+    tx.nTime = 0;
+    bool found = false;
+    BOOST_FOREACH(uint256 hash, mapNamePending[vchName])
+    {
+        if (!mempool.exists(hash))
+            continue;
+        if (mempool.mapTx[hash].nTime > tx.nTime)
+        {
+            tx = mempool.mapTx[hash];
+            found = true;
+        }
+    }
+    if (!found)
+        return false;
+
+    NameTxInfo nti;
+    if (!DecodeNameTx(tx, nti, false, true))
+        return false;
+
+    vchValue = nti.vchValue;
+    return true;
+}
+
+// if pending is true it will grab value from pending names. If there are no pending names it will grab value from nameindex.dat
+bool GetNameValue(const vector<unsigned char> &vchName, vector<unsigned char> &vchValue, bool checkPending)
+{
+    bool found = false;
+    if (checkPending)
+        found = GetPendingNameValue(vchName, vchValue);
+
+    if (found)
+        return true;
+    else
+    {
+        CNameDB dbName("r");
+        vector<CNameIndex> vtxPos;
+        int nExpiresAt;
+        if (!dbName.ReadName(vchName, vtxPos, nExpiresAt))
+            return false;
+        if (vtxPos.empty())
+            return false;
+
+        vchValue = vtxPos.back().vchValue;
+        return true;
+    }
 }

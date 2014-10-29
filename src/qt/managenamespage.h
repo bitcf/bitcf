@@ -76,6 +76,7 @@ private slots:
     void onCopyValueAction();
     void onCopyAddressAction();
     void onCopyAllAction();
+    void onSaveValueAsBinaryAction();
 
     void on_txTypeSelector_currentIndexChanged(const QString &txType);
     void on_cbMyNames_stateChanged(int arg1);

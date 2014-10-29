@@ -103,6 +103,7 @@ ManageNamesPage::ManageNamesPage(QWidget *parent) :
     QAction *copyValueAction = new QAction(tr("Copy &Value"), this);
     QAction *copyAddressAction = new QAction(tr("Copy &Address"), this);
     QAction *copyAllAction = new QAction(tr("Copy all to edit boxes"), this);
+    QAction *saveValueAsBinaryAction = new QAction(tr("Save value as binary file"), this);
 
     // Build context menu
     contextMenu = new QMenu();
@@ -110,12 +111,14 @@ ManageNamesPage::ManageNamesPage(QWidget *parent) :
     contextMenu->addAction(copyValueAction);
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyAllAction);
+    contextMenu->addAction(saveValueAsBinaryAction);
 
     // Connect signals for context menu actions
     connect(copyNameAction, SIGNAL(triggered()), this, SLOT(onCopyNameAction()));
     connect(copyValueAction, SIGNAL(triggered()), this, SLOT(onCopyValueAction()));
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(onCopyAddressAction()));
     connect(copyAllAction, SIGNAL(triggered()), this, SLOT(onCopyAllAction()));
+    connect(saveValueAsBinaryAction, SIGNAL(triggered()), this, SLOT(onSaveValueAsBinaryAction()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -412,16 +415,51 @@ void ManageNamesPage::onCopyAllAction()
     QModelIndexList selection;
 
     selection = ui->tableView->selectionModel()->selectedRows(NameTableModel::Name);
-    if(!selection.isEmpty())
+    if (!selection.isEmpty())
         ui->registerName->setText(selection.at(0).data(Qt::EditRole).toString());
 
     selection = ui->tableView->selectionModel()->selectedRows(NameTableModel::Value);
-    if(!selection.isEmpty())
+    if (!selection.isEmpty())
         ui->registerValue->setPlainText(selection.at(0).data(Qt::EditRole).toString());
 
     selection = ui->tableView->selectionModel()->selectedRows(NameTableModel::Address);
-    if(!selection.isEmpty())
+    if (!selection.isEmpty())
         ui->registerAddress->setText(selection.at(0).data(Qt::EditRole).toString());
+}
+
+void ManageNamesPage::onSaveValueAsBinaryAction()
+{
+    if(!ui->tableView || !ui->tableView->selectionModel())
+        return;
+
+// get name and value
+    QModelIndexList selection;
+    selection = ui->tableView->selectionModel()->selectedRows(NameTableModel::Name);
+    if (selection.isEmpty())
+        return;
+
+    vector<unsigned char> vchName;
+    {
+        QString tmpName1 = selection.at(0).data(Qt::EditRole).toString();
+        string tmpName2 = tmpName1.toStdString();
+        vchName.assign(tmpName2.begin(), tmpName2.end());
+    }
+
+    vector<unsigned char> vchValue;
+    GetNameValue(vchName, vchValue, true);
+
+
+// select file and save value
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export File"), QDir::homePath(), tr("Files (*)"));
+    QFile file(fileName);
+
+    if (!file.open(QIODevice::WriteOnly))
+        return;
+
+    QDataStream in(&file);
+    BOOST_FOREACH(const unsigned char& uch, vchValue)
+        in << uch;
+    file.close();
 }
 
 void ManageNamesPage::exportClicked()
@@ -515,6 +553,7 @@ void ManageNamesPage::on_importValueButton_clicked()
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) return;
     QByteArray blob = file.readAll();
+    file.close();
 
     if (blob.size() > MAX_VALUE_LENGTH)
     {

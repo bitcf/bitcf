@@ -7,24 +7,24 @@ class CNameIndex
 public:
     CDiskTxPos txPos;
     unsigned int nHeight;
-    std::vector<unsigned char> vValue;
+    std::vector<unsigned char> vchValue;
 
     CNameIndex()
     {
     }
 
-    CNameIndex(CDiskTxPos txPosIn, unsigned int nHeightIn, std::vector<unsigned char> vValueIn)
+    CNameIndex(CDiskTxPos txPosIn, unsigned int nHeightIn, std::vector<unsigned char> vchValueIn)
     {
         txPos = txPosIn;
         nHeight = nHeightIn;
-        vValue = vValueIn;
+        vchValue = vchValueIn;
     }
 
     IMPLEMENT_SERIALIZE
     (
         READWRITE(txPos);
         READWRITE(nHeight);
-        READWRITE(vValue);
+        READWRITE(vchValue);
     )
 };
 
@@ -133,6 +133,7 @@ bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_ite
 bool DecodeNameTx(const CTransaction& tx, NameTxInfo& nti, bool checkValuesCorrectness = true, bool checkAddressAndIfIsMine = false);
 
 void GetNameList(const std::vector<unsigned char> &vchNameUniq, std::map<std::vector<unsigned char>, NameTxInfo> &mapNames, std::map<std::vector<unsigned char>, NameTxInfo> &mapPending);
+bool GetNameValue(const std::vector<unsigned char> &vchName, std::vector<unsigned char> &vchValue, bool checkPending);
 
 struct NameTxReturn
 {
