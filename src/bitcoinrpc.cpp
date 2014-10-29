@@ -1932,8 +1932,19 @@ Value walletpassphrase(const Array& params, bool fHelp)
     if (!pwalletMain->IsCrypted())
         throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
 
+    Object ret;
+    // ppcoin: if user OS account compromised prevent trivial sendmoney commands
+    if (params.size() > 2)
+        fWalletUnlockMintOnly = params[2].get_bool();
+    else
+        fWalletUnlockMintOnly = false;
+    ret.push_back(Pair("mint only", fWalletUnlockMintOnly));
+
     if (!pwalletMain->IsLocked())
-        throw JSONRPCError(-17, "Error: Wallet is already unlocked, use walletlock first if need to change unlock settings.");
+    {
+        ret.push_back(Pair("info", "Wallet is already unlocked, use walletlock first if need to change unlock settings."));
+        return ret;
+    }
 
     // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
     SecureString strWalletPass;
@@ -1956,13 +1967,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
     int64* pnSleepTime = new int64(params[1].get_int64());
     CreateThread(ThreadCleanWalletPassphrase, pnSleepTime);
 
-    // ppcoin: if user OS account compromised prevent trivial sendmoney commands
-    if (params.size() > 2)
-        fWalletUnlockMintOnly = params[2].get_bool();
-    else
-        fWalletUnlockMintOnly = false;
-
-    return Value::null;
+    return ret;
 }
 
 
