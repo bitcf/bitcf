@@ -180,23 +180,17 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     return SendCoinsReturn(OK, 0, hex);
 }
 
-NameTxReturn WalletModel::nameNew(const QString &name, const QString &value, int nRentalDays)
+NameTxReturn WalletModel::nameNew(const QString &name, const vector<unsigned char> &vchValue, int nRentalDays)
 {
     string strName = name.toStdString();
     vector<unsigned char> vchName(strName.begin(), strName.end());
-    string strValue = value.toStdString();
-    vector<unsigned char> vchValue(strValue.begin(), strValue.end());
-
     return name_new(vchName, vchValue, nRentalDays);
 }
 
-NameTxReturn WalletModel::nameUpdate(const QString &name, const QString &value, int nRentalDays, QString newAddress)
+NameTxReturn WalletModel::nameUpdate(const QString &name, const vector<unsigned char> &vchValue, int nRentalDays, QString newAddress)
 {
     string strName = name.toStdString();
     vector<unsigned char> vchName(strName.begin(), strName.end());
-    string strValue = value.toStdString();
-    vector<unsigned char> vchValue(strValue.begin(), strValue.end());
-
     return name_update(vchName, vchValue, nRentalDays, newAddress.toStdString());
 }
 

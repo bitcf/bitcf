@@ -231,7 +231,21 @@ void ManageNamesPage::on_submitNameButton_clicked()
         return;
 
     QString name = ui->registerName->text();
-    QString value = ui->registerValue->toPlainText();
+    vector<unsigned char> vchValue;  // byte-by-byte value, as is
+    QString displayValue;            // for displaying value as unicode string
+
+    if (ui->registerValue->isEnabled())
+    {
+        displayValue = ui->registerValue->toPlainText();
+        string strValue = displayValue.toStdString();
+        vchValue.assign(strValue.begin(), strValue.end());
+    }
+    else
+    {
+        vchValue = importedAsBinaryFile;
+        displayValue = QString::fromStdString(stringFromVch(vchValue));
+    }
+
     int days = ui->registerDays->text().toInt();
     QString txType = ui->txTypeSelector->currentText();
     QString newAddress = ui->registerAddress->text();
@@ -244,7 +258,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
         return;
     }
 
-    if (value == "" && (txType == "NAME_NEW" || txType == "NAME_UPDATE"))
+    if (vchValue.empty() && (txType == "NAME_NEW" || txType == "NAME_UPDATE"))
     {
         QMessageBox::critical(this, tr("Value is empty"), tr("Enter value please"));
         return;
@@ -267,8 +281,6 @@ void ManageNamesPage::on_submitNameButton_clicked()
     {
         string strName = name.toStdString();
         vector<unsigned char> vchName(strName.begin(), strName.end());
-        string strValue = value.toStdString();
-        vector<unsigned char> vchValue(strValue.begin(), strValue.end());
 
         if (txType == "NAME_NEW")
             txFee = GetNameOpFee(pindexBest, days, OP_NAME_NEW, vchName, vchValue);
@@ -299,13 +311,13 @@ void ManageNamesPage::on_submitNameButton_clicked()
         {
             nHeight = NameTableEntry::NAME_NEW;
             status = CT_NEW;
-            res = walletModel->nameNew(name, value, days);
+            res = walletModel->nameNew(name, vchValue, days);
         }
         else if (txType == "NAME_UPDATE")
         {
             nHeight = NameTableEntry::NAME_UPDATE;
             status = CT_UPDATED;
-            res = walletModel->nameUpdate(name, value, days, newAddress);
+            res = walletModel->nameUpdate(name, vchValue, days, newAddress);
         }
         else if (txType == "NAME_DELETE")
         {
@@ -314,16 +326,20 @@ void ManageNamesPage::on_submitNameButton_clicked()
             res = walletModel->nameDelete(name);
         }
 
+        importedAsBinaryFile.clear();
+        importedAsTextFile.clear();
+
         if (res.ok)
         {
             ui->registerName->setText("");
+            ui->registerValue->setEnabled(true);
             ui->registerValue->setPlainText("");
-            ui->submitNameButton->setDefault(true);
+            ui->submitNameButton->setDefault(true); // EvgenijM86: is this realy needed here?
 
             int newRowIndex;
             // FIXME: CT_NEW may have been sent from nameNew (via transaction).
             // Currently updateEntry is modified so it does not complain
-            model->updateEntry(name, value, QString::fromStdString(res.address), nHeight, status, &newRowIndex);
+            model->updateEntry(name, displayValue, QString::fromStdString(res.address), nHeight, status, &newRowIndex);
             ui->tableView->selectRow(newRowIndex);
             ui->tableView->setFocus();
             return;
@@ -486,7 +502,15 @@ void ManageNamesPage::on_cbExpired_stateChanged(int arg1)
 
 void ManageNamesPage::on_importValueButton_clicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Import File"), QDir::homePath(), tr("Files (*.*)"));
+    if (ui->registerValue->isEnabled() == false)
+    {
+        ui->registerValue->setEnabled(true);
+        ui->registerValue->setPlainText(importedAsTextFile);
+        return;
+    }
+
+
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Import File"), QDir::homePath(), tr("Files (*)"));
 
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) return;
@@ -494,20 +518,36 @@ void ManageNamesPage::on_importValueButton_clicked()
 
     if (blob.size() > MAX_VALUE_LENGTH)
     {
-        QMessageBox::critical(this, tr("Value too large!"), tr("Value is larger than maximum size: %1 bytes > %2 bytes").arg(blob.size()).arg(MAX_VALUE_LENGTH));
+        QMessageBox::critical(this, tr("Value too large!"), tr("Value is larger than maximum size: %1 bytes > %2 bytes").arg(importedAsBinaryFile.size()).arg(MAX_VALUE_LENGTH));
         return;
     }
 
-    vector<unsigned char> vchBlob;
-    vchBlob.reserve(blob.size());
+    // save textual and binary representation
+    importedAsBinaryFile.clear();
+    importedAsBinaryFile.reserve(blob.size());
     for (int i = 0; i < blob.size(); ++i)
-        vchBlob.push_back(blob.at(i));
+        importedAsBinaryFile.push_back(blob.at(i));
+    importedAsTextFile = QString::fromStdString(stringFromVch(importedAsBinaryFile));
 
-    ui->registerValue->setPlainText(QString::fromStdString(stringFromVch(vchBlob)));
+    ui->registerValue->setDisabled(true);
+    ui->registerValue->setPlainText(tr(
+        "Currently file %1 is imported as binary (byte by byte) into name value. "
+        "If you wish to import file as unicode string then click on Import buttton again. "
+        "If you import file as unicode string its data may weight more than original file did."
+        ).arg(fileName));
 }
 
 void ManageNamesPage::on_registerValue_textChanged()
 {
-    float size = ui->registerValue->toPlainText().length();
-    ui->labelValue->setText(tr("value(%1%)").arg(int(100 * size / MAX_VALUE_LENGTH)));
+    float byteSize;
+    if (ui->registerValue->isEnabled())
+    {
+        string strValue = ui->registerValue->toPlainText().toStdString();
+        vector<unsigned char> vchValue(strValue.begin(), strValue.end());
+        byteSize = vchValue.size();
+    }
+    else
+        byteSize = importedAsBinaryFile.size();
+
+    ui->labelValue->setText(tr("value(%1%)").arg(int(100 * byteSize / MAX_VALUE_LENGTH)));
 }

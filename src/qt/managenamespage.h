@@ -46,6 +46,8 @@ public:
     ~ManageNamesPage();
 
     void setModel(WalletModel *walletModel);
+    std::vector<unsigned char> importedAsBinaryFile;
+    QString               importedAsTextFile;
 
 private:
     Ui::ManageNamesPage *ui;
