@@ -546,6 +546,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
     if ((int64)tx.nLockTime > std::numeric_limits<int>::max())
         return error("CTxMemPool::accept() : not accepting nLockTime beyond 2038 yet");
 
+#define STANDARD_TX_ONLY
 #ifdef STANDARD_TX_ONLY
     bool isNameTx = hooks->IsStandardNameTx(txdb, tx, true); //accept name tx with correct fee.
     // Rather not work on nonstandard transactions (unless -testnet)

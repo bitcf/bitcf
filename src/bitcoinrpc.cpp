@@ -1932,12 +1932,33 @@ Value walletpassphrase(const Array& params, bool fHelp)
     if (!pwalletMain->IsCrypted())
         throw JSONRPCError(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
 
-    Object ret;
-    // ppcoin: if user OS account compromised prevent trivial sendmoney commands
-    if (params.size() > 2)
-        fWalletUnlockMintOnly = params[2].get_bool();
+    // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
+    SecureString strWalletPass;
+    strWalletPass.reserve(100);
+
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    strWalletPass = params[0].get_str().c_str();
+
+    if (strWalletPass.length() == 0)
+        throw runtime_error(
+            "walletpassphrase <passphrase> <timeout>\n"
+            "Stores the wallet decryption key in memory for <timeout> seconds.");
+
+
+    // lock/unlock mint only mode, if password is correct.
+    if (!pwalletMain->CheckPassword(strWalletPass))
+        throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
     else
-        fWalletUnlockMintOnly = false;
+    {
+        // ppcoin: if user OS account compromised prevent trivial sendmoney commands
+        if (params.size() > 2)
+            fWalletUnlockMintOnly = params[2].get_bool();
+        else
+            fWalletUnlockMintOnly = false;
+    }
+
+    Object ret;
     ret.push_back(Pair("mint only", fWalletUnlockMintOnly));
 
     if (!pwalletMain->IsLocked())
@@ -1946,22 +1967,8 @@ Value walletpassphrase(const Array& params, bool fHelp)
         return ret;
     }
 
-    // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
-    SecureString strWalletPass;
-    strWalletPass.reserve(100);
-    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-    // Alternately, find a way to make params[0] mlock()'d to begin with.
-    strWalletPass = params[0].get_str().c_str();
-
-    if (strWalletPass.length() > 0)
-    {
-        if (!pwalletMain->Unlock(strWalletPass))
-            throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
-    }
-    else
-        throw runtime_error(
-            "walletpassphrase <passphrase> <timeout>\n"
-            "Stores the wallet decryption key in memory for <timeout> seconds.");
+    if (!pwalletMain->Unlock(strWalletPass))
+        throw JSONRPCError(-14, "Error: The wallet passphrase entered was incorrect.");
 
     CreateThread(ThreadTopUpKeyPool, NULL);
     int64* pnSleepTime = new int64(params[1].get_int64());

@@ -33,22 +33,10 @@ class CNameDB : public CDB
 public:
     CNameDB(const char* pszMode="r+") : CDB("nameindex.dat", pszMode) {}
 
-    //bool WriteName(std::vector<unsigned char>& name, std::vector<CDiskTxPos> vtxPos)
-//    bool WriteName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos)
-//    {
-//        return Write(make_pair(std::string("namei"), name), vtxPos);
-//    }
-
     bool WriteName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos, int nExpiresAt)
     {
         return Write(make_pair(std::string("namei"), name), make_pair(vtxPos, nExpiresAt));
     }
-
-    //bool ReadName(std::vector<unsigned char>& name, std::vector<CDiskTxPos>& vtxPos)
-//    bool ReadName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos)
-//    {
-//        return Read(make_pair(std::string("namei"), name), vtxPos);
-//    }
 
     bool ReadName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos, int &nExpiresAt)
     {

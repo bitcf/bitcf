@@ -99,6 +99,24 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
     return false;
 }
 
+// check if given password can be used to unlock wallet
+bool CWallet::CheckPassword(const SecureString& strWalletPassphrase)
+{
+    CCrypter crypter;
+    CKeyingMaterial vMasterKey;
+
+    {
+        LOCK(cs_wallet);
+        BOOST_FOREACH(const MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
+        {
+            if(!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+                return false;
+            return crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey);
+        }
+    }
+    return false;
+}
+
 bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase)
 {
     bool fWasLocked = IsLocked();
