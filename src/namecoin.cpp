@@ -143,8 +143,11 @@ bool NameActive(const vector<unsigned char> &vchName, int currentBlockHeight = -
     return NameActive(dbName, vchName, currentBlockHeight);
 }
 
-//returns minimum name operation fee rounded down to cents
-int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op, const vector<unsigned char> &vchName, const vector<unsigned char> &vchValue)
+// Returns minimum name operation fee rounded down to cents. Should be used during|before transaction creation.
+// If you wish to calculate if fee is enough - use IsNameFeeEnough() function.
+// Generaly:  GetNameOpFee() > IsNameFeeEnough().
+// Penalty index is needed only in one place - when we are counting 10 blocks in outside loop in IsNameFeeEnough().
+int64 GetNameOpFee(const CBlockIndex* pindexBlock, const CBlockIndex* pindexPenalty, const int nRentalDays, int op, const vector<unsigned char> &vchName, const vector<unsigned char> &vchValue)
 {
     if (op == OP_NAME_DELETE)
         return MIN_TX_FEE;
@@ -170,9 +173,17 @@ int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op
         return txMinFee;
     else
     {
-        int64 txMinFee2 = 300 * COIN - (pindexBlock->nHeight - RELEASE_HEIGHT) * CENT;
+        // add penalty that is active for a couple of months after release date
+        int64 txMinFee2 = 300 * COIN - (pindexPenalty->nHeight - RELEASE_HEIGHT) * CENT;
+
         return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
     }
+}
+
+int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op, const vector<unsigned char> &vchName, const vector<unsigned char> &vchValue)
+{
+    const CBlockIndex* pindexPenalty = pindexBlock;
+    return GetNameOpFee(pindexBlock, pindexPenalty, nRentalDays, op, vchName, vchValue);
 }
 
 bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight)
@@ -365,7 +376,7 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend, 
                     dPriority /= nBytes;
 
                     // Check that enough fee is included
-                    int64 nPayFee = nTransactionFee + MIN_TX_FEE * (1 + (int64)nBytes / 1000);
+                    int64 nPayFee = max(nTransactionFee, MIN_TX_FEE * (1 + (int64)nBytes / 1000));
                     int64 nMinFee = wtxNew.GetMinFee(1, false);
                     if (nFeeRet < max(nPayFee, nMinFee))
                     {
@@ -547,22 +558,23 @@ bool IsNameFeeEnough(CTxDB& txdb, const CTransaction& tx, const NameTxInfo& nti,
     txFee = tx.GetValueIn(mapInputs) - tx.GetValueOut();
 
 
-// scan last 10 PoW block for tx fee that matches the one specified in tx
+// scan last 20 PoW block for tx fee that matches the one specified in tx
     const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
     bool txFeePass = false;
     for (int i = 1; i <= 10; i++)
     {
-        int64 netFee = GetNameOpFee(lastPoW, nti.nRentalDays, nti.op, nti.vchName, nti.vchValue);
-        //printf("op == name_new, txFee = %"PRI64d", netFee = %"PRI64d", nRentalDays = %d\n", txFee, netFee, nRentalDays);
+        int64 netFee = GetNameOpFee(lastPoW, pindexBlock, nti.nRentalDays, nti.op, nti.vchName, nti.vchValue);
         if (txFee >= netFee)
         {
             txFeePass = true;
             break;
         }
+        printf("op == name_new, txFee = %"PRI64d", netFee = %"PRI64d", nRentalDays = %d\n", txFee, netFee, nti.nRentalDays);
         lastPoW = GetLastBlockIndex(lastPoW->pprev, false);
     }
     return txFeePass;
 }
+
 // version for mempool::accept. Used to check newly submited transaction that has yet to get in a block.
 bool IsNameFeeEnough(CTxDB& txdb, const CTransaction& tx, const NameTxInfo& nti)
 {
