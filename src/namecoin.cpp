@@ -558,7 +558,7 @@ bool IsNameFeeEnough(CTxDB& txdb, const CTransaction& tx, const NameTxInfo& nti,
     txFee = tx.GetValueIn(mapInputs) - tx.GetValueOut();
 
 
-// scan last 20 PoW block for tx fee that matches the one specified in tx
+// scan last 10 PoW block for tx fee that matches the one specified in tx
     const CBlockIndex* lastPoW = GetLastBlockIndex(pindexBlock, false);
     bool txFeePass = false;
     for (int i = 1; i <= 10; i++)

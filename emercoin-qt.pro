@@ -1,9 +1,13 @@
 TEMPLATE = app
 TARGET = emercoin-qt
-VERSION = 0.2.4.0
+VERSION = 0.3.0.0
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
+
+
+    QMAKE_CXXFLAGS += -I/usr/local/BerkeleyDB.4.8/include
+    QMAKE_LFLAGS += -L/usr/local/BerkeleyDB.4.8/lib
 
 # for boost 1.37, add -mt to the boost libraries 
 # use: qmake BOOST_LIB_SUFFIX=-mt
