@@ -1042,6 +1042,13 @@ Value name_show(const Array& params, bool fHelp)
     return oLastName;
 }
 
+// used for sorting in name_filter by nHeight
+bool mycompare2 (const Object &lhs, const Object &rhs)
+{
+    int pos = 2; //this should exactly match field name position in name_filter
+
+    return lhs[pos].value_.get_int() < rhs[pos].value_.get_int();
+}
 Value name_filter(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 5)
@@ -1084,7 +1091,7 @@ Value name_filter(const Array& params, bool fHelp)
 
 
     CNameDB dbName("r");
-    Array oRes;
+    vector<Object> oRes;
 
     vector<unsigned char> vchName;
     vector<pair<vector<unsigned char>, pair<CNameIndex,int> > > nameScan;
@@ -1129,6 +1136,8 @@ Value name_filter(const Array& params, bool fHelp)
             string value = stringFromVch(txName.vchValue);
             oName.push_back(Pair("value", value));
 
+            oName.push_back(Pair("registered_at", nHeight)); // pos = 2 in comparison function (above name_filter)
+
             int nExpiresIn = nExpiresAt - pindexBest->nHeight;
             oName.push_back(Pair("expires_in", nExpiresIn));
             if (nExpiresIn <= 0)
@@ -1142,16 +1151,23 @@ Value name_filter(const Array& params, bool fHelp)
             break;
     }
 
-    if (fStat)
+    Array oRes2;
+    if (!fStat)
+    {
+        std::sort(oRes.begin(), oRes.end(), mycompare2); //sort by nHeight
+        BOOST_FOREACH(const Object& res, oRes)
+            oRes2.push_back(res);
+    }
+    else
     {
         Object oStat;
         oStat.push_back(Pair("blocks",    (int)nBestHeight));
-        oStat.push_back(Pair("count",     (int)oRes.size()));
+        oStat.push_back(Pair("count",     (int)oRes2.size()));
         //oStat.push_back(Pair("sha256sum", SHA256(oRes), true));
         return oStat;
     }
 
-    return oRes;
+    return oRes2;
 }
 
 Value name_scan(const Array& params, bool fHelp)
