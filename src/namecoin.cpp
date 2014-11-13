@@ -10,6 +10,7 @@ extern std::map<uint256, CTransaction> mapTransactions;
 #include "hooks.h"
 
 #include <boost/xpressive/xpressive_dynamic.hpp>
+#include <fstream>
 
 using namespace json_spirit;
 
@@ -996,15 +997,17 @@ Value name_debug(const Array& params, bool fHelp)
 
 Value name_show(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "name_show <name>\n"
+            "name_show <name> [filepath]\n"
             "Show values of a name.\n"
+            "If filepath is specified name value will be saved in that file in binary format (file will be overwritten!).\n"
             );
 
-    Object oLastName;
+    Object oName;
     vector<unsigned char> vchName = vchFromValue(params[0]);
     string name = stringFromVch(vchName);
+    NameTxInfo nti;
     {
         LOCK(cs_main);
         vector<CNameIndex> vtxPos;
@@ -1024,11 +1027,9 @@ Value name_show(const Array& params, bool fHelp)
         if (!tx.ReadFromDisk(txPos))
             throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from from disk");
 
-        NameTxInfo nti;
         if (!DecodeNameTx(tx, nti, false, true))
             throw JSONRPCError(RPC_WALLET_ERROR, "failed to decode name");
 
-        Object oName;
         oName.push_back(Pair("name", name));
         string value = stringFromVch(nti.vchValue);
         oName.push_back(Pair("value", value));
@@ -1037,9 +1038,21 @@ Value name_show(const Array& params, bool fHelp)
         oName.push_back(Pair("expires_in", nExpiresAt - pindexBest->nHeight));
         if (nExpiresAt - pindexBest->nHeight <= 0)
             oName.push_back(Pair("expired", true));
-        oLastName = oName;
     }
-    return oLastName;
+
+    if (params.size() > 1)
+    {
+        string filepath = params[1].get_str();
+        ofstream file;
+        file.open(filepath.c_str(), ios::out | ios::binary | ios::trunc);
+        if (!file.is_open())
+            throw JSONRPCError(RPC_PARSE_ERROR, "Failed to open file. Check if you have permission to open it.");
+
+        file.write((const char*)&nti.vchValue[0], nti.vchValue.size());
+        file.close();
+    }
+
+    return oName;
 }
 
 // used for sorting in name_filter by nHeight
