@@ -260,6 +260,8 @@ bool GetMyExternalIP_STUN(CNetAddr& ipRet) {
   int rc = GetExternalIPbySTUN(rnd, &mapped, &srv);
   if(rc >= 0) {
     ipRet = CNetAddr(mapped.sin_addr);
+
+    //uncommenting this printf will result in a bug in Windows XP. TODO: fix this behavior, or maybe drop Windows XP support.
     //printf("GetExternalIPbySTUN(%llx) returned %s in attempt %d; Server=%s\n",
     //    rnd, addrLocalHost.ToStringIP().c_str(), rc, srv);
     return true;

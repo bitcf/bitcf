@@ -25,18 +25,8 @@ class CHooks
 {
 public:
     virtual bool IsStandardNameTx(CTxDB& txdb, const CTransaction& tx, bool fCheckNameFee) = 0;
-    virtual bool ConnectInputs(CTxDB& txdb,
-            std::map<uint256, CTxIndex>& mapTestPool,
-            const CTransaction& tx,
-            std::vector<CTransaction>& vTxPrev,
-            std::vector<CTxIndex>& vTxindex,
-            const CBlockIndex* pindexBlock,
-            const CDiskTxPos& txPos,
-            bool fBlock,
-            bool fMiner) = 0;
     virtual bool DisconnectInputs(CTxDB& txdb,
-            const CTransaction& tx,
-            CBlockIndex* pindexBlock) = 0;
+            const CTransaction& tx) = 0;
     virtual bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex) = 0;
     virtual bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex) = 0;
     virtual bool ExtractAddress(const CScript& script, std::string& address) = 0;

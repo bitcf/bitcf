@@ -1087,7 +1087,7 @@ void CBlock::UpdateTime(const CBlockIndex* pindexPrev)
 
 bool CTransaction::DisconnectInputs(CTxDB& txdb, CBlockIndex* pindex)
 {
-    hooks->DisconnectInputs(txdb, *this, pindex);
+    hooks->DisconnectInputs(txdb, *this);
 
     // Relinquish previous transactions' spent pointers
     if (!IsCoinBase())
@@ -1352,9 +1352,6 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             nFees += nTxFee;
             if (!MoneyRange(nFees))
                 return DoS(100, error("ConnectInputs() : nFees out of range"));
-
-            //this will write tx to nameindex.dat, if it passes all check needed. It does not (and should not) affect if tx will get into block or not.
-            hooks->ConnectInputs(txdb, mapTestPool, *this, vTxPrev, vTxindex, pindexBlock, posThisTx, fBlock, fMiner);
         }
     }
 
@@ -1551,7 +1548,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     BOOST_FOREACH(CTransaction& tx, vtx)
         SyncWithWallets(tx, this, true);
 
-    // write to nameindex.dat
+    // add names to nameindex.dat
     hooks->ConnectBlock(txdb, pindex);
 
     return true;

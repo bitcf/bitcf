@@ -21,13 +21,12 @@ map<vector<unsigned char>, set<uint256> > mapNamePending; // for pending tx
 
 struct nameTempProxy
 {
-    int nTime;
+    unsigned int nTime;
     vector<unsigned char> vchName;
     int op;
     uint256 hash;
     CNameIndex ind;
 };
-static vector<nameTempProxy> vNameTemp; // used to store name tx after connectInputs and before connectBlock . TODO: remove this global var and make it local
 
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
@@ -42,18 +41,8 @@ class CNamecoinHooks : public CHooks
 {
 public:
     virtual bool IsStandardNameTx(CTxDB& txdb, const CTransaction &tx, bool fCheckNameFee);
-    virtual bool ConnectInputs(CTxDB& txdb,
-            map<uint256, CTxIndex>& mapTestPool,
-            const CTransaction& tx,
-            vector<CTransaction>& vTxPrev,
-            vector<CTxIndex>& vTxindex,
-            const CBlockIndex* pindexBlock,
-            const CDiskTxPos &txPos,
-            bool fBlock,
-            bool fMiner);
     virtual bool DisconnectInputs(CTxDB& txdb,
-            const CTransaction& tx,
-            CBlockIndex* pindexBlock);
+            const CTransaction& tx);
     virtual bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     virtual bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex);
     virtual bool ExtractAddress(const CScript& script, string& address);
@@ -494,45 +483,11 @@ bool CNameDB::ScanNames(
 bool CNameDB::ReconstructNameIndex()
 {
     CTxDB txdb("r");
-    CTxIndex txindex;
     CBlockIndex* pindex = pindexGenesisBlock;
     {
         LOCK(cs_main);
         while (pindex)
         {
-            CBlock block;
-            block.ReadFromDisk(pindex, true);
-
-            BOOST_FOREACH(CTransaction& tx, block.vtx)
-            {
-                if (tx.nVersion != NAMECOIN_TX_VERSION)
-                    continue;
-
-                // posThisTx = txindex.pos
-                if(!txdb.ReadTxIndex(tx.GetHash(), txindex))
-                    return error("ReconstructNameIndex() : failed to read from disk, aborting.");
-
-                // mapTestPool - is used in hooks->ConnectInput only if we have fMiner=true, so we don't care about it in this case
-                map<uint256, CTxIndex> mapTestPool;
-                MapPrevTx mapInputs;
-                bool fInvalid;
-                if (!tx.FetchInputs(txdb, mapTestPool, true, false, mapInputs, fInvalid))
-                    return error("ReconstructNameIndex() : failed to read from disk, aborting.");
-
-                // vTxPrev and vTxindex
-                vector<CTxIndex> vTxindex;
-                vector<CTransaction> vTxPrev;
-                for (unsigned int i = 0; i < tx.vin.size(); i++)
-                {
-                    COutPoint prevout = tx.vin[i].prevout;
-                    CTransaction& txPrev = mapInputs[prevout.hash].second;
-                    CTxIndex& txindex = mapInputs[prevout.hash].first;
-
-                    vTxPrev.push_back(txPrev);
-                    vTxindex.push_back(txindex);
-                }
-                hooks->ConnectInputs(txdb, mapTestPool, tx, vTxPrev, vTxindex, pindex, txindex.pos, true, false);
-            }
             hooks->ConnectBlock(txdb, pindex);
             pindex = pindex->pnext;
         }
@@ -1746,7 +1701,8 @@ bool ConnectInputsInner(CTxDB& txdb,
         const CBlockIndex* pindexBlock,
         const CDiskTxPos& txPos,
         bool fBlock,
-        bool fMiner)
+        bool fMiner,
+        vector<nameTempProxy>& vName)
 {
     // find prev name tx
     int nInput = 0;
@@ -1862,7 +1818,7 @@ bool ConnectInputsInner(CTxDB& txdb,
         return false;
     }
 
-    // all checks passed - record tx information to vNameTemp. It will be sorted by nTime and writen to nameindex.dat at the end of ConnectBlock
+    // all checks passed - record tx information to vName. It will be sorted by nTime and writen to nameindex.dat at the end of ConnectBlock
     if (fBlock)
     {
         CNameIndex txPos2;
@@ -1877,7 +1833,7 @@ bool ConnectInputsInner(CTxDB& txdb,
         tmp.hash = tx.GetHash();
         tmp.ind = txPos2;
 
-        vNameTemp.push_back(tmp);
+        vName.push_back(tmp);
     }
     return true;
 }
@@ -1885,7 +1841,7 @@ bool ConnectInputsInner(CTxDB& txdb,
 // Returns true if tx is a valid namecoin tx.
 // Will write to nameindex.dat if fBlock=true.
 // Will remove incorrect namecoin tx or non-namecoin tx that tries to spend namecoin inputs from wallet and memory pool if fMiner=true. TODO: this should be done elsewhere (perhaps at mempool.accept)
-bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
+bool ConnectInputs(CTxDB& txdb,
         map<uint256, CTxIndex>& mapTestPool,
         const CTransaction& tx,
         vector<CTransaction>& vTxPrev, //vector of all input transactions
@@ -1893,12 +1849,13 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
         const CBlockIndex* pindexBlock,
         const CDiskTxPos& txPos,
         bool fBlock,
-        bool fMiner)
+        bool fMiner,
+        vector<nameTempProxy>& vName)
 {
     if (tx.nVersion != NAMECOIN_TX_VERSION)
         return false;
 
-    if (!ConnectInputsInner(txdb, mapTestPool, tx, vTxPrev, vTxindex, pindexBlock, txPos, fBlock, fMiner) && fMiner == true)
+    if (!ConnectInputsInner(txdb, mapTestPool, tx, vTxPrev, vTxindex, pindexBlock, txPos, fBlock, fMiner, vName) && fMiner == true)
     {
         NameTxInfo nti;
         if (DecodeNameTx(tx, nti, false))
@@ -1911,9 +1868,12 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
         }
 
         //name TX is invalid - remove it.
-        LOCK2(cs_main, pwalletMain->cs_wallet);
-        pwalletMain->EraseFromWallet(tx.GetHash());
-        mempool.remove(tx);
+        if (fMiner)
+        {
+            LOCK2(cs_main, pwalletMain->cs_wallet);
+            pwalletMain->EraseFromWallet(tx.GetHash());
+            mempool.remove(tx);
+        }
 
         return false;
     }
@@ -1922,8 +1882,7 @@ bool CNamecoinHooks::ConnectInputs(CTxDB& txdb,
 }
 
 bool CNamecoinHooks::DisconnectInputs(CTxDB& txdb,
-        const CTransaction& tx,
-        CBlockIndex* pindexBlock)
+        const CTransaction& tx)
 {
     if (tx.nVersion != NAMECOIN_TX_VERSION)
         return true;
@@ -2000,38 +1959,84 @@ bool mycompare (const nameTempProxy &lhs, const nameTempProxy &rhs)
 // called at end of connecting block
 bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
 {
-    if (vNameTemp.empty())
+    CBlock block;
+    block.ReadFromDisk(pindex, true);
+
+    // read name txs and add them to vName if they pass all checks
+    CTxIndex txindex;
+    vector<nameTempProxy> vName;
+    BOOST_FOREACH(CTransaction& tx, block.vtx)
+    {
+        if (tx.nVersion != NAMECOIN_TX_VERSION)
+            continue;
+
+        // posThisTx = txindex.pos
+        if(!txdb.ReadTxIndex(tx.GetHash(), txindex))
+            return error("ConnectBlockHook() : failed to read tx from disk, aborting.");
+
+        // mapTestPool - is used in hooks->ConnectInput only if we have fMiner=true, so we don't care about it in this case
+        map<uint256, CTxIndex> mapTestPool;
+        MapPrevTx mapInputs;
+        bool fInvalid;
+        if (!tx.FetchInputs(txdb, mapTestPool, true, false, mapInputs, fInvalid))
+            return error("ReconstructNameIndex() : failed to read from disk, aborting.");
+
+        // vTxPrev and vTxindex
+        vector<CTxIndex> vTxindex;
+        vector<CTransaction> vTxPrev;
+        for (unsigned int i = 0; i < tx.vin.size(); i++)
+        {
+            COutPoint prevout = tx.vin[i].prevout;
+            CTransaction& txPrev = mapInputs[prevout.hash].second;
+            CTxIndex& txindex = mapInputs[prevout.hash].first;
+
+            vTxPrev.push_back(txPrev);
+            vTxindex.push_back(txindex);
+        }
+        ConnectInputs(txdb, mapTestPool, tx, vTxPrev, vTxindex, pindex, txindex.pos, true, false, vName);
+    }
+
+    if (vName.empty())
         return true;
 
-    // sort by nTime
-    std::sort(vNameTemp.begin(), vNameTemp.end(), mycompare);
-
-    CNameDB dbName("cr+");
+    // Sort by nTime in accending order. This allows to ensure that if 2 or more users register same name in same block only tx with earlies nTime will get added.
+    std::sort(vName.begin(), vName.end(), mycompare);
 
     // All of these changes should succed. If there is an error - nameindex.dat is probably corrupt.
-    BOOST_FOREACH(const nameTempProxy &i, vNameTemp)
+    CNameDB dbName("cr+");
+    set< vector<unsigned char> > sNameNew;
+    BOOST_FOREACH(const nameTempProxy &i, vName)
     {
         vector<CNameIndex> vtxPos;
         int nExpiresAt;
         if (dbName.ExistsName(i.vchName) && !dbName.ReadName(i.vchName, vtxPos, nExpiresAt))
             return error("ConnectInputsHook() : failed to read from name DB");
 
-        // try to write changes to NameDB
         dbName.TxnBegin();
+
+        // try to delete previous chain of new->update->update->... from nameindex.dat
         if (i.op == OP_NAME_NEW || i.op == OP_NAME_DELETE)
-        {//try to delete previous chain of new->update->update->... from nameindex.dat
+        {
             if (!dbName.EraseName(i.vchName))
                 return error("ConnectInputsHook() : failed to erase name after name_delete");
             vtxPos.clear();
         }
+
+        // only first name_new for same name in same block will get written (assuming vName was sorted by nTime).
+        if  (i.op == OP_NAME_NEW && sNameNew.count(i.vchName))
+            continue;
+
+        // try to add new name or update old one.
         if (i.op == OP_NAME_NEW || i.op == OP_NAME_UPDATE)
         {
             vtxPos.push_back(i.ind); // fin add
             if (!CalculateExpiresAt(dbName, vtxPos, nExpiresAt))
-                return error("ConnectInputsHook() : failed to calculate expiration time before writing to name DB");
+                return error("ConnectBlockHook() : failed to calculate expiration time before writing to name DB");
             if (!dbName.WriteName(i.vchName, vtxPos, nExpiresAt))
-                return error("ConnectInputsHook() : failed to write to name DB");
-            printf("connectInputs(): writing %s to nameindex.dat\n", stringFromVch(i.vchName).c_str());
+                return error("ConnectBlockHook() : failed to write to name DB");
+            if  (i.op == OP_NAME_NEW)
+                sNameNew.insert(i.vchName);
+            printf("ConnectBlockHook(): writing %s to nameindex.dat\n", stringFromVch(i.vchName).c_str());
         }
         {
             LOCK(cs_main);
@@ -2046,7 +2051,6 @@ bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         if (!dbName.TxnCommit())
             return error("failed to write %s to name DB", stringFromVch(i.vchName).c_str());
     }
-    vNameTemp.clear();
 
     return true;
 }
