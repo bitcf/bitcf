@@ -28,10 +28,18 @@ extern const std::string CLIENT_BUILD;
 extern const std::string CLIENT_DATE;
 
 // ppcoin version - intended for display purpose ONLY
-#define PPCOIN_VERSION_MAJOR       0
-#define PPCOIN_VERSION_MINOR       3
-#define PPCOIN_VERSION_REVISION    0
-#define PPCOIN_VERSION_BUILD       0
+// emercoin: is also used to identify target for alerts
+#define EMERCOIN_VERSION_MAJOR       0
+#define EMERCOIN_VERSION_MINOR       3
+#define EMERCOIN_VERSION_REVISION    0
+#define EMERCOIN_VERSION_BUILD       0
+
+// this is an ugly hack. TODO: reimplement version system to use single version. Need to study if bitcoin version can be changed without breaking things.
+static const int EMERCOIN_ALERT_VERSION =
+                           1000000 * EMERCOIN_VERSION_MAJOR
+                         +   10000 * EMERCOIN_VERSION_MINOR
+                         +     100 * EMERCOIN_VERSION_REVISION
+                         +       1 * EMERCOIN_VERSION_BUILD;
 
 //
 // network protocol versioning

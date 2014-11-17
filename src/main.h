@@ -1811,7 +1811,7 @@ public:
 
     bool AppliesToMe() const
     {
-        return AppliesTo(PROTOCOL_VERSION, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<std::string>()));
+        return AppliesTo(PROTOCOL_VERSION, FormatSubVersion(CLIENT_NAME, EMERCOIN_ALERT_VERSION, std::vector<std::string>()));
     }
 
     bool RelayTo(CNode* pnode) const
