@@ -497,7 +497,7 @@ bool CNameDB::ReconstructNameIndex()
     CTxIndex txindex;
     CBlockIndex* pindex = pindexGenesisBlock;
     {
-        LOCK(pwalletMain->cs_wallet);
+        LOCK(cs_main);
         while (pindex)
         {
             CBlock block;
