@@ -44,8 +44,10 @@ extern CHooks* hooks;
 /*---------------------------------------------------*/
 
 #define BUF_SIZE (512 + 512)
-#define MAX_OUT  (512) // Old DNS restricts UDP to 512 bytes
-#define MAX_TOK  64
+#define MAX_OUT  512	// Old DNS restricts UDP to 512 bytes
+#define MAX_TOK  64	// Maximal TokenQty in the vsl_list, like A=IP1,..,IPn
+#define MAX_DOM  10	// Maximal domain level
+
 #define VAL_SIZE (MAX_VALUE_LENGTH + 16)
 #define DNS_PREFIX "dns"
 #define REDEF_SYM  '~'
@@ -166,6 +168,13 @@ int EmcDns::Reset(const char *bind_ip, uint16_t port_no,
     // Allocate memory
     int allowed_len = allowed_suff == NULL? 0 : strlen(allowed_suff);
     m_gw_suf_len    = gw_suffix    == NULL? 0 : strlen(gw_suffix);
+
+    // Compute dots in the gw-suffix
+    m_gw_suf_dots = 0;
+    if(m_gw_suf_len)
+      for(const char *p = gw_suffix; *p; p++)
+        if(*p == '.') 
+	  m_gw_suf_dots++;
 
     // If no memory, DAP inactive - this is not critical problem
     m_dap_ht  = (allowed_len | m_gw_suf_len)? (DNSAP*)calloc(EMCDNS_DAPSIZE, sizeof(DNSAP)) : NULL; 
@@ -376,60 +385,59 @@ void EmcDns::HandlePacket() {
 /*---------------------------------------------------*/
 uint16_t EmcDns::HandleQuery() {
   // Decode qname
-  uint8_t key[BUF_SIZE];
-  strcpy((char *)key, DNS_PREFIX); 
-  uint8_t *keyp = key + sizeof(DNS_PREFIX) - 1;
-  uint8_t *p = keyp;
-  strncpy((char *)keyp, (const char *)m_rcv, BUF_SIZE - sizeof(DNS_PREFIX));
+  uint8_t key[BUF_SIZE];				// Key, transformed to dot-separated LC
+  uint8_t *key_end = key;
+  uint8_t *domain_ndx[MAX_DOM];				// indexes to domains
+  uint8_t **domain_ndx_p = domain_ndx;			// Ptr to end
 
-  // Decode domain string to dot-separated, insert ':' at begin
-  for(uint8_t sep = ':'; *p != 0; ) {
-    uint8_t sym = *p;
-    *p = sep; 
-    sep = '.';
-    p += sym + 1;
-    if((sym & 0xc0) || p >= key + BUF_SIZE - sizeof(DNS_PREFIX))
-      return 1; // Invalid request
-  }
-
+  // Set reference to domain label
   m_label_ref = htons((m_rcv - m_buf) | 0xc000);
-  m_rcv += p - keyp + 1; // Promote to end of QNAME
 
-  keyp++; // Set PTR to begin of token, after ':' in "dns:"
+  // Convert DNS request to dot-separated printed domaon name in LC
+  // Fill domain_ndx - indexes for domain entries
+  uint8_t dom_len;
+  while((dom_len = *m_rcv++) != 0) {
+    // wrong domain length | key too long, over BUF_SIZE | too mant domains, max is MAX_DOM
+    if((dom_len & 0xc0) || key_end >= key + BUF_SIZE || domain_ndx_p >= domain_ndx + MAX_DOM)
+      return 1; // Invalid request
+    *domain_ndx_p++ = m_rcv;
+    do {
+      *key_end++ = tolower(*m_rcv++);
+    } while(--dom_len);
+    *key_end++ = '.'; // Set DOT at domain end
+  }
+  *--key_end = 0; // Remove last dot, set EOLN
+
+  if(m_verbose > 3) 
+    printf("EmcDns::HandleQuery: Translated domain name: [%s]; DomainsQty=%u\n", key, domain_ndx_p - domain_ndx);
 
   uint16_t qtype  = *m_rcv++; qtype  = (qtype  << 8) + *m_rcv++; 
   uint16_t qclass = *m_rcv++; qclass = (qclass << 8) + *m_rcv++;
 
   if(m_verbose > 0) 
-    printf("EmcDns::HandleQuery Key=%s QType=%x QClass=%x\n", key, qtype, qclass);
+    printf("EmcDns::HandleQuery: Key=%s QType=%x QClass=%x\n", key, qtype, qclass);
 
   if(qclass != 1)
     return 4; // Not implemented - support INET only
 
-  // ToLower search key
-  for(p = keyp; *p; p++)
-      if(*p >= 'A' && *p <= 'Z')
-	  *p |= 040; // tolower
-
-  // If thid is puplic gateway, gw-suffix must be specified, like 
+  // If thid is puplic gateway, gw-suffix can be specified, like 
   // emcdnssuffix=.xyz.com
-  // Followind block cut this suffix.
+  // Followind block cuts this suffix, if exist.
   // If received domain name "xyz.com" only, keyp is empty string
 
   if(m_gw_suf_len) { // suffix defined [public DNS], need to cut
-    p -= m_gw_suf_len;
-    int d = p - keyp;
-    if((d >=  0 && strcmp((const char *)p, m_gw_suffix) != 0)
-    || (d == -1 && strcmp((const char *)p + 1, m_gw_suffix + 1) != 0)
-    || (d <  -1)) {
-        if(m_verbose > 3) 
-	    printf("EmcDns::HandleQuery: missing GW-suffix=%s in given key=%s; return NXDOMAIN\n", 
-		  m_gw_suffix, key);
-        return 3; // Invalid or missing domain suffix, return NXDOMAIN
-    }
-    if(d < 0) 
-      p = keyp;
-    *p = 0; // Cut suffix m_gw_sufix
+    uint8_t *p_suffix = key_end - m_gw_suf_len;
+    if(p_suffix >= key && strcmp((const char *)p_suffix, m_gw_suffix) == 0) {
+      *p_suffix = 0; // Cut suffix m_gw_sufix
+      key_end = p_suffix;
+      domain_ndx_p -= m_gw_suf_dots; 
+    } else 
+    // check special - if suffix == GW-site, e.g., request: emergate.net
+    if(p_suffix == key - 1 && strcmp((const char *)p_suffix + 1, m_gw_suffix + 1) == 0) {
+      *++p_suffix = 0; // Set empty search key
+      key_end = p_suffix;
+      domain_ndx_p = domain_ndx;
+    } 
   } // if(m_gw_suf_len)
 
   // Search for TLD-suffix, like ".coin"
@@ -438,7 +446,12 @@ uint16_t EmcDns::HandleQuery() {
 
   uint8_t pos = 0, step = 0; // pos, step for double hashing
 
-  while(p > keyp) {
+  uint8_t *p = key_end;
+
+  if(m_verbose > 3) 
+    printf("EmcDns::HandleQuery: After TLD-suffix cut: [%s]\n", key);
+
+  while(p > key) {
     uint8_t c = *--p;
     if(c == '.')
       break; // this is TLD-suffix
@@ -448,7 +461,7 @@ uint16_t EmcDns::HandleQuery() {
 
   step |= 1; // Set even step for 2-hashing
 
-  if(p == keyp && m_local_base != NULL) {
+  if(p == key && m_local_base != NULL) {
     // no TLD suffix, try to search local 1st
     if(LocalSearch(p, pos, step) > 0)
       p = NULL; // local search is OK, do not perform nameindex search
@@ -475,6 +488,7 @@ uint16_t EmcDns::HandleQuery() {
     } // if(m_allowed_qty)
 
     // Search in the nameindex db. Possible to search filtered indexes, or even pure names, like "dns:www"
+
     if(Search(key) <= 0) // Result saved into m_value
       return 3; // empty answer, not found, return NXDOMAIN
   } // if(p) 
@@ -662,9 +676,8 @@ int EmcDns::Search(uint8_t *key) {
   if(m_verbose > 1) 
     printf("EmcDns::Search(%s)\n", key);
 
-  string name((const char *)key);
   string value;
-  if (!hooks->getNameValue(name, value))
+  if (!hooks->getNameValue(string("dns:") + (const char *)key, value))
     return 0;
 
   strcpy(m_value, value.c_str());

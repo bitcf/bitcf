@@ -71,6 +71,7 @@ class EmcDns {
     uint16_t  m_port;
     uint16_t  m_label_ref;
     uint16_t  m_gw_suf_len;
+    uint8_t   m_gw_suf_dots;
     uint8_t   m_verbose;
     uint8_t   m_allowed_qty;
     char     *m_allowed_base;
