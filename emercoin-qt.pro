@@ -5,10 +5,6 @@ INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 
-
-    QMAKE_CXXFLAGS += -I/usr/local/BerkeleyDB.4.8/include
-    QMAKE_LFLAGS += -L/usr/local/BerkeleyDB.4.8/lib
-
 # for boost 1.37, add -mt to the boost libraries 
 # use: qmake BOOST_LIB_SUFFIX=-mt
 # for boost thread win32 with _win32 sufix
@@ -345,7 +341,7 @@ macx:HEADERS += src/qt/macdockiconhandler.h
 macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0
-macx:ICON = src/qt/res/icons/bitcoin.icns
+macx:ICON = src/qt/res/icons/emercoin.icns
 macx:TARGET = "Emercoin-Qt"
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
