@@ -51,7 +51,7 @@ CAddress addrLocalHost(CService("0.0.0.0", 0), nLocalServices);
 CAddress addrSeenByPeer(CService("0.0.0.0", 0), nLocalServices);
 static CNode* pnodeLocalHost = NULL;
 uint64 nLocalHostNonce = 0;
-array<int, THREAD_MAX> vnThreadsRunning;
+boost::array<int, THREAD_MAX> vnThreadsRunning;
 static SOCKET hListenSocket = INVALID_SOCKET;
 CAddrMan addrman;
 
@@ -261,9 +261,7 @@ bool GetMyExternalIP_STUN(CNetAddr& ipRet) {
   if(rc >= 0) {
     ipRet = CNetAddr(mapped.sin_addr);
 
-    //uncommenting this printf will result in a bug in Windows XP. TODO: fix this behavior, or maybe drop Windows XP support.
-    //printf("GetExternalIPbySTUN(%llx) returned %s in attempt %d; Server=%s\n",
-    //    rnd, addrLocalHost.ToStringIP().c_str(), rc, srv);
+    printf("GetExternalIPbySTUN() returned %s in attempt %d; Server=%s\n", addrLocalHost.ToStringIP().c_str(), rc, srv);
     return true;
   }
   return false;
