@@ -400,7 +400,7 @@ uint16_t EmcDns::HandleQuery() {
     // wrong domain length | key too long, over BUF_SIZE | too mant domains, max is MAX_DOM
     if((dom_len & 0xc0) || key_end >= key + BUF_SIZE || domain_ndx_p >= domain_ndx + MAX_DOM)
       return 1; // Invalid request
-    *domain_ndx_p++ = m_rcv;
+    *domain_ndx_p++ = key_end;
     do {
       *key_end++ = tolower(*m_rcv++);
     } while(--dom_len);
@@ -489,8 +489,29 @@ uint16_t EmcDns::HandleQuery() {
 
     // Search in the nameindex db. Possible to search filtered indexes, or even pure names, like "dns:www"
 
-    if(Search(key) <= 0) // Result saved into m_value
-      return 3; // empty answer, not found, return NXDOMAIN
+    uint8_t **cur_ndx_p, **prev_ndx_p = domain_ndx_p - 2;
+    if(prev_ndx_p < domain_ndx) prev_ndx_p = domain_ndx;
+    bool step_next;
+    do {
+      cur_ndx_p = prev_ndx_p;
+      if(Search(*cur_ndx_p) <= 0) // Result saved into m_value
+	return 3; // empty answer, not found, return NXDOMAIN
+      if(cur_ndx_p == domain_ndx)
+	break; // This is 1st domain (last in the chain)
+      prev_ndx_p = cur_ndx_p - 1;
+      int domain_len = *cur_ndx_p - *prev_ndx_p - 1;
+      char val2[VAL_SIZE];
+      char *tokens[MAX_TOK];
+      step_next = false;
+      int sdqty = Tokenize("SD", ",", tokens, strcpy(val2, m_value));
+      while(--sdqty >= 0 && !step_next)
+        step_next = strncmp((const char *)*prev_ndx_p, tokens[sdqty], domain_len) == 0;
+    } while(step_next);
+
+
+    // if(Search(key) <= 0) // Result saved into m_value
+    //  return 3; // empty answer, not found, return NXDOMAIN
+
   } // if(p) 
 
   { // Extract TTL
