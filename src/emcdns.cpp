@@ -625,6 +625,15 @@ void EmcDns::Answer_ALL(uint16_t qtype, char *buf) {
 
   if(m_verbose > 0) printf("EmcDns::Answer_ALL(QT=%d, key=%s); TokenQty=%d\n", qtype, key, tokQty);
 
+  // Shuffle tokens for randomization output order
+  for(int i = tokQty; i > 1; ) {
+    int randndx = GetRand(i);
+    char *tmp = tokens[randndx];
+    --i;
+    tokens[randndx] = tokens[i];
+    tokens[i] = tmp;
+  }
+
   for(int tok_no = 0; tok_no < tokQty; tok_no++) {
       if(m_verbose > 1) 
 	printf("\tEmcDns::Answer_ALL: Token:%u=[%s]\n", tok_no, tokens[tok_no]);
