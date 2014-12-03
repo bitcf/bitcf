@@ -52,12 +52,13 @@ class EmcDns {
     void Answer_ALL(uint16_t qtype, char *buf);
     void Fill_RD_IP(char *ipddrtxt, int af);
     void Fill_RD_DName(char *txt, uint8_t mxsz, int8_t txtcor);
+    int  TryMakeref(uint16_t label_ref);
 
     // Returns x = hash index to update size; x==NULL = disable;
     DNSAP  *CheckDAP(uint32_t ip_addr);
 
-    inline void Out2(uint16_t x) { memcpy(m_snd, &x, 2); m_snd += 2; }
-    inline void Out4(uint32_t x) { memcpy(m_snd, &x, 4); m_snd += 4; }
+    inline void Out2(uint16_t x) { x = htons(x); memcpy(m_snd, &x, 2); m_snd += 2; }
+    inline void Out4(uint32_t x) { x = htonl(x); memcpy(m_snd, &x, 4); m_snd += 4; }
 
     DNSHeader *m_hdr;
     DNSAP    *m_dap_ht;	// Hashtable for DAP; index is hash(IP)

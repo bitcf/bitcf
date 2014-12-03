@@ -390,10 +390,11 @@ uint16_t EmcDns::HandleQuery() {
   uint8_t *domain_ndx[MAX_DOM];				// indexes to domains
   uint8_t **domain_ndx_p = domain_ndx;			// Ptr to end
 
+  // m_rcv is pointer to QNAME
   // Set reference to domain label
-  m_label_ref = htons((m_rcv - m_buf) | 0xc000);
+  m_label_ref = (m_rcv - m_buf) | 0xc000;
 
-  // Convert DNS request to dot-separated printed domaon name in LC
+  // Convert DNS request (QNAME) to dot-separated printed domaon name in LC
   // Fill domain_ndx - indexes for domain entries
   uint8_t dom_len;
   while((dom_len = *m_rcv++) != 0) {
@@ -497,7 +498,8 @@ uint16_t EmcDns::HandleQuery() {
       if(Search(*cur_ndx_p) <= 0) // Result saved into m_value
 	return 3; // empty answer, not found, return NXDOMAIN
       if(cur_ndx_p == domain_ndx)
-	break; // This is 1st domain (last in the chain)
+	break; // This is 1st domain (last in the chain), go to answer
+      // Try to search allowance in SD=list for step down
       prev_ndx_p = cur_ndx_p - 1;
       int domain_len = *cur_ndx_p - *prev_ndx_p - 1;
       char val2[VAL_SIZE];
@@ -506,19 +508,21 @@ uint16_t EmcDns::HandleQuery() {
       int sdqty = Tokenize("SD", ",", tokens, strcpy(val2, m_value));
       while(--sdqty >= 0 && !step_next)
         step_next = strncmp((const char *)*prev_ndx_p, tokens[sdqty], domain_len) == 0;
+
+      // if no way down - maybe, we can create REF-answer from NS-records
+      if(step_next == false && TryMakeref(m_label_ref + (*cur_ndx_p - key)))
+	return 0;
+      // if cannot create REF - just ANSWER for parent domain (ignore prefix)
     } while(step_next);
+    
+  } // if(p) - ends of DB search 
 
-
-    // if(Search(key) <= 0) // Result saved into m_value
-    //  return 3; // empty answer, not found, return NXDOMAIN
-
-  } // if(p) 
-
+  // There is generate ANSWER section
   { // Extract TTL
     char val2[VAL_SIZE];
     char *tokens[MAX_TOK];
     int ttlqty = Tokenize("TTL", NULL, tokens, strcpy(val2, m_value));
-    m_ttl = htonl(ttlqty? atoi(tokens[0]) : 24 * 3600);
+    m_ttl = ttlqty? atoi(tokens[0]) : 24 * 3600;
   }
   
   if(qtype == 0xff) { // ALL Q-types
@@ -532,6 +536,21 @@ uint16_t EmcDns::HandleQuery() {
   return 0;
 } // EmcDns::HandleQuery
 
+/*---------------------------------------------------*/
+int EmcDns::TryMakeref(uint16_t label_ref) {
+  char val2[VAL_SIZE];
+  char *tokens[MAX_TOK];
+  int ttlqty = Tokenize("TTL", NULL, tokens, strcpy(val2, m_value));
+  m_ttl = ttlqty? atoi(tokens[0]) : 24 * 3600;
+  uint16_t orig_label_ref = m_label_ref;
+  m_label_ref = label_ref;
+  Answer_ALL(2, strcpy(val2, m_value));
+  m_label_ref = orig_label_ref;
+  m_hdr->NSCount = m_hdr->ANCount;
+  m_hdr->ANCount = 0;
+  printf("EmcDns::TryMakeref: Generated REF NS=%u\n", m_hdr->NSCount);
+  return m_hdr->NSCount;
+} //  EmcDns::TryMakeref
 /*---------------------------------------------------*/
 
 int EmcDns::Tokenize(const char *key, const char *sep2, char **tokens, char *buf) {
@@ -610,8 +629,8 @@ void EmcDns::Answer_ALL(uint16_t qtype, char *buf) {
       if(m_verbose > 1) 
 	printf("\tEmcDns::Answer_ALL: Token:%u=[%s]\n", tok_no, tokens[tok_no]);
       Out2(m_label_ref);
-      Out2(htons(qtype)); // A record
-      Out2(htons(1)); //  INET
+      Out2(qtype); // A record, or maybe something else
+      Out2(1); //  INET
       Out4(m_ttl);
       switch(qtype) {
 	case 1 : Fill_RD_IP(tokens[tok_no], AF_INET);  break;
@@ -636,7 +655,7 @@ void EmcDns::Fill_RD_IP(char *ipddrtxt, int af) {
       case AF_INET6: out_sz = 16; break;
       default: return;
   }
-  Out2(htons(out_sz));
+  Out2(out_sz);
   if(inet_pton(af, ipddrtxt, m_snd)) 
     m_snd += out_sz;
   else
