@@ -812,11 +812,7 @@ bool CNamecoinHooks::IsMine(const CTxOut& txout)
     if (!RemoveNameScriptPrefix(txout.scriptPubKey, scriptPubKey))
         return false;
 
-    CScript scriptSig;
-    txnouttype whichType;
-    if (!Solver(*pwalletMain, scriptPubKey, 0, 0, scriptSig, whichType))
-        return false;
-    return true;
+    return ::IsMine(*pwalletMain, scriptPubKey);
 }
 
 Value name_list(const Array& params, bool fHelp)
