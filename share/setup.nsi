@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.3.1
+!define VERSION 0.3.2
 !define COMPANY "EmerCoin project"
 !define URL http://www.emercoin.com/
 
@@ -45,13 +45,13 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile emercoin-0.3.1-win32-setup.exe
+OutFile emercoin-0.3.2-win32-setup.exe
 InstallDir $PROGRAMFILES\EmerCoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.3.1.0
+VIProductVersion 0.3.2.0
 VIAddVersionKey ProductName EmerCoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
