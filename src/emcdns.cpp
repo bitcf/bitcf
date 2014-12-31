@@ -488,10 +488,18 @@ uint16_t EmcDns::HandleQuery() {
       } while(m_ht_offset[pos] < 0 || strcmp((const char *)p, m_allowed_base + m_ht_offset[pos]) != 0);
     } // if(m_allowed_qty)
 
+    uint8_t **cur_ndx_p, **prev_ndx_p = domain_ndx_p - 2;
+    if(prev_ndx_p < domain_ndx) 
+      prev_ndx_p = domain_ndx;
+    else {
+      // 2+ domain level. 
+      // Try to adjust TLD suffix for peering GW-site, like opennic.coin
+      if(strncmp((const char *)(*prev_ndx_p), "opennic.", 8) == 0)
+        strcpy((char*)domain_ndx_p[-1], "*"); // substitute TLD to '*'; don't modify domain_ndx_p[0], for keep TLD size for REF
+    }
+
     // Search in the nameindex db. Possible to search filtered indexes, or even pure names, like "dns:www"
 
-    uint8_t **cur_ndx_p, **prev_ndx_p = domain_ndx_p - 2;
-    if(prev_ndx_p < domain_ndx) prev_ndx_p = domain_ndx;
     bool step_next;
     do {
       cur_ndx_p = prev_ndx_p;
