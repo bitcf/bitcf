@@ -11,6 +11,8 @@
 #include "base58.h"
 #include "kernel.h"
 
+#include "uint256hm.h"
+
 using namespace std;
 
 
@@ -1291,17 +1293,38 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         return false;
     int64 nCredit = 0;
     CScript scriptPubKeyKernel;
-    CTxDB txdb("r"); // maxihatop moved out of loop
+
+    static uint256HashMap<pair<CBlock*, unsigned int> > CacheBlockOffset;
+    CacheBlockOffset.Set(setCoins.size() << 1); // 2x pointers
+
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        CTxIndex txindex;
-        if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
-            continue;
+        uint256 tx_hash = pcoin.first->GetHash();
+	uint256HashMap<std::pair<CBlock*, unsigned int> >::Data *pbo = CacheBlockOffset.Search(tx_hash);
+        if(pbo == NULL) {
+          CTxDB txdb("r"); 
+          CTxIndex txindex;
+	  CBlock *block = NULL;
 
-        // Read block header
-        CBlock block;
-        if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-            continue;
+          if(txdb.ReadTxIndex(tx_hash, txindex)) {
+            // Read block header
+            block = new CBlock;
+            if (!block->ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false)) {
+	      delete block;
+	      block = NULL;
+	    }
+	  }
+	  pair<CBlock*, unsigned int> bo(block, txindex.pos.nTxPos - txindex.pos.nBlockPos);
+	  pbo = CacheBlockOffset.Insert(tx_hash, bo);
+	} // if(pbo == NULL)
+
+        if(pbo->value.first == NULL)
+          continue;
+
+	CBlock& block       = *(pbo->value.first);
+	unsigned int offset =   pbo->value.second;
+
+
         static int nMaxStakeSearchInterval = 60;
         if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - nMaxStakeSearchInterval)
             continue; // only count coins meeting min age requirement
@@ -1313,7 +1336,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             // Search nSearchInterval seconds back up to nMaxStakeSearchInterval
             uint256 hashProofOfStake = 0;
             COutPoint prevoutStake = COutPoint(pcoin.first->GetHash(), pcoin.second);
-            if (CheckStakeKernelHash(nBits, block, txindex.pos.nTxPos - txindex.pos.nBlockPos, *pcoin.first, prevoutStake, txNew.nTime - n, hashProofOfStake))
+            //if (CheckStakeKernelHash(nBits, block, txindex.pos.nTxPos - txindex.pos.nBlockPos, *pcoin.first, prevoutStake, txNew.nTime - n, hashProofOfStake))
+            if (CheckStakeKernelHash(nBits, block, offset, *pcoin.first, prevoutStake, txNew.nTime - n, hashProofOfStake))
             {
                 // Found a kernel
                 if (fDebug && GetBoolArg("-printcoinstake"))
@@ -1401,7 +1425,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     // Calculate coin age reward
     {
         uint64 nCoinAge;
-//        CTxDB txdb("r");
+	CTxDB txdb("r");
         if (!txNew.GetCoinAge(txdb, nCoinAge))
             return error("CreateCoinStake : failed to calculate coin age");
         nCredit += GetProofOfStakeReward(nCoinAge);

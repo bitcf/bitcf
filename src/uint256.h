@@ -30,6 +30,10 @@ protected:
     unsigned int pn[WIDTH];
 public:
 
+    const uint32_t *GetDataPtr() const {
+	return pn;
+    }
+
     bool operator!() const
     {
         for (int i = 0; i < WIDTH; i++)
