@@ -1294,31 +1294,44 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     int64 nCredit = 0;
     CScript scriptPubKeyKernel;
 
+    // This is static cache for minimize block loads for each POS-attempt
+    // Possible values of ->value.first
+    // Addr > 0x4 -- This is pointer to blockheader in the memory
+    // Addr = 0x1 -- Was read error, don't load this block anymore
+    // NULL -- Block removed after mint, but maybe need reload again into same cell
     static uint256HashMap<pair<CBlock*, unsigned int> > CacheBlockOffset;
+
     CacheBlockOffset.Set(setCoins.size() << 1); // 2x pointers
+
+    uint256HashMap<std::pair<CBlock*, unsigned int> >::Data *pbo;
 
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
         uint256 tx_hash = pcoin.first->GetHash();
-	uint256HashMap<std::pair<CBlock*, unsigned int> >::Data *pbo = CacheBlockOffset.Search(tx_hash);
-        if(pbo == NULL) {
+	pbo = CacheBlockOffset.Search(tx_hash);
+	// Try Load, if missing or temporary removed
+        if(pbo == NULL || pbo->value.first == NULL) {
           CTxDB txdb("r"); 
           CTxIndex txindex;
-	  CBlock *block = NULL;
+	  CBlock *block = (CBlock*)0x1; // default=Error
 
           if(txdb.ReadTxIndex(tx_hash, txindex)) {
             // Read block header
             block = new CBlock;
             if (!block->ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false)) {
 	      delete block;
-	      block = NULL;
+	      block = (CBlock*)0x1;
 	    }
 	  }
-	  pair<CBlock*, unsigned int> bo(block, txindex.pos.nTxPos - txindex.pos.nBlockPos);
-	  pbo = CacheBlockOffset.Insert(tx_hash, bo);
+	  if((pbo == NULL)) {
+	    pair<CBlock*, unsigned int> bo(block, txindex.pos.nTxPos - txindex.pos.nBlockPos);
+	    pbo = CacheBlockOffset.Insert(tx_hash, bo);
+	  } else 
+	      pbo->value.first = block;
 	} // if(pbo == NULL)
 
-        if(pbo->value.first == NULL)
+	// Don't work, if reaadErr=0x1, or temporary removed=NULL
+        if(pbo->value.first < (CBlock*)0x4)
           continue;
 
 	CBlock& block       = *(pbo->value.first);
@@ -1471,6 +1484,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     }
 
     // Successfully generated coinstake
+    // Remove block reference from cache
+    delete pbo->value.first;
+    pbo->value.first = NULL; // Set "temporary removed"
     return true;
 }
 
