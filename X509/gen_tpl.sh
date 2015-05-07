@@ -35,7 +35,7 @@ fi
 
 #FNAME=$(printf "%08x%08x.tpl" `od -vAn -N4 -tu4 < /dev/urandom` `od -vAn -N4 -tu4 < /dev/urandom`)
 #
-FNAME=`openssl rand 8 | od -xAn | tr -d '[[:space:]]'`
+FNAME=`openssl rand 8 | od -xAn | tr -d '[[:space:]]' | sed 's/^0/f/`
 FNAME="$FNAME.tpl"
 
 echo "Created EMCSSL Certificate template: $FNAME"
