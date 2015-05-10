@@ -16,7 +16,7 @@ OUTF=$FNAME.ze
 HD=`head -n 1 $FNAME`
 
 PREFIX=`echo $HD | cut -c 1-7`
-if [ $PREFIX == "#!info:" ] ; then
+if [ $PREFIX = "#!info:" ] ; then
     INDEX=`echo $HD | cut -d : -f 2`
     PASSW=`echo $HD | cut -d : -f 3`
 else

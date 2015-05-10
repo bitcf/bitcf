@@ -16,7 +16,7 @@ touch db/index.txt
 echo $SERIAL > db/serial
 
 openssl req -new -newkey rsa:2048 -nodes -keyout $SERIAL.key \
- -subj $SUBJ \
+ -subj "$SUBJ" \
  -out $SERIAL.csr
 
 openssl ca -config CA/ca.config -in $SERIAL.csr -out $SERIAL.crt -batch
