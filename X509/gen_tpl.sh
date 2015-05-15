@@ -28,9 +28,9 @@ echo " 3. Your UID for retrieve vCard info (optional)"
 echo "This value printed by script info_crypt.sh during *.ze file creation"
 echo "For example: info:2f2c5a7c57d60668:74744c6e4443df490eab0807052bb9"
 printf "UID: "
-read UID
-if [ ! -z "$UID" ] ; then
-  SUBJ="$SUBJ/UID=$UID"
+read XUID
+if [ ! -z "$XUID" ] ; then
+  SUBJ="$SUBJ/UID=$XUID"
 fi
 
 #FNAME=$(printf "%08x%08x.tpl" `od -vAn -N4 -tu4 < /dev/urandom` `od -vAn -N4 -tu4 < /dev/urandom`)
