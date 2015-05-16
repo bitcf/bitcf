@@ -7,7 +7,7 @@ echo
 echo " 1. Your common name (MANDATORY)"
 echo " This is free-form text printable usename"
 echo " Can be login ID like 'inflat0r'"
-echo " Or personal name, like Abdul Abstul Zadom Bey"
+echo " Or personal name, like John Q. Public"
 printf "CN: "
 read CN
 if [ -z "$CN" ] ; then
