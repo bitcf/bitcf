@@ -136,7 +136,7 @@ EmercoinGUI::EmercoinGUI(QWidget *parent):
     QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
     frameBlocksLayout->setContentsMargins(3,0,3,0);
     frameBlocksLayout->setSpacing(3);
-    labelEncryptionIcon = new QLabel();
+    labelEncryptionIcon = new ClickableLockLabel();
     labelConnectionsIcon = new QLabel();
     labelBlocksIcon = new QLabel();
     frameBlocksLayout->addStretch();
@@ -394,6 +394,7 @@ void EmercoinGUI::setWalletModel(WalletModel *walletModel)
 
         // Ask for passphrase if needed
         connect(walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
+        connect(labelEncryptionIcon, SIGNAL(clicked()), this, SLOT(on_labelEncryptionIcon_clicked()));
     }
 }
 
@@ -882,4 +883,20 @@ void EmercoinGUI::showNormalIfMinimized()
         show();
     if(isMinimized()) // Unminimize, if minimized
         showNormal();
+}
+
+
+void EmercoinGUI::on_labelEncryptionIcon_clicked()
+{
+    if (!walletModel)
+        return;
+    if (walletModel->getEncryptionStatus() == WalletModel::Unlocked)
+        walletModel->setWalletLocked(true);
+    else
+    {
+        AskPassphraseDialog dlg(AskPassphraseDialog::UnlockExtended, this);
+        dlg.setModel(walletModel);
+        dlg.exec();
+    }
+    walletModel->update(); // repaint icon immediately
 }

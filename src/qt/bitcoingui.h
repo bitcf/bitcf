@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QSystemTrayIcon>
+#include "clickablelabel.h"
 
 class TransactionTableModel;
 class ClientModel;
@@ -68,7 +69,7 @@ private:
     ManageNamesPage *manageNamesPage;
     MessagePage *messagePage;
 
-    QLabel *labelEncryptionIcon;
+    ClickableLockLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
@@ -176,6 +177,8 @@ private slots:
     void showNormalIfMinimized();
     /** Hide window if visible, show if hidden */
     void toggleHidden();
+    /** Unlock|Lock wallet when clicking on icon */
+    void on_labelEncryptionIcon_clicked();
 };
 
 #endif

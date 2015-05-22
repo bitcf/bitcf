@@ -19,6 +19,7 @@ public:
     enum Mode {
         Encrypt,    /**< Ask passphrase twice and encrypt */
         Unlock,     /**< Ask passphrase and unlock */
+        UnlockExtended, /**< Same as unlock but with additional choice for mintonly mode and unlock duration */
         ChangePass, /**< Ask old passphrase + new passphrase twice */
         Decrypt     /**< Ask passphrase and decrypt wallet */
     };

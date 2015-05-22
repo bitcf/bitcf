@@ -26,6 +26,11 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
     ui->passEdit3->installEventFilter(this);
     ui->capsLabel->clear();
 
+    ui->passLabelDuration->hide();
+    ui->passEditDuration->hide();
+    ui->passLabelMintOnly->hide();
+    ui->passCheckBoxMintOnly->hide();
+
     switch(mode)
     {
         case Encrypt: // Ask passphrase x2
@@ -40,6 +45,19 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
             ui->passEdit2->hide();
             ui->passLabel3->hide();
             ui->passEdit3->hide();
+            setWindowTitle(tr("Unlock wallet"));
+            break;
+        case UnlockExtended: // Ask passphrase, duration and full / mint only modes
+            ui->warningLabel->setText(tr("This operation needs your wallet passphrase to unlock the wallet."));
+            ui->passLabel2->hide();
+            ui->passEdit2->hide();
+            ui->passLabel3->hide();
+            ui->passEdit3->hide();
+            ui->passLabelDuration->show();
+            ui->passEditDuration->show();
+            ui->passLabelMintOnly->show();
+            ui->passCheckBoxMintOnly->show();
+            ui->passEditDuration->setValidator( new QIntValidator(0, 1000000000, this) );
             setWindowTitle(tr("Unlock wallet"));
             break;
         case Decrypt:   // Ask passphrase
@@ -60,6 +78,9 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
     connect(ui->passEdit1, SIGNAL(textChanged(QString)), this, SLOT(textChanged()));
     connect(ui->passEdit2, SIGNAL(textChanged(QString)), this, SLOT(textChanged()));
     connect(ui->passEdit3, SIGNAL(textChanged(QString)), this, SLOT(textChanged()));
+
+    // resize
+    this->adjustSize();
 }
 
 AskPassphraseDialog::~AskPassphraseDialog()
@@ -141,6 +162,17 @@ void AskPassphraseDialog::accept()
             QDialog::accept(); // Success
         }
         break;
+    case UnlockExtended:
+        if(!model->setWalletLocked(false, oldpass, ui->passEditDuration->text().toLongLong(), ui->passCheckBoxMintOnly->isChecked()))
+        {
+            QMessageBox::critical(this, tr("Wallet unlock failed"),
+                                  tr("The passphrase entered for the wallet decryption was incorrect."));
+        }
+        else
+        {
+            QDialog::accept(); // Success
+        }
+        break;
     case Decrypt:
         if(!model->setWalletEncrypted(false, oldpass))
         {
@@ -186,6 +218,7 @@ void AskPassphraseDialog::textChanged()
         acceptable = !ui->passEdit2->text().isEmpty() && !ui->passEdit3->text().isEmpty();
         break;
     case Unlock: // Old passphrase x1
+    case UnlockExtended:
     case Decrypt:
         acceptable = !ui->passEdit1->text().isEmpty();
         break;
