@@ -17,6 +17,9 @@ unsigned int nProtocolV03TestSwitchTime = 1359781000;
 // Set to 6-hour for production network and 20-minute for test network
 unsigned int nModifierInterval = MODIFIER_INTERVAL;
 
+// Cache for stake modifiers
+uint256HashMap<StakeMod> StakeModCache;
+
 // Hard checkpoints of stake modifiers to ensure they are deterministic
 static std::map<int, unsigned int> mapStakeModifierCheckpoints =
     boost::assign::map_list_of

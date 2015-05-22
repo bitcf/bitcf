@@ -30,6 +30,8 @@ typedef int pid_t; /* define for windows compatiblity */
 
 #include "netbase.h" // for AddTimeData
 
+//#include <unistd.h> // for usleep 
+
 typedef long long  int64;
 typedef unsigned long long  uint64;
 
@@ -96,7 +98,11 @@ T* alignup(T* p)
 
 inline void Sleep(int64 n)
 {
-     boost::this_thread::sleep(boost::posix_time::milliseconds(n));
+#ifdef WIN32
+    boost::this_thread::sleep(boost::posix_time::milliseconds(n));
+#else
+    usleep(n * 1000);
+#endif
 }
 
 #endif

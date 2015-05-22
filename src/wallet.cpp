@@ -11,6 +11,8 @@
 #include "base58.h"
 #include "kernel.h"
 
+#include "uint256hm.h"
+
 using namespace std;
 
 
@@ -1291,17 +1293,51 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         return false;
     int64 nCredit = 0;
     CScript scriptPubKeyKernel;
-    CTxDB txdb("r"); // maxihatop moved out of loop
+
+    // This is static cache for minimize block loads for each POS-attempt
+    // Possible values of ->value.first
+    // Addr > 0x4 -- This is pointer to blockheader in the memory
+    // Addr = 0x1 -- Was read error, don't load this block anymore
+    // NULL -- Block removed after mint, but maybe need reload again into same cell
+    static uint256HashMap<pair<CBlock*, unsigned int> > CacheBlockOffset;
+
+    CacheBlockOffset.Set(setCoins.size() << 1); // 2x pointers
+
+    uint256HashMap<std::pair<CBlock*, unsigned int> >::Data *pbo;
+
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        CTxIndex txindex;
-        if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
-            continue;
+        uint256 tx_hash = pcoin.first->GetHash();
+	pbo = CacheBlockOffset.Search(tx_hash);
+	// Try Load, if missing or temporary removed
+        if(pbo == NULL || pbo->value.first == NULL) {
+          CTxDB txdb("r"); 
+          CTxIndex txindex;
+	  CBlock *block = (CBlock*)0x1; // default=Error
 
-        // Read block header
-        CBlock block;
-        if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-            continue;
+          if(txdb.ReadTxIndex(tx_hash, txindex)) {
+            // Read block header
+            block = new CBlock;
+            if (!block->ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false)) {
+	      delete block;
+	      block = (CBlock*)0x1;
+	    }
+	  }
+	  if((pbo == NULL)) {
+	    pair<CBlock*, unsigned int> bo(block, txindex.pos.nTxPos - txindex.pos.nBlockPos);
+	    pbo = CacheBlockOffset.Insert(tx_hash, bo);
+	  } else 
+	      pbo->value.first = block;
+	} // if(pbo == NULL)
+
+	// Don't work, if reaadErr=0x1, or temporary removed=NULL
+        if(pbo->value.first < (CBlock*)0x4)
+          continue;
+
+	CBlock& block       = *(pbo->value.first);
+	unsigned int offset =   pbo->value.second;
+
+
         static int nMaxStakeSearchInterval = 60;
         if (block.GetBlockTime() + nStakeMinAge > txNew.nTime - nMaxStakeSearchInterval)
             continue; // only count coins meeting min age requirement
@@ -1313,7 +1349,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             // Search nSearchInterval seconds back up to nMaxStakeSearchInterval
             uint256 hashProofOfStake = 0;
             COutPoint prevoutStake = COutPoint(pcoin.first->GetHash(), pcoin.second);
-            if (CheckStakeKernelHash(nBits, block, txindex.pos.nTxPos - txindex.pos.nBlockPos, *pcoin.first, prevoutStake, txNew.nTime - n, hashProofOfStake))
+            //if (CheckStakeKernelHash(nBits, block, txindex.pos.nTxPos - txindex.pos.nBlockPos, *pcoin.first, prevoutStake, txNew.nTime - n, hashProofOfStake))
+            if (CheckStakeKernelHash(nBits, block, offset, *pcoin.first, prevoutStake, txNew.nTime - n, hashProofOfStake))
             {
                 // Found a kernel
                 if (fDebug && GetBoolArg("-printcoinstake"))
@@ -1401,7 +1438,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     // Calculate coin age reward
     {
         uint64 nCoinAge;
-//        CTxDB txdb("r");
+	CTxDB txdb("r");
         if (!txNew.GetCoinAge(txdb, nCoinAge))
             return error("CreateCoinStake : failed to calculate coin age");
         nCredit += GetProofOfStakeReward(nCoinAge);
@@ -1447,6 +1484,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     }
 
     // Successfully generated coinstake
+    // Remove block reference from cache
+    delete pbo->value.first;
+    pbo->value.first = NULL; // Set "temporary removed"
     return true;
 }
 

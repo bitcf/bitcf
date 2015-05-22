@@ -258,10 +258,11 @@ bool GetMyExternalIP_STUN(CNetAddr& ipRet) {
   uint64_t rnd = GetRand(~0LL);
   const char *srv;
   int rc = GetExternalIPbySTUN(rnd, &mapped, &srv);
-  if(rc >= 0) {
+  if(rc > 0) {
     ipRet = CNetAddr(mapped.sin_addr);
 
-    printf("GetExternalIPbySTUN() returned %s in attempt %d; Server=%s\n", addrLocalHost.ToStringIP().c_str(), rc, srv);
+    printf("GetExternalIPbySTUN() returned %s in attempt %u; flags=%x; Server=%s\n", 
+	    addrLocalHost.ToStringIP().c_str(), rc >> 8, (uint8_t)rc, srv);
     return true;
   }
   return false;

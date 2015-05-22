@@ -55,14 +55,12 @@ struct StunSrv {
 };
 
 /*---------------------------------------------------------------------*/
-static const int StunSrvListQty = 263; // Must be PRIME!!!!!
+static const int StunSrvListQty = 241; // Must be PRIME!!!!!
 
-static struct StunSrv StunSrvList[263] = {
+static struct StunSrv StunSrvList[241] = {
 {"23.21.150.121",	3478},
 {"iphone-stun.strato-iphone.de",	3478},
 {"numb.viagenie.ca",	3478},
-{"s1.taraba.net",	3478},
-{"s2.taraba.net",	3478},
 {"stun.12connect.com",	3478},
 {"stun.12voip.com",	3478},
 {"stun.1und1.de",	3478},
@@ -79,8 +77,7 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.aeta.com",	3478},
 {"stun.alltel.com.au",	3478},
 {"stun.altar.com.pl",	3478},
-{"stun.annatel.net",	3478},
-{"stun.arbuz.ru",	3478},
+{"stun.antisip.com",	3478},
 {"stun.avigora.com",	3478},
 {"stun.avigora.fr",	3478},
 {"stun.awa-shima.com",	3478},
@@ -96,14 +93,12 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.cablenet-as.net",	3478},
 {"stun.callromania.ro",	3478},
 {"stun.callwithus.com",	3478},
-{"stun.cbsys.net",	3478},
 {"stun.chathelp.ru",	3478},
 {"stun.cheapvoip.com",	3478},
 {"stun.ciktel.com",	3478},
 {"stun.cloopen.com",	3478},
 {"stun.colouredlines.com.au",	3478},
 {"stun.comfi.com",	3478},
-{"stun.commpeak.com",	3478},
 {"stun.comtube.com",	3478},
 {"stun.comtube.ru",	3478},
 {"stun.cope.es",	3478},
@@ -111,11 +106,8 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.counterpath.net",	3478},
 {"stun.cryptonit.net",	3478},
 {"stun.darioflaccovio.it",	3478},
-{"stun.datamanagement.it",	3478},
 {"stun.dcalling.de",	3478},
-{"stun.decanet.fr",	3478},
 {"stun.demos.ru",	3478},
-{"stun.develz.org",	3478},
 {"stun.dingaling.ca",	3478},
 {"stun.doublerobotics.com",	3478},
 {"stun.drogon.net",	3478},
@@ -141,6 +133,7 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.gmx.net",	3478},
 {"stun.gradwell.com",	3478},
 {"stun.halonet.pl",	3478},
+{"stun.hellonanu.com",	3478},
 {"stun.hoiio.com",	3478},
 {"stun.hosteurope.de",	3478},
 {"stun.ideasip.com",	3478},
@@ -149,11 +142,8 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.internetcalls.com",	3478},
 {"stun.intervoip.com",	3478},
 {"stun.ipcomms.net",	3478},
-{"stun.ipfire.org",	3478},
-{"stun.ippi.fr",	3478},
 {"stun.ipshka.com",	3478},
 {"stun.iptel.org",	3478},
-{"stun.irian.at",	3478},
 {"stun.it1.hr",	3478},
 {"stun.ivao.aero",	3478},
 {"stun.jappix.com",	3478},
@@ -170,10 +160,8 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.lugosoft.com",	3478},
 {"stun.lundimatin.fr",	3478},
 {"stun.magnet.ie",	3478},
-{"stun.manle.com",	3478},
 {"stun.mgn.ru",	3478},
 {"stun.mit.de",	3478},
-{"stun.mitake.com.tw",	3478},
 {"stun.miwifi.com",	3478},
 {"stun.modulus.gr",	3478},
 {"stun.mozcom.com",	3478},
@@ -183,7 +171,6 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.neotel.co.za",	3478},
 {"stun.netappel.com",	3478},
 {"stun.netappel.fr",	3478},
-{"stun.netgsm.com.tr",	3478},
 {"stun.nfon.net",	3478},
 {"stun.noblogs.org",	3478},
 {"stun.noc.ams-ix.net",	3478},
@@ -194,8 +181,6 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.nventure.com",	3478},
 {"stun.on.net.mk",	3478},
 {"stun.ooma.com",	3478},
-{"stun.ooonet.ru",	3478},
-{"stun.outland-net.de",	3478},
 {"stun.ozekiphone.com",	3478},
 {"stun.patlive.com",	3478},
 {"stun.personal-voip.de",	3478},
@@ -208,11 +193,10 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.powervoip.com",	3478},
 {"stun.ppdi.com",	3478},
 {"stun.prizee.com",	3478},
-{"stun.qq.com",	3478},
 {"stun.qvod.com",	3478},
 {"stun.rackco.com",	3478},
 {"stun.rapidnet.de",	3478},
-{"stun.rb-net.com",	3478},
+{"stun.refint.net",	3478},
 {"stun.remote-learner.net",	3478},
 {"stun.rixtelecom.se",	3478},
 {"stun.rockenstein.de",	3478},
@@ -238,14 +222,12 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.smartvoip.com",	3478},
 {"stun.smsdiscount.com",	3478},
 {"stun.snafu.de",	3478},
-{"stun.softjoys.com",	3478},
 {"stun.solcon.nl",	3478},
 {"stun.solnet.ch",	3478},
 {"stun.sonetel.com",	3478},
 {"stun.sonetel.net",	3478},
 {"stun.sovtest.ru",	3478},
 {"stun.speedy.com.ar",	3478},
-{"stun.spokn.com",	3478},
 {"stun.srce.hr",	3478},
 {"stun.ssl7.net",	3478},
 {"stun.stunprotocol.org",	3478},
@@ -255,7 +237,6 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.t-online.de",	3478},
 {"stun.tagan.ru",	3478},
 {"stun.tatneft.ru",	3478},
-{"stun.teachercreated.com",	3478},
 {"stun.tel.lu",	3478},
 {"stun.telbo.com",	3478},
 {"stun.telefacil.com",	3478},
@@ -268,7 +249,6 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.ucw.cz",	3478},
 {"stun.uls.co.za",	3478},
 {"stun.unseen.is",	3478},
-{"stun.usfamily.net",	3478},
 {"stun.veoh.com",	3478},
 {"stun.vidyo.com",	3478},
 {"stun.vipgroup.net",	3478},
@@ -280,7 +260,6 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.vodafone.ro",	3478},
 {"stun.voicetrading.com",	3478},
 {"stun.voip.aebc.com",	3478},
-{"stun.voip.blackberry.com",	3478},
 {"stun.voip.eutelia.it",	3478},
 {"stun.voiparound.com",	3478},
 {"stun.voipblast.com",	3478},
@@ -309,18 +288,17 @@ static struct StunSrv StunSrvList[263] = {
 {"stun.wwdl.net",	3478},
 {"stun.xs4all.nl",	3478},
 {"stun.xtratelecom.es",	3478},
-{"stun.yesss.at",	3478},
 {"stun.zadarma.com",	3478},
 {"stun.zadv.com",	3478},
 {"stun.zoiper.com",	3478},
 {"stun1.faktortel.com.au",	3478},
-{"stun1.l.google.com",	19302},
 {"stun1.voiceeclipse.net",	3478},
+{"stun1.l.google.com",	19302},
 {"stun2.l.google.com",	19302},
 {"stun3.l.google.com",	19302},
 {"stun4.l.google.com",	19302},
-{"stunserver.org",	3478},
-{"stun.antisip.com",    3478}
+{"stun.l.google.com",	19302},
+{"stun.fbsbx.com",	3478}
 };
 
 
@@ -336,21 +314,60 @@ static uint64_t randfiller;
 static void stun_req_id(struct stun_header *req)
 {
   const uint64_t *S_block = (const uint64_t *)StunSrvList;
-  req->id.id[0] |= 0x55555555;
   req->id.id[1] &= 0x55555555;
   req->id.id[2] |= 0x55555555;
   req->id.id[3] &= 0x55555555;
   register char x = 20;
   do {
     uint32_t s_elm = S_block[(uint8_t)randfiller];
-    randfiller ^= (randfiller << 5) | (randfiller >> (64 - 5));
+    randfiller = (randfiller << 5) | (randfiller >> (64 - 5));
     randfiller += s_elm ^ x;
-    req->id.id[x & 3] ^= randfiller + (randfiller >> 13);
+    req->id.id[x & 3] += randfiller ^ (randfiller >> 19);
   } while(--x);
+  req->id.id[0] = STUN_XORMAGIC; // Set magic for RFC5389
 }
 
-/* callback type to be invoked on stun responses. */
-typedef int (stun_cb_f)(struct stun_attr *attr, void *arg);
+
+/* Extract the STUN_MAPPED_ADDRESS from the stun response.
+ * This is used as a callback for stun_handle_response
+ * when called from stun_request.
+ */
+static int stun_get_mapped(struct stun_attr *attr, void *arg)
+{
+  struct stun_addr *addr = (struct stun_addr *)(attr + 1);
+  struct sockaddr_in *sa = (struct sockaddr_in *)arg;
+  int rc = 0;
+  if(ntohs(attr->len) != 8)
+    return rc;
+
+  uint32_t xor_mask;
+
+  switch(ntohs(attr->attr)) {
+    case STUN_MAPPED_ADDRESS:
+      if(sa->sin_addr.s_addr == 0) { 
+        rc = 1; 
+	xor_mask = 0;
+      }
+      break;
+    case STUN_XORMAPPEDADDRESS:  
+      rc = 2; 
+      xor_mask = STUN_XORMAGIC; 
+      break;
+    case STUN_XORMAPPEDADDRESS2: 
+      rc = 4; 
+      xor_mask = STUN_XORMAGIC; 
+      break;
+    default: break;
+  }
+
+  if(rc) {
+     sa->sin_port        = addr->port ^ xor_mask;
+     sa->sin_addr.s_addr = addr->addr ^ xor_mask;
+  }
+
+  return rc;
+}
+
 
 /* handle an incoming STUN message.
  *
@@ -361,11 +378,11 @@ typedef int (stun_cb_f)(struct stun_attr *attr, void *arg);
  * If a callback is specified, invoke it with the attribute.
  */
 static int stun_handle_packet(int s, struct sockaddr_in *src,
-	unsigned char *data, size_t len, stun_cb_f *stun_cb, void *arg)
+	unsigned char *data, size_t len, void *arg)
 {
   struct stun_header *hdr = (struct stun_header *)data;
   struct stun_attr *attr;
-  int ret = len;
+  int ret = 0;
   int x;
 
   /* On entry, 'len' is the length of the udp payload. After the
@@ -393,11 +410,7 @@ static int stun_handle_packet(int s, struct sockaddr_in *src,
       ret = -22;
       break;
     }
-    stun_cb(attr, arg);
-    //if (stun_process_attr(&st, attr)) {
-    //  ret = -23;
-    //  break;
-   // }
+    ret |= stun_get_mapped(attr, arg);
     /* Clear attribute id: in case previous entry was a string,
      * this will act as the terminator for the string.
      */
@@ -419,23 +432,6 @@ static int stun_handle_packet(int s, struct sockaddr_in *src,
 
   return ret;
 }
-
-/* Extract the STUN_MAPPED_ADDRESS from the stun response.
- * This is used as a callback for stun_handle_response
- * when called from stun_request.
- */
-static int stun_get_mapped(struct stun_attr *attr, void *arg)
-{
-	struct stun_addr *addr = (struct stun_addr *)(attr + 1);
-	struct sockaddr_in *sa = (struct sockaddr_in *)arg;
-
-	if (ntohs(attr->attr) != STUN_MAPPED_ADDRESS || ntohs(attr->len) != 8)
-		return 1;	/* not us. */
-	sa->sin_port = addr->port;
-	sa->sin_addr.s_addr = addr->addr;
-	return 0;
-}
-
 /*---------------------------------------------------------------------*/
 
 static int StunRequest2(int sock, struct sockaddr_in *server, struct sockaddr_in *mapped) {
@@ -479,7 +475,7 @@ static int StunRequest2(int sock, struct sockaddr_in *server, struct sockaddr_in
   if (res <= 0)
     return -12;
   memset(mapped, 0, sizeof(struct sockaddr_in));
-  return stun_handle_packet(sock, &src, reply_buf, res, stun_get_mapped, mapped);
+  return stun_handle_packet(sock, &src, reply_buf, res, mapped);
 } // StunRequest2
 
 /*---------------------------------------------------------------------*/
@@ -515,7 +511,7 @@ static int StunRequest(const char *host, uint16_t port, struct sockaddr_in *mapp
 // list
 // Output: populate struct struct mapped
 // Retval:
-
+// bits 0-7 = STUN tokens set, 8-32 = attempt number
 int GetExternalIPbySTUN(uint64_t rnd, struct sockaddr_in *mapped, const char **srv) {
   randfiller    = rnd;
   uint16_t pos  = rnd;
@@ -525,14 +521,12 @@ int GetExternalIPbySTUN(uint64_t rnd, struct sockaddr_in *mapped, const char **s
       step = rnd % StunSrvListQty;
   } while(step == 0);
 
-  uint16_t attempt;
-  for(attempt = 1; attempt < StunSrvListQty * 2; attempt++) {
+  int attempt; // runs in 8 birs offset, for keep flags in low byte 
+  for(attempt = 256; attempt < StunSrvListQty * 2 * 256; attempt += 256) {
     pos = (pos + step) % StunSrvListQty;
     int rc = StunRequest(*srv = StunSrvList[pos].name, StunSrvList[pos].port, mapped);
-    if(rc >= 0)
-      return attempt;
-    // fprintf(stderr, "Lookup: %s:%u\t%s\t%d\n", StunSrvList[pos].name, 
-    // StunSrvList[pos].port, inet_ntoa(mapped->sin_addr), rc);
+    if(rc > 0)
+      return attempt | rc;
   }
   return -1;
 }
