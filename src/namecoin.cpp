@@ -10,6 +10,7 @@ extern std::map<uint256, CTransaction> mapTransactions;
 #include "hooks.h"
 
 #include <boost/xpressive/xpressive_dynamic.hpp>
+#include <boost/lexical_cast.hpp>
 #include <fstream>
 
 using namespace json_spirit;
@@ -525,7 +526,7 @@ bool IsNameFeeEnough(CTxDB& txdb, const CTransaction& tx, const NameTxInfo& nti,
             txFeePass = true;
             break;
         }
-        printf("op == name_new, txFee = %"PRI64d", netFee = %"PRI64d", nRentalDays = %d\n", txFee, netFee, nti.nRentalDays);
+        //printf("op == name_new, txFee = %"PRI64d", netFee = %"PRI64d", nRentalDays = %d\n", txFee, netFee, nti.nRentalDays);
         lastPoW = GetLastBlockIndex(lastPoW->pprev, false);
     }
     return txFeePass;
@@ -2003,10 +2004,13 @@ bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
     set< vector<unsigned char> > sNameNew;
     BOOST_FOREACH(const nameTempProxy &i, vName)
     {
+        string info = "ConnectInputsHook(): trying to write " + nameFromOp(i.op) + " " + stringFromVch(i.vchName) +
+            " in block " + boost::lexical_cast<string>(pindex->nHeight) + " to nameindex.dat...";
+
         vector<CNameIndex> vtxPos;
         int nExpiresAt;
         if (dbName.ExistsName(i.vchName) && !dbName.ReadName(i.vchName, vtxPos, nExpiresAt))
-            return error("ConnectInputsHook() : failed to read from name DB");
+            return error("%s failed to read from name DB", info.c_str());
 
         dbName.TxnBegin();
 
@@ -2014,7 +2018,7 @@ bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         if (i.op == OP_NAME_NEW || i.op == OP_NAME_DELETE)
         {
             if (!dbName.EraseName(i.vchName))
-                return error("ConnectInputsHook() : failed to erase name after name_delete");
+                return error("%s failed to erase name after name_delete", info.c_str());
             vtxPos.clear();
         }
 
@@ -2027,12 +2031,11 @@ bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         {
             vtxPos.push_back(i.ind); // fin add
             if (!CalculateExpiresAt(dbName, vtxPos, nExpiresAt))
-                return error("ConnectBlockHook() : failed to calculate expiration time before writing to name DB");
+                return error("%s failed to calculate expiration time", info.c_str());
             if (!dbName.WriteName(i.vchName, vtxPos, nExpiresAt))
-                return error("ConnectBlockHook() : failed to write to name DB");
+                return error("%s failed on write", info.c_str());
             if  (i.op == OP_NAME_NEW)
                 sNameNew.insert(i.vchName);
-            printf("ConnectBlockHook(): writing %s to nameindex.dat\n", stringFromVch(i.vchName).c_str());
         }
         {
             LOCK(cs_main);
@@ -2045,7 +2048,8 @@ bool CNamecoinHooks::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             }
         }
         if (!dbName.TxnCommit())
-            return error("failed to write %s to name DB", stringFromVch(i.vchName).c_str());
+            return error("%s failed on write", info.c_str());
+        printf("%s success!\n", info.c_str());
     }
 
     return true;
