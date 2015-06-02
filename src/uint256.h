@@ -10,6 +10,7 @@
 #include <string.h>
 #include <string>
 #include <vector>
+#include <stdint.h>
 
 typedef long long  int64;
 typedef unsigned long long  uint64;
