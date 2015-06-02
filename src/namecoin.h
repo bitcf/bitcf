@@ -2,48 +2,79 @@
 #include "bitcoinrpc.h"
 #include "base58.h"
 
+static const int NAMECOIN_TX_VERSION = 0x0666; //0x0666 is initial version
+static const unsigned int MAX_NAME_LENGTH = 512;
+static const unsigned int MAX_VALUE_LENGTH = 20*1024;
+static const int MAX_RENTAL_DAYS = 100*365; //100 years
+static const int OP_NAME_NEW = 0x01;
+static const int OP_NAME_UPDATE = 0x02;
+static const int OP_NAME_DELETE = 0x03;
+static const unsigned int NAMEINDEX_CHAIN_SIZE = 100;
+
+static const int RELEASE_HEIGHT = 1<<16;
+
 class CNameIndex
 {
 public:
     CDiskTxPos txPos;
-    unsigned int nHeight;
+    int nHeight;
+    int op;
     std::vector<unsigned char> vchValue;
 
-    CNameIndex()
-    {
-    }
+    CNameIndex() : nHeight(0), op(0) {}
 
-    CNameIndex(CDiskTxPos txPosIn, unsigned int nHeightIn, std::vector<unsigned char> vchValueIn)
-    {
-        txPos = txPosIn;
-        nHeight = nHeightIn;
-        vchValue = vchValueIn;
-    }
+    CNameIndex(CDiskTxPos txPos, int nHeight, std::vector<unsigned char> vchValue) :
+        txPos(txPos), nHeight(nHeight), vchValue(vchValue) {}
 
     IMPLEMENT_SERIALIZE
     (
         READWRITE(txPos);
         READWRITE(nHeight);
+        READWRITE(op);
         READWRITE(vchValue);
+    )
+};
+
+// CNameRecord is all the data that is saved (in nameindex.dat) with associated name
+class CNameRecord
+{
+public:
+    std::vector<CNameIndex> vtxPos;
+    int nExpiresAt;
+    int nLastActiveChainIndex;  // position in vtxPos of first tx in last active chain of name_new -> name_update -> name_update -> ....
+
+    CNameRecord() : nExpiresAt(0), nLastActiveChainIndex(0) {}
+    bool deleted()
+    {
+        if (!vtxPos.empty())
+            return vtxPos.back().op == OP_NAME_DELETE;
+        else return true;
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(vtxPos);
+        READWRITE(nExpiresAt);
+        READWRITE(nLastActiveChainIndex);
     )
 };
 
 class CNameDB : public CDB
 {
 public:
-    CNameDB(const char* pszMode="r+") : CDB("nameindex.dat", pszMode) {}
+    CNameDB(const char* pszMode="r+") : CDB("nameindexV2.dat", pszMode) {}
 
-    bool WriteName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos, int nExpiresAt)
+    bool WriteName(const std::vector<unsigned char>& name, const CNameRecord &rec)
     {
-        return Write(make_pair(std::string("namei"), name), make_pair(vtxPos, nExpiresAt));
+        return Write(make_pair(std::string("namei"), name), rec);
     }
 
-    bool ReadName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos, int &nExpiresAt)
+    bool ReadName(const std::vector<unsigned char>& name, CNameRecord &rec)
     {
-        std::pair< std::vector<CNameIndex>, int > v;
-        bool ret = Read(make_pair(std::string("namei"), name), v);
-        vtxPos = v.first;
-        nExpiresAt = v.second;
+        bool ret = Read(make_pair(std::string("namei"), name), rec);
+        int s = rec.vtxPos.size();
+        if (s > 0)
+            assert(s > rec.nLastActiveChainIndex);
         return ret;
     }
 
@@ -59,7 +90,7 @@ public:
 
     bool ScanNames(
             const std::vector<unsigned char>& vchName,
-            int nMax,
+            unsigned int nMax,
             std::vector<
                 std::pair<
                     std::vector<unsigned char>,
@@ -67,31 +98,17 @@ public:
                 >
             >& nameScan
             );
-
-    bool ReconstructNameIndex();
+    bool DumpToTextFile();
 };
-
-static const int NAMECOIN_TX_VERSION = 0x0666; //0x0666 is initial version
-static const int MAX_NAME_LENGTH = 512;
-static const int MAX_VALUE_LENGTH = 20*1024;
-static const int MAX_RENTAL_DAYS = 100*365; //100 years
-static const int OP_NAME_NEW = 0x01;
-static const int OP_NAME_UPDATE = 0x02;
-static const int OP_NAME_DELETE = 0x03;
-static const int MIN_FIRSTUPDATE_DEPTH = 12;
-
-static const int RELEASE_HEIGHT = 1<<16;
 
 extern std::map<std::vector<unsigned char>, uint256> mapMyNames;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapNamePending;
 
 int IndexOfNameOutput(const CTransaction& tx);
-
 bool GetNameCurrentAddress(const std::vector<unsigned char> &vchName, CBitcoinAddress &address, std::string &error);
-bool GetExpirationData(CNameDB& dbName, const std::vector<unsigned char> &vchName, int& nTotalLifeTime, int& nHeight);
-bool GetTxPosHeight(const CDiskTxPos& txPos, int& nHeight);
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromString(const std::string &str);
+std::string nameFromOp(int op);
 
 int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op, const std::vector<unsigned char> &vchName, const std::vector<unsigned char> &vchValue);
 
@@ -119,7 +136,6 @@ struct NameTxInfo
 bool DecodeNameScript(const CScript& script, NameTxInfo& ret, bool checkValuesCorrectness = true, bool checkAddressAndIfIsMine = false);
 bool DecodeNameScript(const CScript& script, NameTxInfo& ret, CScript::const_iterator& pc, bool checkValuesCorrectness = true, bool checkAddressAndIfIsMine = false);
 bool DecodeNameTx(const CTransaction& tx, NameTxInfo& nti, bool checkValuesCorrectness = true, bool checkAddressAndIfIsMine = false);
-
 void GetNameList(const std::vector<unsigned char> &vchNameUniq, std::map<std::vector<unsigned char>, NameTxInfo> &mapNames, std::map<std::vector<unsigned char>, NameTxInfo> &mapPending);
 bool GetNameValue(const std::vector<unsigned char> &vchName, std::vector<unsigned char> &vchValue, bool checkPending);
 
@@ -138,3 +154,13 @@ NameTxReturn name_update(const std::vector<unsigned char> &vchName,
               const std::vector<unsigned char> &vchValue,
               const int nRentalDays, std::string strAddress = "");
 NameTxReturn name_delete(const std::vector<unsigned char> &vchName);
+
+
+struct nameTempProxy
+{
+    unsigned int nTime;
+    std::vector<unsigned char> vchName;
+    int op;
+    uint256 hash;
+    CNameIndex ind;
+};

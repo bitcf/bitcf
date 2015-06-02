@@ -548,7 +548,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
 
 #define STANDARD_TX_ONLY
 #ifdef STANDARD_TX_ONLY
-    bool isNameTx = hooks->IsStandardNameTx(txdb, tx, true); //accept name tx with correct fee.
+    bool isNameTx = hooks->IsNameFeeEnough(txdb, tx); //accept name tx with correct fee.
     // Rather not work on nonstandard transactions (unless -testnet)
     if (!fTestNet && !tx.IsStandard() && !isNameTx)
         return error("CTxMemPool::accept() : nonstandard transaction type");
@@ -1087,7 +1087,7 @@ void CBlock::UpdateTime(const CBlockIndex* pindexPrev)
 
 bool CTransaction::DisconnectInputs(CTxDB& txdb, CBlockIndex* pindex)
 {
-    hooks->DisconnectInputs(txdb, *this);
+    hooks->DisconnectInputs(*this);
 
     // Relinquish previous transactions' spent pointers
     if (!IsCoinBase())

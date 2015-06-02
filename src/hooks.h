@@ -24,11 +24,9 @@ using namespace std;
 class CHooks
 {
 public:
-    virtual bool IsStandardNameTx(CTxDB& txdb, const CTransaction& tx, bool fCheckNameFee) = 0;
-    virtual bool DisconnectInputs(CTxDB& txdb,
-            const CTransaction& tx) = 0;
+    virtual bool IsNameFeeEnough(CTxDB& txdb, const CTransaction& tx) = 0;
+    virtual bool DisconnectInputs(const CTransaction& tx) = 0;
     virtual bool ConnectBlock(CTxDB& txdb, CBlockIndex* pindex) = 0;
-    virtual bool DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex) = 0;
     virtual bool ExtractAddress(const CScript& script, std::string& address) = 0;
     virtual void AddToPendingNames(const CTransaction& tx) = 0;
     virtual bool IsMine(const CTxOut& txout) = 0;
@@ -36,6 +34,7 @@ public:
     virtual bool IsNameScript(CScript scr) = 0;
     virtual bool deletePendingName(const CTransaction& tx) = 0;
     virtual bool getNameValue(const string& name, string& value) = 0;
+    virtual bool DumpToTextFile() = 0;
 };
 
 extern CHooks* InitHook();

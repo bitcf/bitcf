@@ -479,10 +479,10 @@ bool AppInit2(int argc, char* argv[])
     }
 
 //  recreate namecoin index - this must happen before ReacceptWalletTransactions())
-    filesystem::path nameindexfile = filesystem::path(GetDataDir()) / "nameindex.dat";
-    extern void rescanfornames();
+    filesystem::path nameindexfile = filesystem::path(GetDataDir()) / "nameindexV2.dat";
+    extern void createNameIndexFile();
     if (!filesystem::exists(nameindexfile))
-        rescanfornames();
+        createNameIndexFile();
 //  recreate namecoin index end
 
     // Add wallet transactions that aren't already in a block to mapTransactions
