@@ -1324,6 +1324,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 	    }
 	  }
 	  if((pbo == NULL)) {
+	    // txindex.pos.nTxPos - txindex.pos.nBlockPos: OFFSET to This TX in the Block = const
 	    pair<CBlock*, unsigned int> bo(block, txindex.pos.nTxPos - txindex.pos.nBlockPos);
 	    pbo = CacheBlockOffset.Insert(tx_hash, bo);
 	  } else 
@@ -1487,6 +1488,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     // Remove block reference from cache
     delete pbo->value.first;
     pbo->value.first = NULL; // Set "temporary removed"
+    CacheBlockOffset.MarkDel(pbo);
     return true;
 }
 
