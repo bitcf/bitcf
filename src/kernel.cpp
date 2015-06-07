@@ -9,6 +9,8 @@
 
 using namespace std;
 
+extern bool g_fMintingStarted; // For cache activate at minting phase
+
 // Protocol switch time of v0.3 kernel protocol
 unsigned int nProtocolV03SwitchTime     = 1363800000;
 unsigned int nProtocolV03TestSwitchTime = 1359781000;
@@ -217,6 +219,14 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64& nStakeModif
 // modifier about a selection interval later than the coin generating the kernel
 static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64& nStakeModifier, int& nStakeModifierHeight, int64& nStakeModifierTime, bool fPrintProofOfStake)
 {
+  uint256HashMap<StakeMod>::Data *pcache = StakeModCache.Search(hashBlockFrom);
+    if(pcache != NULL) {
+      nStakeModifier = pcache->value.nStakeModifier;
+      nStakeModifierHeight = pcache->value.nStakeModifierHeight;
+      nStakeModifierTime = pcache->value.nStakeModifierTime;
+      return true;
+    }
+
     nStakeModifier = 0;
     if (!mapBlockIndex.count(hashBlockFrom))
         return error("GetKernelStakeModifier() : block not indexed");
@@ -244,6 +254,15 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64& nStakeModifier
         }
     }
     nStakeModifier = pindex->nStakeModifier;
+
+    // Save to cache only at minting phase
+    if(g_fMintingStarted) {
+      struct StakeMod sm;
+      sm.nStakeModifier = nStakeModifier;
+      sm.nStakeModifierHeight = nStakeModifierHeight;
+      sm.nStakeModifierTime = nStakeModifierTime;
+      StakeModCache.Insert(hashBlockFrom, sm);
+    }
     return true;
 }
 
