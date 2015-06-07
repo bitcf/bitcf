@@ -21,6 +21,7 @@ unsigned int nModifierInterval = MODIFIER_INTERVAL;
 
 // Cache for stake modifiers
 uint256HashMap<StakeMod> StakeModCache;
+static int nClrHeight = 0; 
 
 // Hard checkpoints of stake modifiers to ensure they are deterministic
 static std::map<int, unsigned int> mapStakeModifierCheckpoints =
@@ -257,6 +258,10 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64& nStakeModifier
 
     // Save to cache only at minting phase
     if(g_fMintingStarted) {
+      if(nClrHeight < nBestHeight) {
+	  nClrHeight = nBestHeight + 331;
+	  StakeModCache.clear();
+      }
       struct StakeMod sm;
       sm.nStakeModifier = nStakeModifier;
       sm.nStakeModifierHeight = nStakeModifierHeight;
