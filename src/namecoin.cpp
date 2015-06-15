@@ -66,6 +66,9 @@ string stringFromVch(const vector<unsigned char> &vch) {
 
 string limitString(const string& inp, unsigned int size, string message = "")
 {
+    if (size == -1)
+        return inp;
+
     string ret = inp;
     if (inp.size() > size)
     {
@@ -1092,14 +1095,16 @@ Value name_filter(const Array& params, bool fHelp)
 
 Value name_scan(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 2)
+    if (fHelp || params.size() > 3)
         throw runtime_error(
-                "name_scan [<start-name>] [<max-returned>]\n"
-                "scan all names, starting at start-name and returning a maximum number of entries (default 500)\n"
+                "name_scan [start-name] [max-returned] [max-value-length=-1]\n"
+                "Scan all names, starting at start-name and returning a maximum number of entries (default 500)\n"
+                "You can also control the length of shown value (-1 = full value)\n"
                 );
 
     vector<unsigned char> vchName;
     int nMax = 500;
+    int mMaxShownValue = -1;
     if (params.size() > 0)
     {
         vchName = vchFromValue(params[0]);
@@ -1110,6 +1115,13 @@ Value name_scan(const Array& params, bool fHelp)
         Value vMax = params[1];
         ConvertTo<double>(vMax);
         nMax = (int)vMax.get_real();
+    }
+
+    if (params.size() > 2)
+    {
+        Value vMax = params[2];
+        ConvertTo<double>(vMax);
+        mMaxShownValue = (int)vMax.get_real();
     }
 
     CNameDB dbName("r");
@@ -1131,7 +1143,7 @@ Value name_scan(const Array& params, bool fHelp)
         vector<unsigned char> vchValue = txName.vchValue;
 
         string value = stringFromVch(vchValue);
-        oName.push_back(Pair("value", limitString(value, 300, "\n...(value too large - use name_show to see full value)")));
+        oName.push_back(Pair("value", limitString(value, mMaxShownValue, "\n...(value too large - use name_show to see full value)")));
         oName.push_back(Pair("expires_in", nExpiresAt - pindexBest->nHeight));
         if (nExpiresAt - pindexBest->nHeight <= 0)
             oName.push_back(Pair("expired", true));
