@@ -4027,6 +4027,8 @@ static bool fGenerateBitcoins = false;
 static bool fLimitProcessors = false;
 static int nLimitProcessors = -1;
 
+bool g_fMintingStarted = false; // for activate StakeModCache
+
 void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 {
     printf("CPUMiner started for proof-of-%s\n", fProofOfStake? "stake" : "work");
@@ -4044,6 +4046,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
       pos_timio = GetArg("-staketimio", 500) + 30 * sqrt(vCoins.size());
       StakeModCache.Set(vCoins.size() + 1000);
       printf("Set proof-of-stake timeout: %ums for %u UTXOs\n", pos_timio, vCoins.size());
+      g_fMintingStarted = true;
     }
 
     while (fGenerateBitcoins || fProofOfStake)

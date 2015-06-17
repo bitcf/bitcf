@@ -27,6 +27,8 @@ public:
     // delete data if exist and needed
     if(size == 0) {
       delete [] m_data;
+      m_data = NULL;
+      m_head = -2;
       return;
     }
     // Ignore 2nd Set()
@@ -35,6 +37,7 @@ public:
     // compute size 2^n
     size += size >> 2; // Add 1/4 reserved 
     for(m_mask = 64; m_mask < size; m_mask <<= 1);
+    printf("uint256HashMap:Set(%u/%u) data=%u sz=%u\n", size, m_mask, sizeof(struct Data), m_mask * sizeof(struct Data));
     // allocate memory
     m_data = new Data[m_mask];
     // set allowed counter - Max population is 7/8
@@ -69,9 +72,15 @@ public:
    }
 
    Data *Next(Data *cur) const {
-     return cur->next < 0? NULL : m_data + cur->next;
+     // return cur->next < 0? NULL : m_data + cur->next;
+     return (uint32_t)cur->next >= (uint32_t)-2? NULL : 
+	 m_data + (cur->next & 0x7fffffff);
    } // Next
 
+   // Mark for delete at next rehash
+   void MarkDel(Data *cur) {
+       cur->next |= 0x80000000;
+   }
 
    Data *Insert(const uint256 &key, DATA &value) {
        if(m_allowed == 0) {
@@ -80,7 +89,8 @@ public:
 	 rehashed.Set(m_mask << 1);
 	 Data *p;
 	 for(p = First(); p != NULL; p = Next(p))
-	   rehashed.Insert(p->key, p->value);
+	   if(p->next >= -2)
+	     rehashed.Insert(p->key, p->value);
          p = m_data;
 	 m_data    = rehashed.m_data;
 	 m_allowed = rehashed.m_allowed;
@@ -96,12 +106,15 @@ public:
 	 m_head = p - m_data;
 	 p->key = key;
        }
+       if(p->next != -2)
+         p->next &= 0x7fffffff; // Clear MarkDel, if exist
        p->value = value;
        return p;
    }
 
 private:
 
+  // Return pointer to the found cell, or to an empty cell
   Data *Lookup(const uint256 &key) const {
       const uint32_t *p = ((base_uint256)key).GetDataPtr();
       // Lowest part left; if changed, need modify indexes
@@ -111,7 +124,7 @@ private:
       do {
 	pos = (pos + step) & m_mask;
 	rc = m_data + pos;
-      } while(rc->next != -1 && memcmp(p, ((base_uint256)rc->key).GetDataPtr(), 256 / 8));
+      } while((pos >= 0x7ffffffe) || (rc->next != -1 && memcmp(p, ((base_uint256)rc->key).GetDataPtr(), 256 / 8)));
       return rc;
   } // Lookup
 
