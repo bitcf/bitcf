@@ -9,8 +9,6 @@
 
 using namespace std;
 
-extern bool g_fMintingStarted; // For cache activate at minting phase
-
 // Protocol switch time of v0.3 kernel protocol
 unsigned int nProtocolV03SwitchTime     = 1363800000;
 unsigned int nProtocolV03TestSwitchTime = 1359781000;
@@ -21,7 +19,6 @@ unsigned int nModifierInterval = MODIFIER_INTERVAL;
 
 // Cache for stake modifiers
 uint256HashMap<StakeMod> StakeModCache;
-static int nClrHeight = 0; 
 
 // Hard checkpoints of stake modifiers to ensure they are deterministic
 static std::map<int, unsigned int> mapStakeModifierCheckpoints =
@@ -220,12 +217,28 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64& nStakeModif
 // modifier about a selection interval later than the coin generating the kernel
 static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64& nStakeModifier, int& nStakeModifierHeight, int64& nStakeModifierTime, bool fPrintProofOfStake)
 {
-  uint256HashMap<StakeMod>::Data *pcache = StakeModCache.Search(hashBlockFrom);
-    if(pcache != NULL) {
-      nStakeModifier = pcache->value.nStakeModifier;
-      nStakeModifierHeight = pcache->value.nStakeModifierHeight;
-      nStakeModifierTime = pcache->value.nStakeModifierTime;
-      return true;
+    // Clear cache after every new block.
+    // If cache is not cleared here it will result in blockchain unable to be downloaded.
+    static int nClrHeight = 0;
+    bool fSameBlock;
+
+    if (nClrHeight < nBestHeight)
+    {
+        nClrHeight = nBestHeight;
+        StakeModCache.clear();
+        fSameBlock = false;
+    }
+    else
+    {
+        fSameBlock = true;
+        uint256HashMap<StakeMod>::Data *pcache = StakeModCache.Search(hashBlockFrom);
+        if (pcache != NULL)
+        {
+            nStakeModifier = pcache->value.nStakeModifier;
+            nStakeModifierHeight = pcache->value.nStakeModifierHeight;
+            nStakeModifierTime = pcache->value.nStakeModifierTime;
+            return true;
+        }
     }
 
     nStakeModifier = 0;
@@ -257,16 +270,13 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64& nStakeModifier
     nStakeModifier = pindex->nStakeModifier;
 
     // Save to cache only at minting phase
-    if(g_fMintingStarted) {
-      if(nClrHeight < nBestHeight) {
-	  nClrHeight = nBestHeight + 331;
-	  StakeModCache.clear();
-      }
-      struct StakeMod sm;
-      sm.nStakeModifier = nStakeModifier;
-      sm.nStakeModifierHeight = nStakeModifierHeight;
-      sm.nStakeModifierTime = nStakeModifierTime;
-      StakeModCache.Insert(hashBlockFrom, sm);
+    if (fSameBlock)
+    {
+        struct StakeMod sm;
+        sm.nStakeModifier = nStakeModifier;
+        sm.nStakeModifierHeight = nStakeModifierHeight;
+        sm.nStakeModifierTime = nStakeModifierTime;
+        StakeModCache.Insert(hashBlockFrom, sm);
     }
     return true;
 }
@@ -351,7 +361,7 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned 
     {
         if (IsProtocolV03(nTimeTx))
             printf("CheckStakeKernelHash() : using modifier 0x%016"PRI64x" at height=%d timestamp=%s for block from height=%d timestamp=%s\n",
-                nStakeModifier, nStakeModifierHeight, 
+                nStakeModifier, nStakeModifierHeight,
                 DateTimeStrFormat(nStakeModifierTime).c_str(),
                 mapBlockIndex[blockFrom.GetHash()]->nHeight,
                 DateTimeStrFormat(blockFrom.GetBlockTime()).c_str());
