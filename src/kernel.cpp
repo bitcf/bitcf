@@ -230,7 +230,6 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64& nStakeModifier
     }
     else
     {
-        fSameBlock = true;
         uint256HashMap<StakeMod>::Data *pcache = StakeModCache.Search(hashBlockFrom);
         if (pcache != NULL)
         {
@@ -239,6 +238,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64& nStakeModifier
             nStakeModifierTime = pcache->value.nStakeModifierTime;
             return true;
         }
+        fSameBlock = true;
     }
 
     nStakeModifier = 0;
