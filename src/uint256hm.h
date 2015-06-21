@@ -34,9 +34,14 @@ public:
     // Ignore 2nd Set()
     if(m_data)
       return;
+
     // compute size 2^n
     size += size >> 2; // Add 1/4 reserved 
-    for(m_mask = 64; m_mask < size; m_mask <<= 1);
+    if((int32_t)size < 0)
+	m_mask = 0x80000000;
+    else
+        for(m_mask = 64; m_mask < size; m_mask <<= 1);
+
     printf("uint256HashMap:Set(%u/%u) data=%u sz=%u\n", size, m_mask, sizeof(struct Data), m_mask * sizeof(struct Data));
     // allocate memory
     m_data = new Data[m_mask];
@@ -53,7 +58,7 @@ public:
   }
 
   void clear() { // cleanup hashtable, no delete memory
-      if(m_data == NULL)
+      if(m_head < 0 || m_data == NULL)
 	  return;
       for(uint32_t i = 0; i <= m_mask; i++)
 	  m_data[i].next = -1; // mark as free
