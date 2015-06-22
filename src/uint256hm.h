@@ -58,7 +58,7 @@ public:
   }
 
   void clear() { // cleanup hashtable, no delete memory
-      if(m_head < 0 || m_data == NULL)
+      if(m_head == -2)
 	  return;
       for(uint32_t i = 0; i <= m_mask; i++)
 	  m_data[i].next = -1; // mark as free
