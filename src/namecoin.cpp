@@ -134,8 +134,7 @@ bool NameActive(const vector<unsigned char> &vchName, int currentBlockHeight = -
 // Returns minimum name operation fee rounded down to cents. Should be used during|before transaction creation.
 // If you wish to calculate if fee is enough - use IsNameFeeEnough() function.
 // Generaly:  GetNameOpFee() > IsNameFeeEnough().
-// Penalty index is needed only in one place - when we are counting 10 blocks in outside loop in IsNameFeeEnough().
-int64 GetNameOpFee(const CBlockIndex* pindexBlock, const CBlockIndex* pindexPenalty, const int nRentalDays, int op, const vector<unsigned char> &vchName, const vector<unsigned char> &vchValue)
+int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op, const vector<unsigned char> &vchName, const vector<unsigned char> &vchValue)
 {
     if (op == OP_NAME_DELETE)
         return MIN_TX_FEE;
@@ -157,21 +156,7 @@ int64 GetNameOpFee(const CBlockIndex* pindexBlock, const CBlockIndex* pindexPena
     // Fee should be at least MIN_TX_FEE
     txMinFee = max(txMinFee, MIN_TX_FEE);
 
-    if (pindexBlock->nHeight < RELEASE_HEIGHT)
-        return txMinFee;
-    else
-    {
-        // add penalty that is active for a couple of months after release date
-        int64 txMinFee2 = 300 * COIN - (pindexPenalty->nHeight - RELEASE_HEIGHT) * CENT;
-
-        return txMinFee2 > 0 ? txMinFee + txMinFee2 : txMinFee;
-    }
-}
-
-int64 GetNameOpFee(const CBlockIndex* pindexBlock, const int nRentalDays, int op, const vector<unsigned char> &vchName, const vector<unsigned char> &vchValue)
-{
-    const CBlockIndex* pindexPenalty = pindexBlock;
-    return GetNameOpFee(pindexBlock, pindexPenalty, nRentalDays, op, vchName, vchValue);
+    return txMinFee;
 }
 
 bool RemoveNameScriptPrefix(const CScript& scriptIn, CScript& scriptOut)
@@ -480,7 +465,7 @@ bool IsNameFeeEnough(CTxDB& txdb, const CTransaction& tx, const NameTxInfo& nti,
     bool txFeePass = false;
     for (int i = 1; i <= 10; i++)
     {
-        int64 netFee = GetNameOpFee(lastPoW, pindexBlock, nti.nRentalDays, nti.op, nti.vchName, nti.vchValue);
+        int64 netFee = GetNameOpFee(lastPoW, nti.nRentalDays, nti.op, nti.vchName, nti.vchValue);
         //printf("                 : netFee = %"PRI64d", lastPoW->nHeight = %d\n", netFee, lastPoW->nHeight);
         if (txFee >= netFee)
         {
