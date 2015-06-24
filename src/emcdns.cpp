@@ -351,6 +351,11 @@ void EmcDns::HandlePacket() {
       break;
     }
 
+    if(!IsSynchronized()) {
+      m_hdr->Bits |= 2; // Server failure - not available valud nameindex DB yet
+      break;
+    }
+
     // Handle questions here
     for(uint16_t qno = 0; qno < m_hdr->QDCount && m_snd < m_bufend; qno--) {
       uint16_t rc = HandleQuery();

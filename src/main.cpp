@@ -1040,6 +1040,12 @@ int GetNumBlocksOfPeers()
     return std::max(cPeerBlockCounts.median(), Checkpoints::GetTotalBlocksEstimate());
 }
 
+bool IsSynchronized() {
+  static bool rc = false;
+  if(rc == false) rc = !IsInitialBlockDownload();
+  return rc;
+}
+
 bool IsInitialBlockDownload()
 {
     LOCK(cs_main);
