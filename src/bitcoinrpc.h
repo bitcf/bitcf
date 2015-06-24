@@ -135,8 +135,6 @@ extern json_spirit::Value name_scan(const json_spirit::Array& params, bool fHelp
 extern json_spirit::Value name_filter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_show(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value name_debug(const json_spirit::Array& params, bool fHelp);
-//extern json_spirit::Value name_encrypt(const json_spirit::Array& params, bool fHelp);
-//extern json_spirit::Value name_decrypt(const json_spirit::Array& params, bool fHelp);
 
 
 #endif

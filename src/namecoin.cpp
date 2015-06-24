@@ -686,6 +686,9 @@ Value sendtoname(const Array& params, bool fHelp)
             "<amount> is a real and is rounded to the nearest 0.01"
             + HelpRequiringPassphrase());
 
+    if (!IsSynchronized())
+        throw runtime_error("Blockchain is still downloading - wait until it is done.");
+
     vector<unsigned char> vchName = vchFromValue(params[0]);
     int64 nAmount = AmountFromValue(params[1]);
 
@@ -764,6 +767,9 @@ Value name_list(const Array& params, bool fHelp)
                 "name_list [<name>]\n"
                 "list my own names"
                 );
+
+    if (!IsSynchronized())
+        throw runtime_error("Blockchain is still downloading - wait until it is done.");
 
     vector<unsigned char> vchNameUniq;
     if (params.size() == 1)
@@ -901,6 +907,9 @@ Value name_show(const Array& params, bool fHelp)
             "If filepath is specified name value will be saved in that file in binary format (file will be overwritten!).\n"
             );
 
+    if (!IsSynchronized())
+        throw runtime_error("Blockchain is still downloading - wait until it is done.");
+
     Object oName;
     vector<unsigned char> vchName = vchFromValue(params[0]);
     string name = stringFromVch(vchName);
@@ -973,6 +982,9 @@ Value name_filter(const Array& params, bool fHelp)
                 "name_filter \"^id/\" # list all names from the \"id\" namespace\n"
                 "name_filter \"^id/\" 36000 0 0 stat # display stats (number of names) on active names from the \"id\" namespace\n"
                 );
+
+    if (!IsSynchronized())
+        throw runtime_error("Blockchain is still downloading - wait until it is done.");
 
     string strRegexp;
     int nFrom = 0;
@@ -1087,6 +1099,9 @@ Value name_scan(const Array& params, bool fHelp)
                 "You can also control the length of shown value (-1 = full value)\n"
                 );
 
+    if (!IsSynchronized())
+        throw runtime_error("Blockchain is still downloading - wait until it is done.");
+
     vector<unsigned char> vchName;
     int nMax = 500;
     int mMaxShownValue = -1;
@@ -1191,6 +1206,10 @@ Value name_new(const Array& params, bool fHelp)
                 "Creates new key->value pair which expires after specified number of days.\n"
                 "Cost is square root of (1% of last PoW + 1% per year of last PoW)."
                 + HelpRequiringPassphrase());
+
+    if (!IsSynchronized())
+        throw runtime_error("Blockchain is still downloading - wait until it is done.");
+
     vector<unsigned char> vchName = vchFromValue(params[0]);
     vector<unsigned char> vchValue = vchFromValue(params[1]);
     int nRentalDays = params[2].get_int();
@@ -1279,6 +1298,9 @@ Value name_update(const Array& params, bool fHelp)
         throw runtime_error(
                 "name_update <name> <value> <days> [<toaddress>]\nUpdate name value, add days to expiration time and possibly transfer a name to diffrent address."
                 + HelpRequiringPassphrase());
+
+    if (!IsSynchronized())
+        throw runtime_error("Blockchain is still downloading - wait until it is done.");
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
     vector<unsigned char> vchValue = vchFromValue(params[1]);
@@ -1434,6 +1456,9 @@ Value name_delete(const Array& params, bool fHelp)
         throw runtime_error(
                 "name_delete <name>\nDelete a name if you own it. Others may do name_new after this command."
                 + HelpRequiringPassphrase());
+
+    if (!IsSynchronized())
+        throw runtime_error("Blockchain is still downloading - wait until it is done.");
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
 

@@ -2743,8 +2743,6 @@ static const CRPCCommand vRPCCommands[] =
     { "name_filter",            &name_filter,            false },
     { "name_show",              &name_show,              false },
     { "name_debug",             &name_debug,             false },
-//    { "name_encrypt",           &name_encrypt,           false },
-//    { "name_decrypt",           &name_decrypt,           false },
 
     // new non-standard commands
     { "gettxlistfor",           &gettxlistfor,           false },
