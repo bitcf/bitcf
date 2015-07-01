@@ -938,6 +938,7 @@ Value name_show(const Array& params, bool fHelp)
         oName.push_back(Pair("address", nti.strAddress));
         oName.push_back(Pair("expires_in", nameRec.nExpiresAt - pindexBest->nHeight));
         oName.push_back(Pair("expires_at", nameRec.nExpiresAt));
+        oName.push_back(Pair("time", (boost::int64_t)tx.nTime));
         if (nameRec.deleted())
             oName.push_back(Pair("deleted", true));
         else
