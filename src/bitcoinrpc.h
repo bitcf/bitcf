@@ -125,6 +125,7 @@ extern json_spirit::Value decoderawtransaction(const json_spirit::Array& params,
 extern json_spirit::Value signrawtransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, bool fHelp);
 
+extern json_spirit::Value getrawmempool(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value name_new(const json_spirit::Array& params, bool fHelp); // in namecoin.cpp
 extern json_spirit::Value name_update(const json_spirit::Array& params, bool fHelp);

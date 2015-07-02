@@ -642,6 +642,23 @@ Value settxfee(const Array& params, bool fHelp)
     return true;
 }
 
+Value getrawmempool(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getrawmempool\n"
+            "Returns all transaction ids in memory pool.");
+
+    vector<uint256> vtxid;
+    mempool.queryHashes(vtxid);
+
+    Array a;
+    BOOST_FOREACH(const uint256& hash, vtxid)
+        a.push_back(hash.ToString());
+
+    return a;
+}
+
 Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() < 2 || params.size() > 4))
@@ -859,12 +876,12 @@ int64 GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinD
         if (!wtx.IsFinal())
             continue;
 
-        int64 nGenerated, nReceived, nSent, nFee;
-        wtx.GetAccountAmounts(strAccount, nGenerated, nReceived, nSent, nFee);
+        int64 nReceived, nSent, nFee;
+        wtx.GetAccountAmounts(strAccount, nReceived, nSent, nFee);
 
         if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
             nBalance += nReceived;
-        nBalance += nGenerated - nSent - nFee;
+        nBalance -= nSent + nFee;
     }
 
     // Tally internal accounting entries
@@ -898,20 +915,19 @@ Value getbalance(const Array& params, bool fHelp)
     if (params[0].get_str() == "*") {
         // Calculate total balance a different way from GetBalance()
         // (GetBalance() sums up all unspent TxOuts)
-        // getbalance and getbalance '*' should always return the same number.
+        // getbalance and getbalance '*' 0 should return the same number
         int64 nBalance = 0;
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
-            if (!wtx.IsFinal())
+            if (!wtx.IsConfirmed())
                 continue;
 
-            int64 allGeneratedImmature, allGeneratedMature, allFee;
-            allGeneratedImmature = allGeneratedMature = allFee = 0;
+            int64 allFee;
             string strSentAccount;
             list<pair<CTxDestination, int64> > listReceived;
             list<pair<CTxDestination, int64> > listSent;
-            wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount);
+            wtx.GetAmounts(listReceived, listSent, allFee, strSentAccount);
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
                 BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64)& r, listReceived)
@@ -920,7 +936,6 @@ Value getbalance(const Array& params, bool fHelp)
             BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64)& r, listSent)
                 nBalance -= r.second;
             nBalance -= allFee;
-            nBalance += allGeneratedMature;
         }
         return  ValueFromAmount(nBalance);
     }
@@ -1525,36 +1540,23 @@ Value deletetransaction(const Array& params, bool fHelp)
     return result;
 }
 
+static void MaybePushAddress(Object & entry, const CTxDestination &dest)
+{
+    CBitcoinAddress addr;
+    if (addr.Set(dest))
+        entry.push_back(Pair("address", addr.ToString()));
+}
+
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
-    int64 nGeneratedImmature, nGeneratedMature, nFee;
+    int64 nFee;
     string strSentAccount;
     list<pair<CTxDestination, int64> > listReceived;
     list<pair<CTxDestination, int64> > listSent;
 
-    wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount, false);
+    wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, false);
 
     bool fAllAccounts = (strAccount == string("*"));
-
-    // Generated blocks assigned to account ""
-    if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || strAccount == ""))
-    {
-        Object entry;
-        entry.push_back(Pair("account", string("")));
-        if (nGeneratedImmature)
-        {
-            entry.push_back(Pair("category", wtx.GetDepthInMainChain() ? "immature" : "orphan"));
-            entry.push_back(Pair("amount", ValueFromAmount(nGeneratedImmature)));
-        }
-        else
-        {
-            entry.push_back(Pair("category", "generate"));
-            entry.push_back(Pair("amount", ValueFromAmount(nGeneratedMature)));
-        }
-        if (fLong)
-            WalletTxToJSON(wtx, entry);
-        ret.push_back(entry);
-    }
 
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
@@ -1563,7 +1565,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         {
             Object entry;
             entry.push_back(Pair("account", strSentAccount));
-            entry.push_back(Pair("address", CBitcoinAddress(s.first).ToString()));
+            MaybePushAddress(entry, s.first);
             entry.push_back(Pair("category", "send"));
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
@@ -1585,8 +1587,27 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             {
                 Object entry;
                 entry.push_back(Pair("account", account));
-                entry.push_back(Pair("address", CBitcoinAddress(r.first).ToString()));
-                entry.push_back(Pair("category", "receive"));
+                MaybePushAddress(entry, r.first);
+                if (wtx.IsCoinBase())
+                {
+                    if (wtx.GetDepthInMainChain() < 1)
+                        entry.push_back(Pair("category", "orphan"));
+                    else if (wtx.GetBlocksToMaturity() > 0)
+                        entry.push_back(Pair("category", "immature"));
+                    else
+                        entry.push_back(Pair("category", "generate"));
+                }
+                else if (wtx.IsCoinStake())
+                {
+                    if (wtx.GetDepthInMainChain() < 1)
+                        entry.push_back(Pair("category", "stake-orphan"));
+                    else if (wtx.GetBlocksToMaturity() > 0)
+                        entry.push_back(Pair("category", "stake"));
+                    else
+                        entry.push_back(Pair("category", "stake-mint"));
+                }
+                else
+                    entry.push_back(Pair("category", "receive"));
                 entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
@@ -1631,9 +1652,9 @@ Value listtransactions(const Array& params, bool fHelp)
         nFrom = params[2].get_int();
 
     if (nCount < 0)
-        throw JSONRPCError(-8, "Negative count");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     if (nFrom < 0)
-        throw JSONRPCError(-8, "Negative from");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
 
     Array ret;
     CWalletDB walletdb(pwalletMain->strWalletFile);
@@ -1667,7 +1688,7 @@ Value listtransactions(const Array& params, bool fHelp)
         if (pacentry != 0)
             AcentryToJSON(*pacentry, strAccount, ret);
 
-        if (ret.size() >= (nCount+nFrom)) break;
+        if ((int)ret.size() >= (nCount+nFrom)) break;
     }
     // ret is newest to oldest
 
@@ -1708,17 +1729,16 @@ Value listaccounts(const Array& params, bool fHelp)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        int64 nGeneratedImmature, nGeneratedMature, nFee;
+        int64 nFee;
         string strSentAccount;
         list<pair<CTxDestination, int64> > listReceived;
         list<pair<CTxDestination, int64> > listSent;
-        wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount, true);
+        wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount);
         mapAccountBalances[strSentAccount] -= nFee;
         BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64)& s, listSent)
             mapAccountBalances[strSentAccount] -= s.second;
         if (wtx.GetDepthInMainChain() >= nMinDepth)
         {
-            mapAccountBalances[""] += nGeneratedMature;
             BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64)& r, listReceived)
                 if (pwalletMain->mapAddressBook.count(r.first))
                     mapAccountBalances[pwalletMain->mapAddressBook[r.first]] += r.second;
@@ -2706,6 +2726,7 @@ static const CRPCCommand vRPCCommands[] =
     { "sendfrom",               &sendfrom,               false },
     { "sendmany",               &sendmany,               false },
     { "addmultisigaddress",     &addmultisigaddress,     false },
+    { "getrawmempool",          &getrawmempool,          true },
     { "getblock",               &getblock,               false },
     { "getblockhash",           &getblockhash,           false },
     { "gettransaction",         &gettransaction,         false },

@@ -1863,6 +1863,7 @@ public:
                 bool fCheckInputs, bool* pfMissingInputs, bool fOnlyCheckWithoutAdding=false);
     bool addUnchecked(CTransaction &tx);
     bool remove(const CTransaction &tx);
+    void queryHashes(std::vector<uint256>& vtxid);
 
     unsigned long size()
     {
