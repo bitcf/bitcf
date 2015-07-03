@@ -159,6 +159,11 @@ void SendCoinsDialog::on_sendButton_clicked()
     case WalletModel::OK:
         accept();
         break;
+    case WalletModel::FailedMintOnlyMode:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("Error: Wallet unlocked for block minting only, unable to create transaction."),
+            QMessageBox::Ok, QMessageBox::Ok);
+        break;
     }
     fNewRecipientAllowed = true;
 }

@@ -82,6 +82,9 @@ bool WalletModel::validateAddress(const QString &address)
 
 WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients)
 {
+    if (fWalletUnlockMintOnly)
+        return FailedMintOnlyMode;
+
     qint64 total = 0;
     QSet<QString> setAddress;
     QString hex;

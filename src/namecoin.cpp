@@ -357,6 +357,13 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend, 
 // requires cs_main lock
 string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew)
 {
+    if (fWalletUnlockMintOnly)
+    {
+        string strError = _("Error: Wallet unlocked for block minting only, unable to create transaction.");
+        printf("SendMoneyWithInputTx(): %s", strError.c_str());
+        return strError;
+    }
+
     int nTxOut = IndexOfNameOutput(wtxIn);
     CReserveKey reservekey(pwalletMain);
     int64 nFeeRequired;
@@ -378,7 +385,7 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, C
             strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds "), FormatMoney(nFeeRequired).c_str());
         else
             strError = _("Error: Transaction creation failed  ");
-        printf("SendMoney() : %s", strError.c_str());
+        printf("SendMoneyWithInputTx(): %s", strError.c_str());
         return strError;
     }
 
