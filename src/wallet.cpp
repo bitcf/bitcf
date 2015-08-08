@@ -12,6 +12,7 @@
 #include "kernel.h"
 
 #include "uint256hm.h"
+#include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
 
