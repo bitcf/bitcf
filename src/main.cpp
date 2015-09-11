@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2013 The PPCoin developers
-// Copyright (c) 2013-2014 The EmerCoin developers
+// Copyright (c) 2011-2015 The Peercoin developers
+// Copyright (c) 2013-2016 The EmerCoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -491,7 +491,9 @@ bool CTransaction::CheckTransaction() const
         if (txout.IsEmpty() && (!IsCoinBase()) && (!IsCoinStake()))
             return DoS(100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
         // ppcoin: enforce minimum output amount
-        if ((!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT)
+        // v0.5 protocol: zero amount allowed
+        if ((!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT &&
+            !(IsProtocolV05(nTime) && (txout.nValue == 0)))
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
         if (txout.nValue > MAX_MONEY)
             return DoS(100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
@@ -522,13 +524,11 @@ bool CTransaction::CheckTransaction() const
     }
 
     return true;
-//   return hooks->CheckTransaction(*this);
 }
 
 bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
-                        bool* pfMissingInputs, bool fOnlyCheckWithoutAdding)
+                        bool* pfMissingInputs)
 {
-    printf("CTxMemPool::accept, fCheckInputs = %d, fOnlyCheckWithoutAdding = %d\n", fCheckInputs, fOnlyCheckWithoutAdding);
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
@@ -542,7 +542,7 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
     if (tx.IsCoinStake())
         return tx.DoS(100, error("CTxMemPool::accept() : coinstake as individual tx"));
 
-    // To help v0.2.0 clients who would see it as a negative number
+    // To help v0.1.5 clients who would see it as a negative number
     if ((int64)tx.nLockTime > std::numeric_limits<int>::max())
         return error("CTxMemPool::accept() : not accepting nLockTime beyond 2038 yet");
 
@@ -657,35 +657,31 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         }
     }
 
-    // Do not write to memory if read only mode.
-    if(!fOnlyCheckWithoutAdding)
+    // Store transaction in memory
     {
-        // Store transaction in memory
-        {
-            LOCK(cs);
-            if (ptxOld)
-            {
-                printf("CTxMemPool::accept() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
-                remove(*ptxOld);
-            }
-            addUnchecked(tx);
-        }
-
-        hooks->AddToPendingNames(tx);
-
-        ///// are we sure this is ok when loading transactions or restoring block txes
-        // If updated, erase old tx from wallet
+        LOCK(cs);
         if (ptxOld)
-            EraseFromWallets(ptxOld->GetHash());
-
-        printf("CTxMemPool::accept() : accepted %s\n", hash.ToString().substr(0,10).c_str());
+        {
+            printf("CTxMemPool::accept() : replacing tx %s with new version\n", ptxOld->GetHash().ToString().c_str());
+            remove(*ptxOld);
+        }
+        addUnchecked(tx);
     }
+
+    hooks->AddToPendingNames(tx);
+
+    ///// are we sure this is ok when loading transactions or restoring block txes
+    // If updated, erase old tx from wallet
+    if (ptxOld)
+        EraseFromWallets(ptxOld->GetHash());
+
+    printf("CTxMemPool::accept() : accepted %s\n", hash.ToString().substr(0,10).c_str());
     return true;
 }
 
-bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs, bool fOnlyCheckWithoutAdding)
+bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMissingInputs)
 {
-    return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs, fOnlyCheckWithoutAdding);
+    return mempool.accept(txdb, *this, fCheckInputs, pfMissingInputs);
 }
 
 bool CTxMemPool::addUnchecked(CTransaction &tx)
@@ -722,6 +718,7 @@ bool CTxMemPool::remove(const CTransaction &tx)
     return true;
 }
 
+
 void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
 {
     vtxid.clear();
@@ -731,6 +728,9 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
     for (map<uint256, CTransaction>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
         vtxid.push_back((*mi).first);
 }
+
+
+
 
 
 
@@ -1264,9 +1264,6 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
     // ... both are false when called from CTransaction::AcceptToMemoryPool
     if (!IsCoinBase())
     {
-        vector<CTransaction> vTxPrev;
-        vector<CTxIndex> vTxindex;
-
         int64 nValueIn = 0;
         int64 nFees = 0;
         for (unsigned int i = 0; i < vin.size(); i++)
@@ -1336,9 +1333,6 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             {
                 mapTestPool[prevout.hash] = txindex;
             }
-
-            vTxPrev.push_back(txPrev);
-            vTxindex.push_back(txindex);
         }
 
         if (IsCoinStake())
@@ -1788,7 +1782,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
 // ppcoin: total coin age spent in transaction, in the unit of coin-days.
 // Only those coins meeting minimum age requirement counts. As those
 // transactions not in main chain are not currently indexed so we
-// might not find out about their coin age. Older transactions are
+// might not find out about their coin age. Older transactions are 
 // guaranteed to be in main chain by sync-checkpoint. This rule is
 // introduced to help nodes establish a consistent view of the coin
 // age (trust score) of competing branches.
@@ -1920,7 +1914,6 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
 
     txdb.Close();
 
-    LOCK(cs_main);
     if (pindexNew == pindexBest)
     {
         // Notify UI to display prev block's coinbase if it was ours
@@ -2288,7 +2281,6 @@ unsigned int CBlock::GetStakeEntropyBit(int32_t height) const
 
 
 
-
 bool CheckDiskSpace(uint64 nAdditionalBytes)
 {
     uint64 nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
@@ -2461,10 +2453,12 @@ bool LoadBlockIndex(bool fAllowNew)
             CTxDB txdb;
             if (!txdb.WriteV04UpgradeTime(0))
                 return error("LoadBlockIndex() : failed to init upgrade info");
-            printf(" Upgrade Info: v0.3.5+ txdb initialization\n");
+            if (!txdb.WriteV05UpgradeTime(0))
+                return error("LoadBlockIndex() : failed to init upgrade info");
+            printf(" Upgrade Info: v0.5+ txdb initialization\n");
             txdb.Close();
         }
-     }
+    }
 
     // ppcoin: if checkpoint master key changed must reset sync-checkpoint
     {
@@ -2490,15 +2484,34 @@ bool LoadBlockIndex(bool fAllowNew)
         if (txdb.ReadV04UpgradeTime(nProtocolV04UpgradeTime))
         {
             if (nProtocolV04UpgradeTime)
-                printf(" Upgrade Info: txdb upgrade to v0.3.5 detected at timestamp %d\n", nProtocolV04UpgradeTime);
+                printf(" Upgrade Info: txdb upgrade v0.3->v0.4 detected at timestamp %d\n", nProtocolV04UpgradeTime);
             else
-                printf(" Upgrade Info: v0.3.5+ no txdb upgrade detected.\n");
+                printf(" Upgrade Info: no txdb upgrade v0.3->v0.4 detected.\n");
         }
         else
         {
             nProtocolV04UpgradeTime = GetTime();
-            printf(" Upgrade Info: upgrading txdb from v0.3.4 at timestamp %u\n", nProtocolV04UpgradeTime);
+            printf(" Upgrade Info: upgrading txdb from v0.3->v0.5 at timestamp %u\n", nProtocolV04UpgradeTime);
             if (!txdb.WriteV04UpgradeTime(nProtocolV04UpgradeTime))
+                return error("LoadBlockIndex() : failed to write upgrade info");
+        }
+        txdb.Close();
+    }
+
+    {
+        CTxDB txdb;
+        if (txdb.ReadV05UpgradeTime(nProtocolV05UpgradeTime))
+        {
+            if (nProtocolV05UpgradeTime)
+                printf(" Upgrade Info: txdb upgrade to v0.5 detected at timestamp %d\n", nProtocolV05UpgradeTime);
+            else
+                printf(" Upgrade Info: v0.5+ no txdb upgrade detected.\n");
+        }
+        else
+        {
+            nProtocolV05UpgradeTime = GetTime();
+            printf(" Upgrade Info: upgrading txdb to v0.5 at timestamp %u\n", nProtocolV05UpgradeTime);
+            if (!txdb.WriteV05UpgradeTime(nProtocolV05UpgradeTime))
                 return error("LoadBlockIndex() : failed to write upgrade info");
         }
         txdb.Close();
@@ -2600,7 +2613,7 @@ void PrintBlockTree()
 map<uint256, CAlert> mapAlerts;
 CCriticalSection cs_mapAlerts;
 
-static string strMintMessage = _("Info: Minting suspended due to locked wallet.");
+static string strMintMessage = _("Info: Minting suspended due to locked wallet."); 
 static string strMintWarning;
 
 string GetWarnings(string strFor)
@@ -2645,7 +2658,15 @@ string GetWarnings(string strFor)
     if (IsProtocolV04(nProtocolV04UpgradeTime + 60*60*24)) // 1 day margin
     {
         nPriority = 5000;
-        strStatusBar = strRPC = "WARNING: Blockchain redownload required approaching or past v0.3.5 upgrade deadline.";
+        strStatusBar = strRPC = "WARNING: Blockchain redownload required upgrading from pre v0.4 wallet.";
+    }
+    else if (IsProtocolV05(nProtocolV05UpgradeTime + 60*60*24)) // 1 day margin
+    {
+        // v0.5 protocol does not change modifier computation from v0.4.
+        // So redownload of blockchain is not required for late upgrades, 
+        // but still recommended.
+        nPriority = 200;
+        strStatusBar = strRPC = "WARNING: Blockchain redownload recommended approaching or past v0.5 upgrade deadline.";
     }
 
     // Alerts
@@ -3057,7 +3078,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                         // and we want it right after the last block so they don't
                         // wait for other stuff first.
                         // ppcoin: send latest proof-of-work block to allow the
-                        // download node to accept as orphan (proof-of-stake
+                        // download node to accept as orphan (proof-of-stake 
                         // block might be rejected by stake connection check)
                         vector<CInv> vInv;
                         vInv.push_back(CInv(MSG_BLOCK, GetLastBlockIndex(pindexBest, false)->GetBlockHash()));
@@ -3808,7 +3829,6 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
         {
             if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime-nLastCoinStakeSearchTime, txCoinStake))
             {
-                printf("CreateCoinStake=1\n");
                 if (txCoinStake.nTime >= max(pindexPrev->GetMedianTimePast()+1, pindexPrev->GetBlockTime() - nMaxClockDrift))
                 {   // make sure coinstake would meet timestamp protocol
                     // as it would be the same as the block timestamp
@@ -4106,7 +4126,6 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
       std::vector<COutput> vCoins;
       pwalletMain->AvailableCoins(vCoins, false);
       pos_timio = GetArg("-staketimio", 500) + 30 * sqrt(vCoins.size());
-      StakeModCache.Set(vCoins.size() + 1000);
       printf("Set proof-of-stake timeout: %ums for %u UTXOs\n", pos_timio, vCoins.size());
     }
 

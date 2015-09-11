@@ -772,7 +772,7 @@ public:
                        const CBlockIndex* pindexBlock, bool fBlock, bool fMiner, bool fStrictPayToScriptHash=true);
     bool ClientConnectInputs();
     bool CheckTransaction() const;
-    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL, bool fOnlyCheckWithoutAdding=false);
+    bool AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs=true, bool* pfMissingInputs=NULL);
     bool GetCoinAge(CTxDB& txdb, uint64& nCoinAge) const;  // ppcoin: get transaction coin age
 
 protected:
@@ -1853,7 +1853,7 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
 
     bool accept(CTxDB& txdb, CTransaction &tx,
-                bool fCheckInputs, bool* pfMissingInputs, bool fOnlyCheckWithoutAdding=false);
+                bool fCheckInputs, bool* pfMissingInputs);
     bool addUnchecked(CTransaction &tx);
     bool remove(const CTransaction &tx);
     void queryHashes(std::vector<uint256>& vtxid);
@@ -1877,17 +1877,6 @@ public:
 
 extern CTxMemPool mempool;
 
-/*---------------------------------------------------------------------*/
-// This is definitions for kernel.cpp for StakeModifier cache
-// Need define here, for correct setup size from main.cpp (UTXO qty)
-
-struct StakeMod {
-  uint64 nStakeModifier;
-  int64 nStakeModifierTime;
-  int nStakeModifierHeight;
-};
-
-extern uint256HashMap<StakeMod> StakeModCache;
 
 
 
