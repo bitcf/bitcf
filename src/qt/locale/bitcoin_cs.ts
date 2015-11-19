@@ -1710,8 +1710,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Čekat na spojení na &lt;portu&gt; (výchozí: 8333 nebo testnet: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 6661 or testnet: 6663)</source>
+        <translation>Čekat na spojení na &lt;portu&gt; (výchozí: 6661 nebo testnet: 6663)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
@@ -1820,8 +1820,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
-        <translation>Čekat na JSON-RPC spojení na &lt;portu&gt; (výchozí: 8332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 6662)</source>
+        <translation>Čekat na JSON-RPC spojení na &lt;portu&gt; (výchozí: 6662)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>

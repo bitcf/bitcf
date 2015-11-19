@@ -27,7 +27,7 @@ QT_TRANSLATE_NOOP("emercoin-core", "Set database disk log size in megabytes (def
 QT_TRANSLATE_NOOP("emercoin-core", "Specify connection timeout (in milliseconds)"),
 QT_TRANSLATE_NOOP("emercoin-core", "Connect through socks4 proxy"),
 QT_TRANSLATE_NOOP("emercoin-core", "Allow DNS lookups for addnode and connect"),
-QT_TRANSLATE_NOOP("emercoin-core", "Listen for connections on <port> (default: 8333 or testnet: 18333)"),
+QT_TRANSLATE_NOOP("emercoin-core", "Listen for connections on <port> (default: 6661 or testnet: 6663)"),
 QT_TRANSLATE_NOOP("emercoin-core", "Maintain at most <n> connections to peers (default: 125)"),
 QT_TRANSLATE_NOOP("emercoin-core", "Add a node to connect to and attempt to keep the connection open"),
 QT_TRANSLATE_NOOP("emercoin-core", "Connect only to the specified node"),

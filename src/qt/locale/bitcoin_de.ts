@@ -1708,8 +1708,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="18"/>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Verbindungen erwarten an &lt;port&gt; (Standard: 8333 oder test-Netzwerk: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 6661 or testnet: 6663)</source>
+        <translation>Verbindungen erwarten an &lt;port&gt; (Standard: 6661 oder test-Netzwerk: 6663)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="19"/>
@@ -1818,8 +1818,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332)</source>
-        <translation>JSON-RPC Verbindungen erwarten an &lt;port&gt; (Standard: 8332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 6662)</source>
+        <translation>JSON-RPC Verbindungen erwarten an &lt;port&gt; (Standard: 6662)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
