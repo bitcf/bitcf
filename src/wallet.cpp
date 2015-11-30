@@ -12,6 +12,7 @@
 #include "kernel.h"
 
 #include "uint256hm.h"
+#include <inttypes.h>
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
@@ -993,10 +994,17 @@ int64 CWallet::GetNewMint() const
 }
 
 
+static bool CmpDepth(const CWalletTx* a, const CWalletTx* b) { return a->nTime > b->nTime; }
+
 bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
+
+    // Maximap DP array size
+    static uint32_t nMaxDP = 0;
+    if(nMaxDP == 0)
+        nMaxDP = GetArg("-maxdp", 8 * 1024 * 1024);
 
     // List of values less than target
     pair<int64, pair<const CWalletTx*,unsigned int> > coinLowestLarger;
@@ -1011,7 +1019,21 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, in
        vCoins.reserve(mapWallet.size());
        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
            vCoins.push_back(&(*it).second);
-       random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+    //   random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+
+       static int sortir = -1;
+       if(sortir < 0)
+           sortir = GetArg("-sortir", 0);
+
+        switch(sortir) {
+	  case 1:
+	    sort(vCoins.begin(), vCoins.end(), CmpDepth);
+	    break;
+	  default:
+            random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+	    break;
+        } // switch
+
 
        BOOST_FOREACH(const CWalletTx* pcoin, vCoins)
        {
@@ -1063,7 +1085,8 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, in
         }
     }
 
-    if (nTotalLower == nTargetValue || nTotalLower == nTargetValue + CENT)
+    // Payoff all available UTXOs
+    if (nTotalLower >= nTargetValue && nTotalLower <= nTargetValue + CENT)
     {
         for (unsigned int i = 0; i < vValue.size(); ++i)
         {
@@ -1082,9 +1105,74 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, in
         return true;
     }
 
+  // If possible, solve subset sum by dynamic programming
+  // Adeed by maxihatop
+  uint16_t *dp;	// dynamic programming array
+  uint32_t dp_tgt = nTargetValue / MIN_TXOUT_AMOUNT;
+  if(dp_tgt < nMaxDP && (dp = (uint16_t*)calloc(dp_tgt + 1, sizeof(uint16_t))) != NULL) {
+    dp[0] = 1; // Zero CENTs can be reached anyway
+    uint32_t rlimit = 0; // Current Right Borer limit
+    uint16_t max_utxo_qty((1 << 16) - 2);
+    if(vValue.size() < max_utxo_qty)
+	max_utxo_qty = vValue.size();
+    uint32_t min_over_utxo =  0;
+    uint32_t min_over_sum  = ~0;
+    // Apply UTXOs to DP array, until exact sum will be found
+    for(uint16_t utxo_no = 0; utxo_no < max_utxo_qty && dp[dp_tgt] == 0; utxo_no++) {
+      uint32_t offset = vValue[utxo_no].first / MIN_TXOUT_AMOUNT;
+      for(int32_t ndx = rlimit; ndx >= 0; ndx--)
+        if(dp[ndx]) {
+	  uint32_t nxt = ndx + offset;
+          if(nxt <= dp_tgt) {
+	    if(dp[nxt] == 0)
+	      dp[nxt] = utxo_no + 1;
+	  } else
+	    if(nxt < min_over_sum) {
+	      min_over_sum = nxt;
+	      min_over_utxo = utxo_no + 1;
+	    }
+	} // if(dp[ndx])
+        rlimit += offset;
+	if(rlimit >= dp_tgt)
+	  rlimit = dp_tgt - 1;
+    } // for - UTXOs
+
+    if(dp[dp_tgt] != 0)  // Found exactly sum without payback
+      min_over_utxo = dp[min_over_sum = dp_tgt];
+
+    while(min_over_sum) {
+      uint16_t utxo_no = min_over_utxo - 1;
+      if (fDebug && GetBoolArg("-printselectcoin"))
+        printf("SelectCoins() DP Added #%u: Val=%s\n", utxo_no, FormatMoney(vValue[utxo_no].first).c_str());
+      setCoinsRet.insert(vValue[utxo_no].second);
+      nValueRet += vValue[utxo_no].first;
+      min_over_sum -= vValue[utxo_no].first / MIN_TXOUT_AMOUNT;
+      min_over_utxo = dp[min_over_sum];
+    }
+
+    free(dp);
+
+    if(nValueRet >= nTargetValue) {
+      //// debug print
+      if (fDebug && GetBoolArg("-printselectcoin"))
+        printf("SelectCoins() DP subset: Target=%s Found=%s Payback=%s Qty=%u\n",
+            FormatMoney(nTargetValue).c_str(),
+            FormatMoney(nValueRet).c_str(),
+	        FormatMoney(nValueRet - nTargetValue).c_str(),
+	        (unsigned)setCoinsRet.size()
+	        );
+      return true; // sum found by DP
+    } else {
+	nValueRet = 0;
+	setCoinsRet.clear();
+    }
+  } // DP compute
+
+#if 1
+    // maxihatop: don't understand, why add extra cent to TARGET
     if (nTotalLower >= nTargetValue + CENT)
         nTargetValue += CENT;
-
+#endif
     // Solve subset sum by stochastic approximation
     sort(vValue.rbegin(), vValue.rend());
     vector<char> vfIncluded;
@@ -1137,7 +1225,7 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, in
         //// debug print
         if (fDebug && GetBoolArg("-printselectcoin"))
         {
-            printf("SelectCoins() best subset: ");
+            printf("SelectCoins() stochastic best subset: ");
             for (unsigned int i = 0; i < vValue.size(); i++)
                 if (vfBest[i])
                     printf("%s ", FormatMoney(vValue[i].first).c_str());
