@@ -1155,7 +1155,10 @@ public:
     bool GetCoinAge(uint64& nCoinAge) const; // ppcoin: calculate total coin age spent in block
     bool SignBlock(const CKeyStore& keystore);
     bool CheckBlockSignature() const;
-    unsigned int GetStakeEntropyBit() const; // ppcoin: entropy bit for stake modifier if chosen by modifier
+
+    // ppcoin: entropy bit for stake modifier if chosen by modifier
+    // if height is specified a special table with precomputed bits is used
+    unsigned int GetStakeEntropyBit(int32_t height) const;
 
 private:
     bool SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew);

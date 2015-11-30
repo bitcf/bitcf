@@ -11,6 +11,7 @@
 #include "init.h"
 #include "ui_interface.h"
 #include "kernel.h"
+#include "checkpoints_eb.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -1878,7 +1879,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     pindexNew->bnChainTrust = (pindexNew->pprev ? pindexNew->pprev->bnChainTrust : 0) + pindexNew->GetBlockTrust();
 
     // ppcoin: compute stake entropy bit for stake modifier
-    if (!pindexNew->SetStakeEntropyBit(GetStakeEntropyBit()))
+    if (!pindexNew->SetStakeEntropyBit(GetStakeEntropyBit(pindexNew->nHeight)))
         return error("AddToBlockIndex() : SetStakeEntropyBit() failed");
 
     // ppcoin: record proof-of-stake hash value
@@ -2263,8 +2264,12 @@ bool CBlock::CheckBlockSignature() const
 }
 
 // ppcoin: entropy bit for stake modifier if chosen by modifier
-unsigned int CBlock::GetStakeEntropyBit() const
+// if height is specified a special table with precomputed bits is used
+unsigned int CBlock::GetStakeEntropyBit(int32_t height) const
 {
+    if (height > -1 && height <= 136500)
+        return (vEntropyBits[height >> 5] >> (height & 0x1f)) & 1;
+
     unsigned int nEntropyBit = 0;
     if (IsProtocolV04(nTime))
     {
