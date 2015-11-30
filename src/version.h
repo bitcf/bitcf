@@ -31,7 +31,7 @@ extern const std::string CLIENT_DATE;
 // emercoin: is also used to identify target for alerts
 #define EMERCOIN_VERSION_MAJOR       0
 #define EMERCOIN_VERSION_MINOR       3
-#define EMERCOIN_VERSION_REVISION    4
+#define EMERCOIN_VERSION_REVISION    5
 #define EMERCOIN_VERSION_BUILD       0
 
 // this is an ugly hack. TODO: reimplement version system to use single version. Need to study if bitcoin version can be changed without breaking things.
