@@ -88,7 +88,33 @@
      <item>
       <widget class="QLabel" name="label_ppcoin_copyright">
        <property name="text">
-        <string>Copyright © 2013-2015 EmerCoin Developers</string>
+        <string>Copyright © 2013-2015 Emercoin Developers</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_emercoin_copyright">
+       <property name="text">
+        <string>Copyright © 2011-2014 PPCoin Developers</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_namecoin_copyright">
+       <property name="text">
+        <string>Copyright © 2009-2013 Namecoin Developers</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
