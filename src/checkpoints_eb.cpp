@@ -1,6 +1,6 @@
 #include <inttypes.h>
 
-uint32_t vEntropyBits_number_of_blocks = 136500;
+uint32_t vEntropyBits_number_of_blocks = 136600;
 
 uint32_t vEntropyBits[] = {
 0xc9db3be1u,0xe476769au,0x000e430au,0x250fb53au,0x9cd3028fu,0xf59a591fu,0x9bb05552u,0x346040ddu,
