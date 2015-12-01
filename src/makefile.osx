@@ -94,7 +94,8 @@ OBJS= \
     obj/kernel.o \
     obj/stun.o \
     obj/namecoin.o \
-    obj/emcdns.o
+    obj/emcdns.o \
+    obj/checkpoints_eb.o
 
 ifdef USE_UPNP
 	DEFS += -DUSE_UPNP=$(USE_UPNP)

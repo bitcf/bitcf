@@ -18,6 +18,7 @@
 #include <list>
 
 #include "uint256hm.h"
+#include "checkpoints_eb.h"
 
 class CWallet;
 class CBlock;
@@ -1372,8 +1373,11 @@ public:
         nFlags |= BLOCK_PROOF_OF_STAKE;
     }
 
-    unsigned int GetStakeEntropyBit() const
+    unsigned int GetStakeEntropyBit(int32_t height) const
     {
+        if (height > -1 && height <= vEntropyBits_number_of_blocks)
+            return (vEntropyBits[height >> 5] >> (height & 0x1f)) & 1;
+
         return ((nFlags & BLOCK_STAKE_ENTROPY) >> 1);
     }
 
@@ -1402,7 +1406,7 @@ public:
         return strprintf("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, nMint=%s, nMoneySupply=%s, nFlags=(%s)(%d)(%s), nStakeModifier=%016"PRI64x", nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
             pprev, pnext, nFile, nBlockPos, nHeight,
             FormatMoney(nMint).c_str(), FormatMoney(nMoneySupply).c_str(),
-            GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
+            GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(nHeight), IsProofOfStake()? "PoS" : "PoW",
             nStakeModifier, nStakeModifierChecksum, 
             hashProofOfStake.ToString().c_str(),
             prevoutStake.ToString().c_str(), nStakeTime,

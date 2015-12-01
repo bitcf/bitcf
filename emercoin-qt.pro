@@ -234,7 +234,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/namecoin.cpp \
     src/qt/nametablemodel.cpp \
     src/qt/managenamespage.cpp \
-    src/emcdns.cpp
+    src/emcdns.cpp \
+    src/checkpoints_eb.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

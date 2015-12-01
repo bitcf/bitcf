@@ -11,7 +11,6 @@
 #include "init.h"
 #include "ui_interface.h"
 #include "kernel.h"
-#include "checkpoints_eb.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -2267,7 +2266,7 @@ bool CBlock::CheckBlockSignature() const
 // if height is specified a special table with precomputed bits is used
 unsigned int CBlock::GetStakeEntropyBit(int32_t height) const
 {
-    if (height > -1 && height <= 136500)
+    if (height > -1 && height <= vEntropyBits_number_of_blocks)
         return (vEntropyBits[height >> 5] >> (height & 0x1f)) & 1;
 
     unsigned int nEntropyBit = 0;
