@@ -2266,27 +2266,21 @@ bool CBlock::CheckBlockSignature() const
 // if height is specified a special table with precomputed bits is used
 unsigned int CBlock::GetStakeEntropyBit(int32_t height) const
 {
-    if (height > -1 && height <= vEntropyBits_number_of_blocks)
-        return (vEntropyBits[height >> 5] >> (height & 0x1f)) & 1;
-
     unsigned int nEntropyBit = 0;
     if (IsProtocolV04(nTime))
     {
-        nEntropyBit = ((GetHash().Get64()) & 1llu);// last bit of block hash
+        nEntropyBit = GetHash().Get64() & 1llu;// last bit of block hash
         if (fDebug && GetBoolArg("-printstakemodifier"))
             printf("GetStakeEntropyBit(v0.3.5+): nTime=%u hashBlock=%s entropybit=%d\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
     }
-    else
+    else if (height > -1 && height <= vEntropyBits_number_of_blocks)
     {
-        // old protocol for entropy bit pre v0.4
-        uint160 hashSig = Hash160(vchBlockSig);
+        // old protocol for entropy bit pre v0.4; exctracted from precomputed table.
+        nEntropyBit = (vEntropyBits[height >> 5] >> (height & 0x1f)) & 1;
         if (fDebug && GetBoolArg("-printstakemodifier"))
-            printf("GetStakeEntropyBit(v0.3.4): nTime=%u hashSig=%s", nTime, hashSig.ToString().c_str());
-        hashSig >>= 159; // take the first bit of the hash
-        nEntropyBit = hashSig.Get64();
-        if (fDebug && GetBoolArg("-printstakemodifier"))
-            printf(" entropybit=%d\n", nEntropyBit);
+            printf("GetStakeEntropyBit(v0.3.4): nTime=%d entropybit=%d\n", nTime, nEntropyBit);
     }
+
     return nEntropyBit;
 }
 
@@ -3784,7 +3778,6 @@ int64 nLastCoinStakeSearchInterval = 0;
 //   fProofOfStake: try (best effort) to make a proof-of-stake block
 CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
 {
-    if (fDebug) printf("CreateNewBlock\n");
     CReserveKey reservekey(pwallet);
 
     // Create new block
