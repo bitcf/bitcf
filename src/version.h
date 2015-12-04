@@ -31,7 +31,7 @@ extern const std::string CLIENT_DATE;
 // emercoin: is also used to identify target for alerts
 #define EMERCOIN_VERSION_MAJOR       0
 #define EMERCOIN_VERSION_MINOR       3
-#define EMERCOIN_VERSION_REVISION    5
+#define EMERCOIN_VERSION_REVISION    6
 #define EMERCOIN_VERSION_BUILD       0
 
 // this is an ugly hack. TODO: reimplement version system to use single version. Need to study if bitcoin version can be changed without breaking things.
@@ -45,7 +45,7 @@ static const int EMERCOIN_ALERT_VERSION =
 // network protocol versioning
 //
 
-static const int PROTOCOL_VERSION = 60004;
+static const int PROTOCOL_VERSION = 60005;
 
 // earlier versions not supported as of Feb 2012, and are disconnected
 // NOTE: as of bitcoin v0.6 message serialization (vSend, vRecv) still
