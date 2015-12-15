@@ -1206,6 +1206,23 @@ bool createNameScript(CScript& nameScript, const vector<unsigned char> &vchName,
     return true;
 }
 
+bool IsWalletLocked(NameTxReturn& ret)
+{
+    if (pwalletMain->IsLocked())
+    {
+        ret.err_code = RPC_WALLET_UNLOCK_NEEDED;
+        ret.err_msg = "Error: Please enter the wallet passphrase with walletpassphrase first.";
+        return true;
+    }
+    if (fWalletUnlockMintOnly)
+    {
+        ret.err_code = RPC_WALLET_UNLOCK_NEEDED;
+        ret.err_msg = "Error: Wallet unlocked for block minting only, unable to create transaction.";
+        return true;
+    }
+    return false;
+}
+
 Value name_new(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
@@ -1237,6 +1254,9 @@ NameTxReturn name_new(const vector<unsigned char> &vchName,
     ret.err_code = RPC_INTERNAL_ERROR; //default value
     ret.ok = false;
 
+    if (IsWalletLocked(ret))
+        return ret;
+
     CWalletTx wtx;
     wtx.nVersion = NAMECOIN_TX_VERSION;
     stringstream ss;
@@ -1259,8 +1279,6 @@ NameTxReturn name_new(const vector<unsigned char> &vchName,
             ret.err_msg = "name_new on an unexpired name";
             return ret;
         }
-
-        EnsureWalletIsUnlocked();
 
         CPubKey vchPubKey;
         if (!pwalletMain->GetKeyFromPool(vchPubKey, true))
@@ -1332,6 +1350,9 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
     NameTxReturn ret;
     ret.err_code = RPC_INTERNAL_ERROR; //default value
     ret.ok = false;
+
+    if (IsWalletLocked(ret))
+        return ret;
 
     CWalletTx wtx;
     wtx.nVersion = NAMECOIN_TX_VERSION;
@@ -1429,8 +1450,6 @@ NameTxReturn name_update(const vector<unsigned char> &vchName,
 
         nameScript += scriptPubKey;
 
-        EnsureWalletIsUnlocked();
-
         CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 
         int64 prevFee = nTransactionFee;
@@ -1483,6 +1502,9 @@ NameTxReturn name_delete(const vector<unsigned char> &vchName)
     NameTxReturn ret;
     ret.err_code = RPC_INTERNAL_ERROR; //default value
     ret.ok = false;
+
+    if (IsWalletLocked(ret))
+        return ret;
 
     CWalletTx wtx;
     wtx.nVersion = NAMECOIN_TX_VERSION;
@@ -1568,8 +1590,6 @@ NameTxReturn name_delete(const vector<unsigned char> &vchName)
         }
 
         nameScript += scriptPubKey;
-
-        EnsureWalletIsUnlocked();
 
         CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 
