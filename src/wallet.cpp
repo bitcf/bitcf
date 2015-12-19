@@ -342,7 +342,7 @@ void CWallet::MarkDirty()
     }
 }
 
-bool CWallet::AddToWallet(const CWalletTx& wtxIn)
+bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fOverwriteTimestamp)
 {
     uint256 hash = wtxIn.GetHash();
     {
@@ -352,7 +352,11 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         CWalletTx& wtx = (*ret.first).second;
         wtx.BindWallet(this);
         bool fInsertedNew = ret.second;
-        if (fInsertedNew)
+
+        // emercoin: overwrite timestamp if called from -rescan option
+        if (fOverwriteTimestamp)
+            wtx.nTimeReceived = wtx.nTime;
+        else if (fInsertedNew)
             wtx.nTimeReceived = GetAdjustedTime();
 
         bool fUpdated = false;
@@ -427,7 +431,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 // Add a transaction to the wallet, or update it.
 // pblock is optional, but should be provided if the transaction is known to be in a block.
 // If fUpdate is true, existing transactions will be updated.
-bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate, bool fFindBlock)
+bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate, bool fOverwriteTimestamp)
 {
     uint256 hash = tx.GetHash();
     {
@@ -440,7 +444,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
             // Get merkle branch if transaction was found in a block
             if (pblock)
                 wtx.SetMerkleBranch(pblock);
-            return AddToWallet(wtx);
+            return AddToWallet(wtx, fOverwriteTimestamp);
         }
         else
             WalletUpdateSpent(tx);
@@ -744,7 +748,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             block.ReadFromDisk(pindex, true);
             BOOST_FOREACH(CTransaction& tx, block.vtx)
             {
-                if (AddToWalletIfInvolvingMe(tx, &block, fUpdate))
+                if (AddToWalletIfInvolvingMe(tx, &block, fUpdate, true))
                     ret++;
             }
             pindex = pindex->pnext;
@@ -757,7 +761,7 @@ int CWallet::ScanForWalletTransaction(const uint256& hashTx)
 {
     CTransaction tx;
     tx.ReadFromDisk(COutPoint(hashTx, 0));
-    if (AddToWalletIfInvolvingMe(tx, NULL, true, true))
+    if (AddToWalletIfInvolvingMe(tx, NULL, true))
         return 1;
     return 0;
 }
