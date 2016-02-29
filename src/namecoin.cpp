@@ -2166,9 +2166,11 @@ bool CNameDB::DumpToTextFile()
     if (!pcursor)
         return false;
 
+
     vector<unsigned char> vchName;
+    map<string, CNameRecord> mapNames;
     unsigned int fFlags = DB_SET_RANGE;
-    loop
+    while (true)
     {
         // Read next record
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -2193,20 +2195,25 @@ bool CNameDB::DumpToTextFile()
             ssValue >> val;
             if (val.vtxPos.empty())
                 continue;
-
-            myfile << "name =  " << stringFromVch(vchName) << "\n";
-            myfile << "nExpiresAt " << val.nExpiresAt << "\n";
-            myfile << "nLastActiveChainIndex " << val.nLastActiveChainIndex << "\n";
-            myfile << "vtxPos:\n";
-            for (unsigned int i = 0; i < val.vtxPos.size(); i++)
-            {
-                myfile << "    nHeight = " << val.vtxPos[i].nHeight << "\n";
-                myfile << "    op = " << val.vtxPos[i].op << "\n";
-                myfile << "    value = " << stringFromVch(val.vtxPos[i].vchValue) << "\n";
-            }
-            myfile << "\n\n";
+            mapNames[stringFromVch(vchName)] = val;
         }
     }
+
+    BOOST_FOREACH(PAIRTYPE(const string, CNameRecord)& item, mapNames)
+    {
+        myfile << "name = " << item.first << "\n";
+        myfile << "nExpiresAt " << item.second.nExpiresAt << "\n";
+        myfile << "nLastActiveChainIndex " << item.second.nLastActiveChainIndex << "\n";
+        myfile << "vtxPos:\n";
+        for (unsigned int i = 0; i < item.second.vtxPos.size(); i++)
+        {
+            myfile << "    nHeight = " << item.second.vtxPos[i].nHeight << " op = " << item.second.vtxPos[i].op << "\n";
+            myfile << "    value = " << stringFromVch(item.second.vtxPos[i].vchValue) << "\n";
+        }
+        myfile << "\n\n";
+        myfile.flush();
+    }
+
     pcursor->close();
     myfile.close();
     return true;
