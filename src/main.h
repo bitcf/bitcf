@@ -18,7 +18,6 @@
 #include <list>
 
 #include "uint256hm.h"
-#include "checkpoints_eb.h"
 
 class CWallet;
 class CBlock;

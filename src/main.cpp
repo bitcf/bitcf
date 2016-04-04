@@ -2264,16 +2264,8 @@ unsigned int CBlock::GetStakeEntropyBit(int32_t height) const
     {
         nEntropyBit = GetHash().Get64() & 1llu;// last bit of block hash
         if (fDebug && GetBoolArg("-printstakemodifier"))
-            printf("GetStakeEntropyBit(v0.3.5+): nTime=%u hashBlock=%s entropybit=%d\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
+            printf("GetStakeEntropyBit(v0.4+): nTime=%u hashBlock=%s entropybit=%d\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
     }
-    else if (height > -1 && height <= vEntropyBits_number_of_blocks)
-    {
-        // old protocol for entropy bit pre v0.4; exctracted from precomputed table.
-        nEntropyBit = (vEntropyBits[height >> 5] >> (height & 0x1f)) & 1;
-        if (fDebug && GetBoolArg("-printstakemodifier"))
-            printf("GetStakeEntropyBit(v0.3.4): nTime=%d entropybit=%d\n", nTime, nEntropyBit);
-    }
-
     return nEntropyBit;
 }
 
