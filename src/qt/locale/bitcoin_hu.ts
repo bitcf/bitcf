@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <source>About Emercoin</source>
-        <translation>A Emercoinról</translation>
+        <source>About FirstBitcoinCapitalCorp</source>
+        <translation>A FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
-        <source>&lt;b&gt;Emercoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Emercoin&lt;/b&gt; verzió</translation>
+        <source>&lt;b&gt;FirstBitcoinCapitalCorp&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;FirstBitcoinCapitalCorp&lt;/b&gt; verzió</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="85"/>
@@ -33,8 +33,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
-        <source>These are your Emercoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Ezekkel a Emercoin-címekkel fogadhatod kifizetéseket.   Érdemes lehet minden egyes kifizető számára külön címet létrehozni, hogy könnyebben nyomon követhesd, kitől kaptál már pénzt.</translation>
+        <source>These are your FirstBitcoinCapitalCorp addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation>Ezekkel a FirstBitcoinCapitalCorp-címekkel fogadhatod kifizetéseket.   Érdemes lehet minden egyes kifizető számára külön címet létrehozni, hogy könnyebben nyomon követhesd, kitől kaptál már pénzt.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="33"/>
@@ -220,9 +220,9 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR EMERCOINS&lt;/b&gt;!
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
-        <translation>FIGYELEM: Ha kódolod a tárcát, és elveszíted a jelszavad, akkor &lt;b&gt;AZ ÖSSZES EMERCOINODAT IS EL FOGOD VESZÍTENI!&lt;/b&gt;
+        <translation>FIGYELEM: Ha kódolod a tárcát, és elveszíted a jelszavad, akkor &lt;b&gt;AZ ÖSSZES BIT IS EL FOGOD VESZÍTENI!&lt;/b&gt;
 Biztosan kódolni akarod a tárcát?</translation>
     </message>
     <message>
@@ -233,7 +233,7 @@ Biztosan kódolni akarod a tárcát?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Emercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your emercoins from being stolen by malware infecting your computer.</source>
+        <source>FirstBitcoinCapitalCorp will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your BITs from being stolen by malware infecting your computer.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -288,8 +288,8 @@ Biztosan kódolni akarod a tárcát?</translation>
     <name>EmercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="69"/>
-        <source>Emercoin Wallet</source>
-        <translation>Emercoin-tárca</translation>
+        <source>FirstBitcoinCapitalCorp Wallet</source>
+        <translation>FirstBitcoinCapitalCorp-tárca</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="142"/>
@@ -349,7 +349,7 @@ Biztosan kódolni akarod a tárcát?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
-        <source>Send coins to a emercoin address</source>
+        <source>Send coins to a FirstBitcoinCapitalCorp address</source>
         <translation>Érmék küldése megadott címre</translation>
     </message>
     <message>
@@ -379,8 +379,8 @@ Biztosan kódolni akarod a tárcát?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
-        <source>Show information about Emercoin</source>
-        <translation>Információk a Emercoinról</translation>
+        <source>Show information about FirstBitcoinCapitalCorp</source>
+        <translation>Információk a FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
@@ -399,18 +399,18 @@ Biztosan kódolni akarod a tárcát?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Modify configuration options for emercoin</source>
-        <translation>Emercoin konfigurációs opciók</translation>
+        <source>Modify configuration options for FirstBitcoinCapitalCorp</source>
+        <translation>FirstBitcoinCapitalCorp konfigurációs opciók</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
-        <source>Open &amp;Emercoin</source>
-        <translation>A &amp;Emercoin megnyitása</translation>
+        <source>Open &amp;FirstBitcoinCapitalCorp</source>
+        <translation>A &amp;FirstBitcoinCapitalCorp megnyitása</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
-        <source>Show the Emercoin window</source>
-        <translation>A Emercoin-ablak mutatása</translation>
+        <source>Show the FirstBitcoinCapitalCorp window</source>
+        <translation>A FirstBitcoinCapitalCorp-ablak mutatása</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -484,13 +484,13 @@ Biztosan kódolni akarod a tárcát?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="407"/>
-        <source>emercoin-qt</source>
-        <translation>emercoin-qt</translation>
+        <source>bitcf-qt</source>
+        <translation>bitcf-qt</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="449"/>
-        <source>%n active connection(s) to Emercoin network</source>
-        <translation><numerusform>%n aktív kapcsolat a Emercoin-hálózattal</numerusform><numerusform>%n aktív kapcsolat a Emercoin-hálózattal</numerusform></translation>
+        <source>%n active connection(s) to FirstBitcoinCapitalCorp network</source>
+        <translation><numerusform>%n aktív kapcsolat a FirstBitcoinCapitalCorp-hálózattal</numerusform><numerusform>%n aktív kapcsolat a FirstBitcoinCapitalCorp-hálózattal</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="475"/>
@@ -673,8 +673,8 @@ Cím: %4
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="96"/>
-        <source>The entered address &quot;%1&quot; is not a valid emercoin address.</source>
-        <translation>A megadott &quot;%1&quot; cím nem egy érvényes Emercoin-cím.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid FirstBitcoinCapitalCorp address.</source>
+        <translation>A megadott &quot;%1&quot; cím nem egy érvényes FirstBitcoinCapitalCorp-cím.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="101"/>
@@ -691,13 +691,13 @@ Cím: %4
     <name>MainOptionsPage</name>
     <message>
         <location filename="../optionsdialog.cpp" line="170"/>
-        <source>&amp;Start Emercoin on window system startup</source>
+        <source>&amp;Start FirstBitcoinCapitalCorp on window system startup</source>
         <translation>&amp;Induljon el a számítógép bekapcsolásakor</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="171"/>
-        <source>Automatically start Emercoin after the computer is turned on</source>
-        <translation>Induljon el a Emercoin a számítógép bekapcsolásakor</translation>
+        <source>Automatically start FirstBitcoinCapitalCorp after the computer is turned on</source>
+        <translation>Induljon el a FirstBitcoinCapitalCorp a számítógép bekapcsolásakor</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="175"/>
@@ -716,8 +716,8 @@ Cím: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="181"/>
-        <source>Automatically open the Emercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>A Emercoin-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a routered támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
+        <source>Automatically open the FirstBitcoinCapitalCorp client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>A FirstBitcoinCapitalCorp-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a routered támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="185"/>
@@ -737,7 +737,7 @@ Cím: %4
     <message>
         <location filename="../optionsdialog.cpp" line="191"/>
         <source>Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
-        <translation>SOCKS4 proxyn keresztüli csatlakozás a Emercoin hálózatához (pl. Tor-on keresztüli csatlakozás esetén)</translation>
+        <translation>SOCKS4 proxyn keresztüli csatlakozás a FirstBitcoinCapitalCorp hálózatához (pl. Tor-on keresztüli csatlakozás esetén)</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="196"/>
@@ -1094,7 +1094,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="133"/>
         <source>Amount exceeds your balance</source>
-        <translation>Nincs ennyi emercoin az egyenlegeden.</translation>
+        <translation>Nincs ennyi BIT az egyenlegeden.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="138"/>
@@ -1178,8 +1178,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
-        <source>Enter a Emercoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Adj meg egy Emercoin-címet (pl.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L )</translation>
+        <source>Enter a FirstBitcoinCapitalCorp address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Adj meg egy FirstBitcoinCapitalCorp-címet (pl.: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L )</translation>
     </message>
 </context>
 <context>
@@ -1627,11 +1627,11 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>emercoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="3"/>
-        <source>Emercoin version</source>
-        <translation>Emercoin verzió</translation>
+        <source>FirstBitcoinCapitalCorp version</source>
+        <translation>FirstBitcoinCapitalCorp verzió</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="4"/>
@@ -1640,8 +1640,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="5"/>
-        <source>Send command to -server or emercoind</source>
-        <translation>Parancs küldése a -serverhez vagy a emercoindhez
+        <source>Send command to -server or bitcfd</source>
+        <translation>Parancs küldése a -serverhez vagy a bitcfd
 </translation>
     </message>
     <message>
@@ -1664,14 +1664,14 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Specify configuration file (default: emercoin.conf)</source>
-        <translation>Konfigurációs fájl (alapértelmezett: emercoin.conf)
+        <source>Specify configuration file (default: bitcf.conf)</source>
+        <translation>Konfigurációs fájl (alapértelmezett: bitcf.conf)
 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Specify pid file (default: emercoind.pid)</source>
-        <translation>pid-fájl (alapértelmezett: emercoind.pid)
+        <source>Specify pid file (default: bitcf.pid)</source>
+        <translation>pid-fájl (alapértelmezett: bitcf.pid)
 </translation>
     </message>
     <message>
@@ -1683,7 +1683,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="12"/>
         <source>Don&apos;t generate coins</source>
-        <translation>Emercoin-generálás leállítása
+        <translation>FirstBitcoinCapitalCorp-generálás leállítása
 </translation>
     </message>
     <message>
@@ -1869,9 +1869,9 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>
-SSL options: (see the Emercoin Wiki for SSL setup instructions)</source>
+SSL options: (see the FirstBitcoinCapitalCorp Wiki for SSL setup instructions)</source>
         <translation>
-SSL-opciók: (lásd a Emercoin Wiki SSL-beállítási instrukcióit)
+SSL-opciók: (lásd a FirstBitcoinCapitalCorp Wiki SSL-beállítási instrukcióit)
 </translation>
     </message>
     <message>
@@ -1906,8 +1906,8 @@ SSL-opciók: (lásd a Emercoin Wiki SSL-beállítási instrukcióit)
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Cannot obtain a lock on data directory %s.  Emercoin is probably already running.</source>
-        <translation>Az %s adatkönyvtár nem zárható.  A Emercoin valószínűleg fut már.</translation>
+        <source>Cannot obtain a lock on data directory %s.  FirstBitcoinCapitalCorp is probably already running.</source>
+        <translation>Az %s adatkönyvtár nem zárható.  A FirstBitcoinCapitalCorp valószínűleg fut már.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="60"/>
@@ -1931,12 +1931,12 @@ SSL-opciók: (lásd a Emercoin Wiki SSL-beállítási instrukcióit)
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Emercoin</source>
+        <source>Error loading wallet.dat: Wallet requires newer version of FirstBitcoinCapitalCorp</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Wallet needed to be rewritten: restart Emercoin to complete</source>
+        <source>Wallet needed to be rewritten: restart FirstBitcoinCapitalCorp to complete</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1991,13 +1991,13 @@ SSL-opciók: (lásd a Emercoin Wiki SSL-beállítási instrukcióit)
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Unable to bind to port %d on this computer.  Emercoin is probably already running.</source>
-        <translation>A %d port nem elérhető ezen a gépen.  A Emercoin valószínűleg fut már.</translation>
+        <source>Unable to bind to port %d on this computer.  FirstBitcoinCapitalCorp is probably already running.</source>
+        <translation>A %d port nem elérhető ezen a gépen.  A FirstBitcoinCapitalCorp valószínűleg fut már.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Emercoin will not work properly.</source>
-        <translation>Figyelem: Ellenőrizd, hogy helyesen van-e beállítva a gépeden a dátum és az idő.  A Emercoin nem fog megfelelően működni, ha rosszul van beállítvaaz órád.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong FirstBitcoinCapitalCorp will not work properly.</source>
+        <translation>Figyelem: Ellenőrizd, hogy helyesen van-e beállítva a gépeden a dátum és az idő.  A FirstBitcoinCapitalCorp nem fog megfelelően működni, ha rosszul van beállítvaaz órád.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>

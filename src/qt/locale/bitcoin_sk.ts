@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <source>About Emercoin</source>
-        <translation>O Emercoin</translation>
+        <source>About FirstBitcoinCapitalCorp</source>
+        <translation>O FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
-        <source>&lt;b&gt;Emercoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Emercoin&lt;/b&gt; verzia</translation>
+        <source>&lt;b&gt;FirstBitcoinCapitalCorp&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;FirstBitcoinCapitalCorp&lt;/b&gt; verzia</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="85"/>
@@ -33,8 +33,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
-        <source>These are your Emercoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Toto sú Vaše Emercoin adresy pre prijímanie platieb. Môžete dať každému odosielateľovi inú rôznu adresu a tak udržiavať prehľad o platbách.</translation>
+        <source>These are your FirstBitcoinCapitalCorp addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation>Toto sú Vaše FirstBitcoinCapitalCorp adresy pre prijímanie platieb. Môžete dať každému odosielateľovi inú rôznu adresu a tak udržiavať prehľad o platbách.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="33"/>
@@ -220,9 +220,9 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR EMERCOINS&lt;/b&gt;!
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
-        <translation>VAROVANIE: Ak zašifrujete peňaženku a stratíte heslo, &lt;b&gt;STRATÍTE VŠETKY VAŠE EMERCOINY&lt;/b&gt;!⏎
+        <translation>VAROVANIE: Ak zašifrujete peňaženku a stratíte heslo, &lt;b&gt;STRATÍTE VŠETKY VAŠE BITS&lt;/b&gt;!⏎
 Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     </message>
     <message>
@@ -233,7 +233,7 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Emercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your emercoins from being stolen by malware infecting your computer.</source>
+        <source>FirstBitcoinCapitalCorp will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your BITs from being stolen by malware infecting your computer.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -288,8 +288,8 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     <name>EmercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="69"/>
-        <source>Emercoin Wallet</source>
-        <translation>Emercoin peňaženka</translation>
+        <source>FirstBitcoinCapitalCorp Wallet</source>
+        <translation>FirstBitcoinCapitalCorp peňaženka</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="142"/>
@@ -335,7 +335,7 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="194"/>
         <source>&amp;Receive coins</source>
-        <translation>&amp;Prijať emercoins</translation>
+        <translation>&amp;Prijať BITs</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="195"/>
@@ -345,12 +345,12 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
         <source>&amp;Send coins</source>
-        <translation>&amp;Poslať emercoins</translation>
+        <translation>&amp;Poslať BITs</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
-        <source>Send coins to a emercoin address</source>
-        <translation>Poslať emercoins na adresu</translation>
+        <source>Send coins to a FirstBitcoinCapitalCorp address</source>
+        <translation>Poslať BITs na adresu</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="206"/>
@@ -379,8 +379,8 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
-        <source>Show information about Emercoin</source>
-        <translation>Zobraziť informácie o Emercoin</translation>
+        <source>Show information about FirstBitcoinCapitalCorp</source>
+        <translation>Zobraziť informácie o FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
@@ -399,18 +399,18 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Modify configuration options for emercoin</source>
-        <translation>Upraviť možnosti nastavenia pre emercoin</translation>
+        <source>Modify configuration options for FirstBitcoinCapitalCorp</source>
+        <translation>Upraviť možnosti nastavenia pre FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
-        <source>Open &amp;Emercoin</source>
-        <translation>Otvoriť &amp;Emercoin</translation>
+        <source>Open &amp;FirstBitcoinCapitalCorp</source>
+        <translation>Otvoriť &amp;FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
-        <source>Show the Emercoin window</source>
-        <translation>Zobraziť okno Emercoin</translation>
+        <source>Show the FirstBitcoinCapitalCorp window</source>
+        <translation>Zobraziť okno FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -484,12 +484,12 @@ Ste si istí, že si želáte zašifrovať peňaženku?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="407"/>
-        <source>emercoin-qt</source>
-        <translation>emercoin-qt</translation>
+        <source>bitcf-qt</source>
+        <translation>bitcf-qt</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="449"/>
-        <source>%n active connection(s) to Emercoin network</source>
+        <source>%n active connection(s) to FirstBitcoinCapitalCorp network</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
@@ -672,8 +672,8 @@ Adresa: %4</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="96"/>
-        <source>The entered address &quot;%1&quot; is not a valid emercoin address.</source>
-        <translation>Vložená adresa &quot;%1&quot; nieje platnou adresou emercoin.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid FirstBitcoinCapitalCorp address.</source>
+        <translation>Vložená adresa &quot;%1&quot; nieje platnou adresou FirstBitcoinCapitalCorp.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="101"/>
@@ -690,13 +690,13 @@ Adresa: %4</translation>
     <name>MainOptionsPage</name>
     <message>
         <location filename="../optionsdialog.cpp" line="170"/>
-        <source>&amp;Start Emercoin on window system startup</source>
-        <translation>&amp;Spustiť Emercoin pri spustení systému správy okien</translation>
+        <source>&amp;Start FirstBitcoinCapitalCorp on window system startup</source>
+        <translation>&amp;Spustiť FirstBitcoinCapitalCorp pri spustení systému správy okien</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="171"/>
-        <source>Automatically start Emercoin after the computer is turned on</source>
-        <translation>Automaticky spustiť Emercoin po zapnutí počítača</translation>
+        <source>Automatically start FirstBitcoinCapitalCorp after the computer is turned on</source>
+        <translation>Automaticky spustiť FirstBitcoinCapitalCorp po zapnutí počítača</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="175"/>
@@ -715,8 +715,8 @@ Adresa: %4</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="181"/>
-        <source>Automatically open the Emercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automaticky otvorit port pre Emercoin na routeri. Toto funguje len ak router podporuje UPnP a je táto podpora aktivovaná.</translation>
+        <source>Automatically open the FirstBitcoinCapitalCorp client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automaticky otvorit port pre FirstBitcoinCapitalCorp na routeri. Toto funguje len ak router podporuje UPnP a je táto podpora aktivovaná.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="185"/>
@@ -736,7 +736,7 @@ Adresa: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="191"/>
         <source>Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
-        <translation>Pripojiť do siete Emercoin cez SOCKS4 proxy (napr. keď sa pripájate cez Tor)</translation>
+        <translation>Pripojiť do siete FirstBitcoinCapitalCorp cez SOCKS4 proxy (napr. keď sa pripájate cez Tor)</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="196"/>
@@ -1014,7 +1014,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../sendcoinsdialog.cpp" line="148"/>
         <location filename="../sendcoinsdialog.cpp" line="153"/>
         <source>Send Coins</source>
-        <translation>Poslať emercoins</translation>
+        <translation>Poslať BITs</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
@@ -1064,7 +1064,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="99"/>
         <source>Confirm send coins</source>
-        <translation>Potvrdiť odoslanie emercoins</translation>
+        <translation>Potvrdiť odoslanie BITs</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="100"/>
@@ -1172,8 +1172,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
-        <source>Enter a Emercoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Zadajte Emercoin adresu (napr. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>Enter a FirstBitcoinCapitalCorp address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Zadajte FirstBitcoinCapitalCorp adresu (napr. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1621,11 +1621,11 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>emercoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="3"/>
-        <source>Emercoin version</source>
-        <translation>Emercoin verzia</translation>
+        <source>FirstBitcoinCapitalCorp version</source>
+        <translation>FirstBitcoinCapitalCorp verzia</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="4"/>
@@ -1634,8 +1634,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="5"/>
-        <source>Send command to -server or emercoind</source>
-        <translation>Odoslať príkaz -server alebo emercoind</translation>
+        <source>Send command to -server or bitcfd</source>
+        <translation>Odoslať príkaz -server alebo bitcfd</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="6"/>
@@ -1654,23 +1654,23 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Specify configuration file (default: emercoin.conf)</source>
-        <translation>Určiť súbor s nastaveniami (predvolené: emercoin.conf)</translation>
+        <source>Specify configuration file (default: bitcf.conf)</source>
+        <translation>Určiť súbor s nastaveniami (predvolené: bitcf.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Specify pid file (default: emercoind.pid)</source>
-        <translation>Určiť súbor pid (predvolené: emercoind.pid)</translation>
+        <source>Specify pid file (default: bitcf.pid)</source>
+        <translation>Určiť súbor pid (predvolené: bitcf.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="11"/>
         <source>Generate coins</source>
-        <translation>Počítaj emercoins</translation>
+        <translation>Počítaj BITs</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="12"/>
         <source>Don&apos;t generate coins</source>
-        <translation>Nepočítaj emercoins</translation>
+        <translation>Nepočítaj BITs</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
@@ -1835,8 +1835,8 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>
-SSL options: (see the Emercoin Wiki for SSL setup instructions)</source>
-        <translation>SSL možnosť: (pozrite Emercoin Wiki pre návod na nastavenie SSL)</translation>
+SSL options: (see the FirstBitcoinCapitalCorp Wiki for SSL setup instructions)</source>
+        <translation>SSL možnosť: (pozrite FirstBitcoinCapitalCorp Wiki pre návod na nastavenie SSL)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>
@@ -1865,7 +1865,7 @@ SSL options: (see the Emercoin Wiki for SSL setup instructions)</source>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Cannot obtain a lock on data directory %s.  Emercoin is probably already running.</source>
+        <source>Cannot obtain a lock on data directory %s.  FirstBitcoinCapitalCorp is probably already running.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1890,13 +1890,13 @@ SSL options: (see the Emercoin Wiki for SSL setup instructions)</source>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Emercoin</source>
-        <translation>Chyba načítania wallet.dat: Peňaženka vyžaduje novšiu verziu Emercoin</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of FirstBitcoinCapitalCorp</source>
+        <translation>Chyba načítania wallet.dat: Peňaženka vyžaduje novšiu verziu FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Wallet needed to be rewritten: restart Emercoin to complete</source>
-        <translation>Bolo potrebné prepísať peňaženku: dokončite reštartovaním Emercoin</translation>
+        <source>Wallet needed to be rewritten: restart FirstBitcoinCapitalCorp to complete</source>
+        <translation>Bolo potrebné prepísať peňaženku: dokončite reštartovaním FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
@@ -1950,12 +1950,12 @@ SSL options: (see the Emercoin Wiki for SSL setup instructions)</source>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Unable to bind to port %d on this computer.  Emercoin is probably already running.</source>
+        <source>Unable to bind to port %d on this computer.  FirstBitcoinCapitalCorp is probably already running.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Emercoin will not work properly.</source>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong FirstBitcoinCapitalCorp will not work properly.</source>
         <translation type="unfinished"/>
     </message>
     <message>

@@ -169,7 +169,7 @@ bool AppInit2(int argc, char* argv[])
     //
     // Parameters
     //
-    // If Qt is used, parameters/emercoin.conf are parsed in qt/bitcoin.cpp's main()
+    // If Qt is used, parameters/bitcf.conf are parsed in qt/bitcoin.cpp's main()
 #if !defined(QT_GUI)
     ParseParameters(argc, argv);
     if (!boost::filesystem::is_directory(GetDataDir(false)))
@@ -377,7 +377,7 @@ bool AppInit2(int argc, char* argv[])
         strErrors << _("Error loading blkindex.dat") << "\n";
 
     // as LoadBlockIndex can take several minutes, it's possible the user
-    // requested to kill emercoin-qt during the last operation. If so, exit.
+    // requested to kill bitcf-qt during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
     if (fRequestShutdown)
     {
@@ -490,7 +490,7 @@ bool AppInit2(int argc, char* argv[])
 
     // Note: Emercoin-QT stores several settings in the wallet, so we want
     // to load the wallet BEFORE parsing command-line arguments, so
-    // the command-line/emercoin.conf settings override GUI setting.
+    // the command-line/bitcf.conf settings override GUI setting.
 
     //
     // Parameters

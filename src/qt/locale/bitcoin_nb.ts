@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <source>About Emercoin</source>
-        <translation>Om Emercoin</translation>
+        <source>About FirstBitcoinCapitalCorp</source>
+        <translation>Om FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
-        <source>&lt;b&gt;Emercoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Emercoin&lt;/b&gt; versjon</translation>
+        <source>&lt;b&gt;FirstBitcoinCapitalCorp&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;FirstBitcoinCapitalCorp&lt;/b&gt; versjon</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="85"/>
@@ -39,8 +39,8 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
-        <source>These are your Emercoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Dette er dine Emercoin adresser for å motta betalinger.  Du kan gi en separat adresse til hver avsender slik at du kan holde oversikt over hvem som betaler deg.</translation>
+        <source>These are your FirstBitcoinCapitalCorp addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation>Dette er dine FirstBitcoinCapitalCorp adresser for å motta betalinger.  Du kan gi en separat adresse til hver avsender slik at du kan holde oversikt over hvem som betaler deg.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="33"/>
@@ -226,9 +226,9 @@ Dette produktet inneholder programvare utviklet av OpenSSL prosjektet for bruk i
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR EMERCOINS&lt;/b&gt;!
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
-        <translation>ADVARSEL: Hvis du krypterer lommeboken og mister adgangsfrasen vil du &lt;b&gt;MISTE ALLE DINE EMERCOINS&lt;/b&gt;!
+        <translation>ADVARSEL: Hvis du krypterer lommeboken og mister adgangsfrasen vil du &lt;b&gt;MISTE ALLE DINE BITS&lt;/b&gt;!
 Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
@@ -239,8 +239,8 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Emercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your emercoins from being stolen by malware infecting your computer.</source>
-        <translation>Emercoin vil nå lukkes for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken ikke fullt ut kan beskytte dine emercoins fra å bli stjålet om skadevare infiserer datamaskinen.</translation>
+        <source>FirstBitcoinCapitalCorp will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your BITs from being stolen by malware infecting your computer.</source>
+        <translation>FirstBitcoinCapitalCorp vil nå lukkes for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken ikke fullt ut kan beskytte dine BITs fra å bli stjålet om skadevare infiserer datamaskinen.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
@@ -294,8 +294,8 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <name>EmercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="69"/>
-        <source>Emercoin Wallet</source>
-        <translation>Emercoin Lommebok</translation>
+        <source>FirstBitcoinCapitalCorp Wallet</source>
+        <translation>FirstBitcoinCapitalCorp Lommebok</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="142"/>
@@ -341,7 +341,7 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="194"/>
         <source>&amp;Receive coins</source>
-        <translation>&amp;Motta emercoins</translation>
+        <translation>&amp;Motta BITs</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="195"/>
@@ -351,12 +351,12 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
         <source>&amp;Send coins</source>
-        <translation>&amp;Send emercoins</translation>
+        <translation>&amp;Send BITs</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
-        <source>Send coins to a emercoin address</source>
-        <translation>Send emercoins til en adresse</translation>
+        <source>Send coins to a FirstBitcoinCapitalCorp address</source>
+        <translation>Send BITs til en adresse</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="206"/>
@@ -385,8 +385,8 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
-        <source>Show information about Emercoin</source>
-        <translation>Vis informasjon om Emercoin</translation>
+        <source>Show information about FirstBitcoinCapitalCorp</source>
+        <translation>Vis informasjon om FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
@@ -405,18 +405,18 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Modify configuration options for emercoin</source>
-        <translation>Endre innstillinger for emercoin</translation>
+        <source>Modify configuration options for FirstBitcoinCapitalCorp</source>
+        <translation>Endre innstillinger for FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
-        <source>Open &amp;Emercoin</source>
-        <translation>Åpne &amp;Emercoin</translation>
+        <source>Open &amp;FirstBitcoinCapitalCorp</source>
+        <translation>Åpne &amp;FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
-        <source>Show the Emercoin window</source>
-        <translation>Vis Emercoin-vinduet</translation>
+        <source>Show the FirstBitcoinCapitalCorp window</source>
+        <translation>Vis FirstBitcoinCapitalCorp-vinduet</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -490,13 +490,13 @@ Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="407"/>
-        <source>emercoin-qt</source>
-        <translation>emercoin-qt</translation>
+        <source>bitcf-qt</source>
+        <translation>bitcf-qt</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="449"/>
-        <source>%n active connection(s) to Emercoin network</source>
-        <translation><numerusform>%n aktiv forbindelse til Emercoin-nettverket</numerusform><numerusform>%n aktive forbindelser til Emercoin-nettverket</numerusform></translation>
+        <source>%n active connection(s) to FirstBitcoinCapitalCorp network</source>
+        <translation><numerusform>%n aktiv forbindelse til FirstBitcoinCapitalCorp-nettverket</numerusform><numerusform>%n aktive forbindelser til FirstBitcoinCapitalCorp-nettverket</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="475"/>
@@ -679,8 +679,8 @@ Adresse: %4
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="96"/>
-        <source>The entered address &quot;%1&quot; is not a valid emercoin address.</source>
-        <translation>en oppgitte adressen &quot;%1&quot; er ikke en gyldig emercoin-adresse.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid FirstBitcoinCapitalCorp address.</source>
+        <translation>en oppgitte adressen &quot;%1&quot; er ikke en gyldig FirstBitcoinCapitalCorp-adresse.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="101"/>
@@ -697,13 +697,13 @@ Adresse: %4
     <name>MainOptionsPage</name>
     <message>
         <location filename="../optionsdialog.cpp" line="170"/>
-        <source>&amp;Start Emercoin on window system startup</source>
-        <translation>&amp;Start Emercoin ved oppstart</translation>
+        <source>&amp;Start FirstBitcoinCapitalCorp on window system startup</source>
+        <translation>&amp;Start FirstBitcoinCapitalCorp ved oppstart</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="171"/>
-        <source>Automatically start Emercoin after the computer is turned on</source>
-        <translation>Start Emercoin automatisk når datamaskinen blir slått på</translation>
+        <source>Automatically start FirstBitcoinCapitalCorp after the computer is turned on</source>
+        <translation>Start FirstBitcoinCapitalCorp automatisk når datamaskinen blir slått på</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="175"/>
@@ -722,8 +722,8 @@ Adresse: %4
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="181"/>
-        <source>Automatically open the Emercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Åpne automatisk Emercoin klientporten på ruteren. Dette virker kun om din ruter støtter UPnP og dette er påslått.</translation>
+        <source>Automatically open the FirstBitcoinCapitalCorp client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Åpne automatisk FirstBitcoinCapitalCorp klientporten på ruteren. Dette virker kun om din ruter støtter UPnP og dette er påslått.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="185"/>
@@ -743,7 +743,7 @@ Adresse: %4
     <message>
         <location filename="../optionsdialog.cpp" line="191"/>
         <source>Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
-        <translation>Koble til Emercoin nettverket gjennom en SOCKS4 mellomtjener (f.eks. for tilkobling gjennom Tor)</translation>
+        <translation>Koble til FirstBitcoinCapitalCorp nettverket gjennom en SOCKS4 mellomtjener (f.eks. for tilkobling gjennom Tor)</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="196"/>
@@ -1025,7 +1025,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../sendcoinsdialog.cpp" line="148"/>
         <location filename="../sendcoinsdialog.cpp" line="153"/>
         <source>Send Coins</source>
-        <translation>Send emercoins</translation>
+        <translation>Send BITs</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
@@ -1075,7 +1075,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="99"/>
         <source>Confirm send coins</source>
-        <translation>Bekreft sending av emercoins</translation>
+        <translation>Bekreft sending av BITs</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="100"/>
@@ -1183,8 +1183,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
-        <source>Enter a Emercoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Skriv inn en Emercoin adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>Enter a FirstBitcoinCapitalCorp address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Skriv inn en FirstBitcoinCapitalCorp adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1632,11 +1632,11 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>emercoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="3"/>
-        <source>Emercoin version</source>
-        <translation>Emercoin versjon</translation>
+        <source>FirstBitcoinCapitalCorp version</source>
+        <translation>FirstBitcoinCapitalCorp versjon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="4"/>
@@ -1645,8 +1645,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="5"/>
-        <source>Send command to -server or emercoind</source>
-        <translation>Send kommando til -server eller emercoind</translation>
+        <source>Send command to -server or bitcfd</source>
+        <translation>Send kommando til -server eller bitcfd</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="6"/>
@@ -1665,23 +1665,23 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Specify configuration file (default: emercoin.conf)</source>
-        <translation>Angi konfigurasjonsfil (standardverdi: emercoin.conf)</translation>
+        <source>Specify configuration file (default: bitcf.conf)</source>
+        <translation>Angi konfigurasjonsfil (standardverdi: bitcf.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Specify pid file (default: emercoind.pid)</source>
-        <translation>Angi pid-fil (standardverdi: emercoind.pid)</translation>
+        <source>Specify pid file (default: bitcf.pid)</source>
+        <translation>Angi pid-fil (standardverdi: bitcf.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="11"/>
         <source>Generate coins</source>
-        <translation>Generér emercoins</translation>
+        <translation>Generér BITs</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="12"/>
         <source>Don&apos;t generate coins</source>
-        <translation>Ikke generér emercoins</translation>
+        <translation>Ikke generér BITs</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="13"/>
@@ -1847,9 +1847,9 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>
-SSL options: (see the Emercoin Wiki for SSL setup instructions)</source>
+SSL options: (see the FirstBitcoinCapitalCorp Wiki for SSL setup instructions)</source>
         <translation>
-SSL innstillinger: (se Emercoin Wiki for instruksjoner om SSL oppsett)</translation>
+SSL innstillinger: (se FirstBitcoinCapitalCorp Wiki for instruksjoner om SSL oppsett)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>
@@ -1878,8 +1878,8 @@ SSL innstillinger: (se Emercoin Wiki for instruksjoner om SSL oppsett)</translat
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Cannot obtain a lock on data directory %s.  Emercoin is probably already running.</source>
-        <translation>Kunne ikke låse datamappen %s.  Emercoin kjører sannsynligvis allerede.</translation>
+        <source>Cannot obtain a lock on data directory %s.  FirstBitcoinCapitalCorp is probably already running.</source>
+        <translation>Kunne ikke låse datamappen %s.  FirstBitcoinCapitalCorp kjører sannsynligvis allerede.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="60"/>
@@ -1903,13 +1903,13 @@ SSL innstillinger: (se Emercoin Wiki for instruksjoner om SSL oppsett)</translat
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Emercoin</source>
-        <translation>Feil ved lasting av wallet.dat: Lommeboken krever en nyere versjon av Emercoin</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of FirstBitcoinCapitalCorp</source>
+        <translation>Feil ved lasting av wallet.dat: Lommeboken krever en nyere versjon av FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Wallet needed to be rewritten: restart Emercoin to complete</source>
-        <translation>Lommeboken måtte skrives om: start Emercoin på nytt for å fullføre</translation>
+        <source>Wallet needed to be rewritten: restart FirstBitcoinCapitalCorp to complete</source>
+        <translation>Lommeboken måtte skrives om: start FirstBitcoinCapitalCorp på nytt for å fullføre</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
@@ -1963,13 +1963,13 @@ SSL innstillinger: (se Emercoin Wiki for instruksjoner om SSL oppsett)</translat
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Unable to bind to port %d on this computer.  Emercoin is probably already running.</source>
-        <translation>Klarer ikke binde til port %d på denne datamaskinen.  Emercoin kjører sannsynligvis allerede.</translation>
+        <source>Unable to bind to port %d on this computer.  FirstBitcoinCapitalCorp is probably already running.</source>
+        <translation>Klarer ikke binde til port %d på denne datamaskinen.  FirstBitcoinCapitalCorp kjører sannsynligvis allerede.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Emercoin will not work properly.</source>
-        <translation>Advarsel: Vennligst sjekk at dato og klokke er riktig innstilt på datamaskinen.  Hvis klokken er feil vil ikke Emercoin fungere ordentlig.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong FirstBitcoinCapitalCorp will not work properly.</source>
+        <translation>Advarsel: Vennligst sjekk at dato og klokke er riktig innstilt på datamaskinen.  Hvis klokken er feil vil ikke FirstBitcoinCapitalCorp fungere ordentlig.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>

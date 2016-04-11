@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <source>About Emercoin</source>
-        <translation>Tietoa Emercoinista</translation>
+        <source>About FirstBitcoinCapitalCorp</source>
+        <translation>Tietoa FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
-        <source>&lt;b&gt;Emercoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Emercoin&lt;/b&gt; versio</translation>
+        <source>&lt;b&gt;FirstBitcoinCapitalCorp&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;FirstBitcoinCapitalCorp&lt;/b&gt; versio</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="85"/>
@@ -39,8 +39,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
-        <source>These are your Emercoin addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Nämä ovat sinun Emercoin-osoitteesi suoritusten vastaanottamiseen. Voit halutessasi antaa kullekin lähettäjälle eri osoitteen, jotta voit seurata kuka sinulle maksaa.</translation>
+        <source>These are your FirstBitcoinCapitalCorp addresses for receiving payments.  You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation>Nämä ovat sinun FirstBitcoinCapitalCorp-osoitteesi suoritusten vastaanottamiseen. Voit halutessasi antaa kullekin lähettäjälle eri osoitteen, jotta voit seurata kuka sinulle maksaa.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="33"/>
@@ -226,7 +226,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="102"/>
-        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR EMERCOINS&lt;/b&gt;!
+        <source>WARNING: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITS&lt;/b&gt;!
 Are you sure you wish to encrypt your wallet?</source>
         <translation>VAROITUS: Mikäli salaat lompakkosi ja unohdat tunnuslauseen, &lt;b&gt;MENETÄT LOMPAKON KOKO SISÄLLÖN&lt;/b&gt;!
 Tahdotko varmasti salata lompakon?</translation>
@@ -239,8 +239,8 @@ Tahdotko varmasti salata lompakon?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
-        <source>Emercoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your emercoins from being stolen by malware infecting your computer.</source>
-        <translation>Emercoin sulkeutuu lopettaessaan salausprosessin. Muista että salattu lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
+        <source>FirstBitcoinCapitalCorp will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your BITs from being stolen by malware infecting your computer.</source>
+        <translation>FirstBitcoinCapitalCorp sulkeutuu lopettaessaan salausprosessin. Muista että salattu lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="208"/>
@@ -294,8 +294,8 @@ Tahdotko varmasti salata lompakon?</translation>
     <name>EmercoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="69"/>
-        <source>Emercoin Wallet</source>
-        <translation>Emercoin-lompakko</translation>
+        <source>FirstBitcoinCapitalCorp Wallet</source>
+        <translation>FirstBitcoinCapitalCorp-lompakko</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="142"/>
@@ -341,22 +341,22 @@ Tahdotko varmasti salata lompakon?</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="194"/>
         <source>&amp;Receive coins</source>
-        <translation>&amp;Emercoinien vastaanottaminen</translation>
+        <translation>&amp;FirstBitcoinCapitalCorp vastaanottaminen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="195"/>
         <source>Show the list of addresses for receiving payments</source>
-        <translation>Näytä Emercoinien vastaanottamiseen käytetyt osoitteet</translation>
+        <translation>Näytä FirstBitcoinCapitalCorp vastaanottamiseen käytetyt osoitteet</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="200"/>
         <source>&amp;Send coins</source>
-        <translation>&amp;Lähetä Emercoineja</translation>
+        <translation>&amp;Lähetä FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="201"/>
-        <source>Send coins to a emercoin address</source>
-        <translation>Lähetä Emercoin-osoitteeseen</translation>
+        <source>Send coins to a FirstBitcoinCapitalCorp address</source>
+        <translation>Lähetä FirstBitcoinCapitalCorp-osoitteeseen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="206"/>
@@ -385,8 +385,8 @@ Tahdotko varmasti salata lompakon?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="231"/>
-        <source>Show information about Emercoin</source>
-        <translation>Näytä tietoa Emercoin-projektista</translation>
+        <source>Show information about FirstBitcoinCapitalCorp</source>
+        <translation>Näytä tietoa FirstBitcoinCapitalCorp-projektista</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
@@ -405,18 +405,18 @@ Tahdotko varmasti salata lompakon?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="237"/>
-        <source>Modify configuration options for emercoin</source>
+        <source>Modify configuration options for FirstBitcoinCapitalCorp</source>
         <translation>Muokkaa asetuksia</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="239"/>
-        <source>Open &amp;Emercoin</source>
-        <translation>Avaa &amp;Emercoin</translation>
+        <source>Open &amp;FirstBitcoinCapitalCorp</source>
+        <translation>Avaa &amp;FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
-        <source>Show the Emercoin window</source>
-        <translation>Näytä Emercoin-ikkuna</translation>
+        <source>Show the FirstBitcoinCapitalCorp window</source>
+        <translation>Näytä FirstBitcoinCapitalCorp-ikkuna</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -490,13 +490,13 @@ Tahdotko varmasti salata lompakon?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="407"/>
-        <source>emercoin-qt</source>
-        <translation>emercoin-qt</translation>
+        <source>bitcf-qt</source>
+        <translation>bitcf-qt</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="449"/>
-        <source>%n active connection(s) to Emercoin network</source>
-        <translation><numerusform>%n aktiivinen yhteys Emercoin-verkkoon</numerusform><numerusform>%n aktiivista yhteyttä Emercoin-verkkoon</numerusform></translation>
+        <source>%n active connection(s) to FirstBitcoinCapitalCorp network</source>
+        <translation><numerusform>%n aktiivinen yhteys FirstBitcoinCapitalCorp-verkkoon</numerusform><numerusform>%n aktiivista yhteyttä FirstBitcoinCapitalCorp-verkkoon</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="475"/>
@@ -678,8 +678,8 @@ Osoite: %4</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="96"/>
-        <source>The entered address &quot;%1&quot; is not a valid emercoin address.</source>
-        <translation>Osoite &quot;%1&quot; ei ole kelvollinen Emercoin-osoite.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid FirstBitcoinCapitalCorp address.</source>
+        <translation>Osoite &quot;%1&quot; ei ole kelvollinen FirstBitcoinCapitalCorp-osoite.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="101"/>
@@ -696,13 +696,13 @@ Osoite: %4</translation>
     <name>MainOptionsPage</name>
     <message>
         <location filename="../optionsdialog.cpp" line="170"/>
-        <source>&amp;Start Emercoin on window system startup</source>
-        <translation>&amp;Käynnistä Emercoin kun kirjaudutaan sisään</translation>
+        <source>&amp;Start FirstBitcoinCapitalCorp on window system startup</source>
+        <translation>&amp;Käynnistä FirstBitcoinCapitalCorp kun kirjaudutaan sisään</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="171"/>
-        <source>Automatically start Emercoin after the computer is turned on</source>
-        <translation>Käynnistä Emercoin automaattisesti, kun tietokone kytketään päälle</translation>
+        <source>Automatically start FirstBitcoinCapitalCorp after the computer is turned on</source>
+        <translation>Käynnistä FirstBitcoinCapitalCorp automaattisesti, kun tietokone kytketään päälle</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="175"/>
@@ -721,8 +721,8 @@ Osoite: %4</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="181"/>
-        <source>Automatically open the Emercoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Avaa Emercoin-asiakasohjelman portti reitittimellä automaattisesti. Tämä toimii vain, jos reitittimesi tukee UPnP:tä ja se on käytössä.</translation>
+        <source>Automatically open the FirstBitcoinCapitalCorp client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Avaa FirstBitcoinCapitalCorp-asiakasohjelman portti reitittimellä automaattisesti. Tämä toimii vain, jos reitittimesi tukee UPnP:tä ja se on käytössä.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="185"/>
@@ -732,7 +732,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="186"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Ikkunaa suljettaessa vain pienentää Emercoin-ohjelman ikkunan lopettamatta itse ohjelmaa. Kun tämä asetus on valittuna, ohjelman voi sulkea vain valitsemalla Lopeta ohjelman valikosta.</translation>
+        <translation>Ikkunaa suljettaessa vain pienentää FirstBitcoinCapitalCorp-ohjelman ikkunan lopettamatta itse ohjelmaa. Kun tämä asetus on valittuna, ohjelman voi sulkea vain valitsemalla Lopeta ohjelman valikosta.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="190"/>
@@ -742,7 +742,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="191"/>
         <source>Connect to the Bitcon network through a SOCKS4 proxy (e.g. when connecting through Tor)</source>
-        <translation>Yhdistä Emercoin-verkkoon SOCKS4-välityspalvelimen kautta (esimerkiksi käyttäessä Tor:ia)</translation>
+        <translation>Yhdistä FirstBitcoinCapitalCorp-verkkoon SOCKS4-välityspalvelimen kautta (esimerkiksi käyttäessä Tor:ia)</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="196"/>
@@ -762,7 +762,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="211"/>
         <source>Port of the proxy (e.g. 1234)</source>
-        <translation>Portti, johon Emercoin-asiakasohjelma yhdistää (esim. 1234)</translation>
+        <translation>Portti, johon FirstBitcoinCapitalCorp-asiakasohjelma yhdistää (esim. 1234)</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="217"/>
@@ -795,7 +795,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/messagepage.ui" line="38"/>
         <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Osoite, johon Emercoinit lähetetään  (esim. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Osoite, johon FirstBitcoinCapitalCorp lähetetään  (esim. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/messagepage.ui" line="48"/>
@@ -946,12 +946,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../overviewpage.cpp" line="103"/>
         <source>Your current balance</source>
-        <translation>Tililläsi tällä hetkellä olevien Emercoinien määrä</translation>
+        <translation>Tililläsi tällä hetkellä olevien FirstBitcoinCapitalCorp määrä</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="108"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation>Niiden saapuvien rahansiirtojen määrä, joita Emercoin-verkko ei vielä ole ehtinyt vahvistaa ja siten eivät vielä näy saldossa.</translation>
+        <translation>Niiden saapuvien rahansiirtojen määrä, joita FirstBitcoinCapitalCorp-verkko ei vielä ole ehtinyt vahvistaa ja siten eivät vielä näy saldossa.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="111"/>
@@ -1024,7 +1024,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../sendcoinsdialog.cpp" line="148"/>
         <location filename="../sendcoinsdialog.cpp" line="153"/>
         <source>Send Coins</source>
-        <translation>Lähetä Emercoineja</translation>
+        <translation>Lähetä FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="64"/>
@@ -1074,7 +1074,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="99"/>
         <source>Confirm send coins</source>
-        <translation>Hyväksy Emercoinien lähettäminen</translation>
+        <translation>Hyväksy FirstBitcoinCapitalCorp lähettäminen</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="100"/>
@@ -1094,7 +1094,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="128"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Maksettavan summan tulee olla suurempi kuin 0 Emercoinia.</translation>
+        <translation>Maksettavan summan tulee olla suurempi kuin 0 FirstBitcoinCapitalCorp.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="133"/>
@@ -1119,7 +1119,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Virhe: Rahansiirto hylättiin.  Tämä voi tapahtua jos jotkin emercoineistasi on jo käytetty, esimerkiksi jos olet käyttänyt kopiota wallet.dat-lompakkotiedostosta ja emercoinit on merkitty käytetyksi vain kopiossa.</translation>
+        <translation>Virhe: Rahansiirto hylättiin.  Tämä voi tapahtua jos jotkin BIT on jo käytetty, esimerkiksi jos olet käyttänyt kopiota wallet.dat-lompakkotiedostosta ja BIT on merkitty käytetyksi vain kopiossa.</translation>
     </message>
 </context>
 <context>
@@ -1153,7 +1153,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
         <source>The address to send the payment to  (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Osoite, johon Emercoinit lähetetään  (esim. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Osoite, johon FirstBitcoinCapitalCorp lähetetään  (esim. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -1182,8 +1182,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="25"/>
-        <source>Enter a Emercoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Anna Emercoin-osoite (esim. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>Enter a FirstBitcoinCapitalCorp address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation>Anna FirstBitcoinCapitalCorp-osoite (esim. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
 </context>
 <context>
@@ -1450,7 +1450,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../transactiontablemodel.cpp" line="599"/>
         <source>Destination address of transaction.</source>
-        <translation>Rahansiirron kohteen Emercoin-osoite</translation>
+        <translation>Rahansiirron kohteen FirstBitcoinCapitalCorp-osoite</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="601"/>
@@ -1631,11 +1631,11 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>emercoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="3"/>
-        <source>Emercoin version</source>
-        <translation>Emercoinin versio</translation>
+        <source>FirstBitcoinCapitalCorp version</source>
+        <translation>FirstBitcoinCapitalCorp versio</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="4"/>
@@ -1644,8 +1644,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="5"/>
-        <source>Send command to -server or emercoind</source>
-        <translation>Lähetä käsky palvelimelle tai emercoind:lle</translation>
+        <source>Send command to -server or bitcfd</source>
+        <translation>Lähetä käsky palvelimelle tai bitcfd:lle</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="6"/>
@@ -1664,13 +1664,13 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="9"/>
-        <source>Specify configuration file (default: emercoin.conf)</source>
-        <translation>Määritä asetustiedosto (oletus: emercoin.conf)</translation>
+        <source>Specify configuration file (default: bitcf.conf)</source>
+        <translation>Määritä asetustiedosto (oletus: bitcf.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="10"/>
-        <source>Specify pid file (default: emercoind.pid)</source>
-        <translation>Määritä pid-tiedosto (oletus: emercoin.pid)</translation>
+        <source>Specify pid file (default: bitcf.pid)</source>
+        <translation>Määritä pid-tiedosto (oletus: bitcf.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="11"/>
@@ -1845,8 +1845,8 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>
-SSL options: (see the Emercoin Wiki for SSL setup instructions)</source>
-        <translation>SSL-asetukset: (lisätietoja Emercoin-Wikistä)</translation>
+SSL options: (see the FirstBitcoinCapitalCorp Wiki for SSL setup instructions)</source>
+        <translation>SSL-asetukset: (lisätietoja FirstBitcoinCapitalCorp-Wikistä)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>
@@ -1876,8 +1876,8 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Cannot obtain a lock on data directory %s.  Emercoin is probably already running.</source>
-        <translation>En pääse käsiksi data-hakemiston lukitukseen %s. Emercoin on todennäköisesti jo käynnistetty.</translation>
+        <source>Cannot obtain a lock on data directory %s.  FirstBitcoinCapitalCorp is probably already running.</source>
+        <translation>En pääse käsiksi data-hakemiston lukitukseen %s. FirstBitcoinCapitalCorp on todennäköisesti jo käynnistetty.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="60"/>
@@ -1901,13 +1901,13 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Emercoin</source>
-        <translation>Virhe ladattaessa wallet.dat-tiedostoa: Tarvitset uudemman version Emercoinista</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of FirstBitcoinCapitalCorp</source>
+        <translation>Virhe ladattaessa wallet.dat-tiedostoa: Tarvitset uudemman version FirstBitcoinCapitalCorp</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="67"/>
-        <source>Wallet needed to be rewritten: restart Emercoin to complete</source>
-        <translation>Lompakko tarvitsee uudelleenkirjoittaa: käynnistä Emercoin uudelleen</translation>
+        <source>Wallet needed to be rewritten: restart FirstBitcoinCapitalCorp to complete</source>
+        <translation>Lompakko tarvitsee uudelleenkirjoittaa: käynnistä FirstBitcoinCapitalCorp uudelleen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
@@ -1961,13 +1961,13 @@ TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
-        <source>Unable to bind to port %d on this computer.  Emercoin is probably already running.</source>
-        <translation>En pysty varaamaan porttia %d tähän koneeseen. Ehkä Emercoin on jo käynnissä.</translation>
+        <source>Unable to bind to port %d on this computer.  FirstBitcoinCapitalCorp is probably already running.</source>
+        <translation>En pysty varaamaan porttia %d tähän koneeseen. Ehkä FirstBitcoinCapitalCorp on jo käynnissä.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong Emercoin will not work properly.</source>
-        <translation>Varoitus: Tarkista, ovatko tietokoneesi päivämäärä ja aika oikein.  Mikäli aika on väärin, Emercoin-ohjelma ei toimi oikein.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct.  If your clock is wrong FirstBitcoinCapitalCorp will not work properly.</source>
+        <translation>Varoitus: Tarkista, ovatko tietokoneesi päivämäärä ja aika oikein.  Mikäli aika on väärin, FirstBitcoinCapitalCorp-ohjelma ei toimi oikein.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>

@@ -118,7 +118,7 @@ void QueueShutdown()
  */
 std::string _(const char* psz)
 {
-    return QCoreApplication::translate("emercoin-core", psz).toStdString();
+    return QCoreApplication::translate("bitcoin-core", psz).toStdString();
 }
 
 /* Handle runaway exceptions. Shows a message box with the problem and quits the program.
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
     // Command-line options take precedence:
     ParseParameters(argc, argv);
 
-    // ... then emercoin.conf:
+    // ... then bitcf.conf:
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
         fprintf(stderr, "Error: Specified directory does not exist\n");

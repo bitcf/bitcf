@@ -931,14 +931,14 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 
     fs::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
-        return; // No emercoin.conf file is OK
+        return; // No bitcf.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
 
     for (pod::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
-        // Don't overwrite existing settings so command line settings override emercoin.conf
+        // Don't overwrite existing settings so command line settings override bitcf.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
         {
