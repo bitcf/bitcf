@@ -292,7 +292,7 @@ void ManageNamesPage::on_submitNameButton_clicked()
     }
 
     if (QMessageBox::Yes != QMessageBox::question(this, tr("Confirm name registration"),
-          tr("This will issue a %1. Tx fee is at least %2 emc.").arg(txType).arg(txFee / (float)COIN, 0, 'f', 2),
+          tr("This will issue a %1. Tx fee is at least %2 BIT.").arg(txType).arg(txFee / (float)COIN, 0, 'f', 2),
           QMessageBox::Yes | QMessageBox::Cancel,
           QMessageBox::Cancel))
     {

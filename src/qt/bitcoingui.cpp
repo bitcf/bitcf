@@ -72,7 +72,7 @@ EmercoinGUI::EmercoinGUI(QWidget *parent):
     rpcConsole(0)
 {
     resize(850, 550);
-    setWindowTitle(tr("EmerCoin Wallet"));
+    setWindowTitle(tr("FirstBitcoinCapitalCorp Wallet"));
 #ifndef Q_WS_MAC
     setWindowIcon(QIcon(":icons/ppcoin"));
 #else
@@ -208,13 +208,13 @@ void EmercoinGUI::createActions()
     tabGroup->addAction(receiveCoinsAction);
 
     sendCoinsAction = new QAction(QIcon(":/icons/send"), tr("&Send coins"), this);
-    sendCoinsAction->setToolTip(tr("Send coins to a emercoin address"));
+    sendCoinsAction->setToolTip(tr("Send coins to a FirstBitcoinCapitalCorp address"));
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
 
     manageNamesAction = new QAction(QIcon(":/icons/name2"), tr("&Manage Names"), this);
-    manageNamesAction->setStatusTip(tr("Manage values registered via Emercoin"));
+    manageNamesAction->setStatusTip(tr("Manage values registered via FirstBitcoinCapitalCorp"));
     manageNamesAction->setToolTip(manageNamesAction->statusTip());
     manageNamesAction->setCheckable(true);
     manageNamesAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
@@ -247,16 +247,16 @@ void EmercoinGUI::createActions()
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     aboutAction = new QAction(QIcon(":/icons/ppcoin"), tr("&About %1").arg(qApp->applicationName()), this);
-    aboutAction->setToolTip(tr("Show information about EmerCoin"));
+    aboutAction->setToolTip(tr("Show information about FirstBitcoinCapitalCorp"));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutQtAction = new QAction(tr("About &Qt"), this);
     aboutQtAction->setToolTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setToolTip(tr("Modify configuration options for emercoin"));
+    optionsAction->setToolTip(tr("Modify configuration options for FirstBitcoinCapitalCorp"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
-    toggleHideAction = new QAction(QIcon(":/icons/ppcoin"), tr("Show/Hide &EmerCoin"), this);
-    toggleHideAction->setToolTip(tr("Show or hide the EmerCoin window"));
+    toggleHideAction = new QAction(QIcon(":/icons/ppcoin"), tr("Show/Hide &FirstBitcoinCapitalCorp"), this);
+    toggleHideAction->setToolTip(tr("Show or hide the FirstBitcoinCapitalCorp window"));
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
     exportAction->setToolTip(tr("Export the data in the current tab to a file"));
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet"), this);
@@ -405,7 +405,7 @@ void EmercoinGUI::createTrayIcon()
     trayIcon = new QSystemTrayIcon(this);
     trayIconMenu = new QMenu(this);
     trayIcon->setContextMenu(trayIconMenu);
-    trayIcon->setToolTip(tr("EmerCoin client"));
+    trayIcon->setToolTip(tr("FirstBitcoinCapitalCorp client"));
     trayIcon->setIcon(QIcon(":/icons/toolbar"));
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
@@ -434,7 +434,7 @@ void EmercoinGUI::createTrayIcon()
     trayIconMenu->addAction(quitAction);
 #endif
 
-    notificator = new Notificator(tr("emercoin-qt"), trayIcon);
+    notificator = new Notificator(tr("bitcf-qt"), trayIcon);
 }
 
 #ifndef Q_WS_MAC
@@ -498,7 +498,7 @@ void EmercoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to EmerCoin network", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to FirstBitcoinCapitalCorp network", "", count));
 }
 
 void EmercoinGUI::setNumBlocks(int count)

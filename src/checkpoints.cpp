@@ -365,7 +365,7 @@ namespace Checkpoints
     }
 }
 
-// emercoin: sync-checkpoint master key
+// sync-checkpoint master key
 const std::string CSyncCheckpoint::strMasterPubKey = "0459cc6e8fc8b162345fe31e31656da1a9849250afb9303034046da2ea9e2992b0a649c306d72e60285d2021641d62052b37f1c1bec123a209d5172671947e6f55";
 std::string CSyncCheckpoint::strMasterPrivKey = "";
 

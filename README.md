@@ -1,27 +1,27 @@
-Emercoin integration/staging tree
+FirstBitcoinCapitalCorp integration/staging tree
 ================================
 
-http://emercoin.com
+http://bitcoincapitalcorp.com/
 
 Copyright (c) 2009-2013 Bitcoin Developers
 Copyright (c) 2013-2014 Emercoin Developers
 
-What is Emercoin?
+What is FirstBitcoinCapitalCorp?
 ----------------
 
-Emercoin is an experimental new digital currency that enables instant payments to
-anyone, anywhere in the world. Emercoin uses peer-to-peer technology to operate
+FirstBitcoinCapitalCorp is an experimental new digital currency that enables instant payments to
+anyone, anywhere in the world. FirstBitcoinCapitalCorp uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Emercoin is also the name of the open source
+out collectively by the network. FirstBitcoinCapitalCorp is also the name of the open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Emercoin client software, see http://emercoin.com.
+the FirstBitcoinCapitalCorp client software, see http://bitcoincapitalcorp.com/.
 
 License
 -------
 
-Emercoin is released under the terms of the MIT license AND GPL3 license. See `COPYING` for more
+FirstBitcoinCapitalCorp is released under the terms of the MIT license AND GPL3 license. See `COPYING` for more
 information or see http://www.gnu.org/licenses/gpl.html.
 
 Development process
@@ -36,8 +36,8 @@ match the project's coding conventions (see `doc/coding.md`) or are
 controversial.
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/EvgenijM86/emercoin/tags) are created
-regularly to indicate new official, stable release versions of Emercoin.
+completely stable. [Tags](https://github.com/EvgenijM86/FirstBitcoinCapitalCorp/tags) are created
+regularly to indicate new official, stable release versions of FirstBitcoinCapitalCorp.
 
 Testing
 -------

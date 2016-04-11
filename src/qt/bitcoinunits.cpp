@@ -34,9 +34,9 @@ QString BitcoinUnits::name(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("EMC");
-    case mBTC: return QString("mEMC");
-    case uBTC: return QString::fromUtf8("μEMC");
+    case BTC: return QString("BIT");
+    case mBTC: return QString("mBIT");
+    case uBTC: return QString::fromUtf8("μBIT");
     default: return QString("???");
     }
 }
@@ -45,9 +45,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("EmerCoins");
-    case mBTC: return QString("Milli-EmerCoins (1 / 1,000)");
-    case uBTC: return QString("Micro-EmerCoins (1 / 1,000,000)");
+    case BTC: return QString("BITs");
+    case mBTC: return QString("Milli-BITs (1 / 1,000)");
+    case uBTC: return QString("Micro-BITs (1 / 1,000,000)");
     default: return QString("???");
     }
 }

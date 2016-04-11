@@ -6,17 +6,17 @@
 #define UNUSED
 #endif
 static const char UNUSED *bitcoin_strings[] = {QT_TRANSLATE_NOOP("emercoin-core", ""
-"Unable to bind to port %d on this computer.  Emercoin is probably already "
+"Unable to bind to port %d on this computer.  FirstBitcoinCapitalCorp is probably already "
 "running."),
 QT_TRANSLATE_NOOP("emercoin-core", "Warning: Disk space is low  "),
-QT_TRANSLATE_NOOP("emercoin-core", "Emercoin version"),
+QT_TRANSLATE_NOOP("emercoin-core", "FirstBitcoinCapitalCorp version"),
 QT_TRANSLATE_NOOP("emercoin-core", "Usage:"),
-QT_TRANSLATE_NOOP("emercoin-core", "Send command to -server or emercoind"),
+QT_TRANSLATE_NOOP("emercoin-core", "Send command to -server or bitcfd"),
 QT_TRANSLATE_NOOP("emercoin-core", "List commands"),
 QT_TRANSLATE_NOOP("emercoin-core", "Get help for a command"),
 QT_TRANSLATE_NOOP("emercoin-core", "Options:"),
-QT_TRANSLATE_NOOP("emercoin-core", "Specify configuration file (default: emercoin.conf)"),
-QT_TRANSLATE_NOOP("emercoin-core", "Specify pid file (default: emercoind.pid)"),
+QT_TRANSLATE_NOOP("emercoin-core", "Specify configuration file (default: bitcf.conf)"),
+QT_TRANSLATE_NOOP("emercoin-core", "Specify pid file (default: bitcf.pid)"),
 QT_TRANSLATE_NOOP("emercoin-core", "Generate coins"),
 QT_TRANSLATE_NOOP("emercoin-core", "Don't generate coins"),
 QT_TRANSLATE_NOOP("emercoin-core", "Start minimized"),
@@ -66,7 +66,7 @@ QT_TRANSLATE_NOOP("emercoin-core", "How many blocks to check at startup (default
 QT_TRANSLATE_NOOP("emercoin-core", "How thorough the block verification is (0-6, default: 1)"),
 QT_TRANSLATE_NOOP("emercoin-core", ""
 "\n"
-"SSL options: (see the Emercoin Wiki for SSL setup instructions)"),
+"SSL options: (see the FirstBitcoinCapitalCorp Wiki for SSL setup instructions)"),
 QT_TRANSLATE_NOOP("emercoin-core", "Use OpenSSL (https) for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("emercoin-core", "Server certificate file (default: server.cert)"),
 QT_TRANSLATE_NOOP("emercoin-core", "Server private key (default: server.pem)"),
@@ -76,17 +76,17 @@ QT_TRANSLATE_NOOP("emercoin-core", ""
 QT_TRANSLATE_NOOP("emercoin-core", "This help message"),
 QT_TRANSLATE_NOOP("emercoin-core", "Usage"),
 QT_TRANSLATE_NOOP("emercoin-core", ""
-"Cannot obtain a lock on data directory %s.  Emercoin is probably already "
+"Cannot obtain a lock on data directory %s.  FirstBitcoinCapitalCorp is probably already "
 "running."),
-QT_TRANSLATE_NOOP("emercoin-core", "Emercoin"),
+QT_TRANSLATE_NOOP("emercoin-core", "FirstBitcoinCapitalCorp"),
 QT_TRANSLATE_NOOP("emercoin-core", "Loading addresses..."),
 QT_TRANSLATE_NOOP("emercoin-core", "Error loading addr.dat"),
 QT_TRANSLATE_NOOP("emercoin-core", "Loading block index..."),
 QT_TRANSLATE_NOOP("emercoin-core", "Error loading blkindex.dat"),
 QT_TRANSLATE_NOOP("emercoin-core", "Loading wallet..."),
 QT_TRANSLATE_NOOP("emercoin-core", "Error loading wallet.dat: Wallet corrupted"),
-QT_TRANSLATE_NOOP("emercoin-core", "Error loading wallet.dat: Wallet requires newer version of Emercoin"),
-QT_TRANSLATE_NOOP("emercoin-core", "Wallet needed to be rewritten: restart Emercoin to complete"),
+QT_TRANSLATE_NOOP("emercoin-core", "Error loading wallet.dat: Wallet requires newer version of FirstBitcoinCapitalCorp"),
+QT_TRANSLATE_NOOP("emercoin-core", "Wallet needed to be rewritten: restart FirstBitcoinCapitalCorp to complete"),
 QT_TRANSLATE_NOOP("emercoin-core", "Error loading wallet.dat"),
 QT_TRANSLATE_NOOP("emercoin-core", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("emercoin-core", "Cannot initialize keypool"),
@@ -104,7 +104,7 @@ QT_TRANSLATE_NOOP("emercoin-core", ""
 "%s, you must set a rpcpassword in the configuration file:\n"
 " %s\n"
 "It is recommended you use the following random password:\n"
-"rpcuser=emercoinrpc\n"
+"rpcuser=bitcfrpc\n"
 "rpcpassword=%s\n"
 "(you do not need to remember this password)\n"
 "If the file does not exist, create it with owner-readable-only file "
@@ -118,7 +118,7 @@ QT_TRANSLATE_NOOP("emercoin-core", ""
 "permissions."),
 QT_TRANSLATE_NOOP("emercoin-core", ""
 "Warning: Please check that your computer's date and time are correct.  If "
-"your clock is wrong Emercoin will not work properly."),
+"your clock is wrong FirstBitcoinCapitalCorp will not work properly."),
 QT_TRANSLATE_NOOP("emercoin-core", "Error: Wallet locked, unable to create transaction  "),
 QT_TRANSLATE_NOOP("emercoin-core", ""
 "Error: This transaction requires a transaction fee of at least %s because of "

@@ -126,7 +126,7 @@ std::string _(const char* psz)
 static void handleRunawayException(std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
-    QMessageBox::critical(0, "Runaway exception", EmercoinGUI::tr("A fatal error occured. Emercoin can no longer continue safely and will quit.") + QString("\n\n") + QString::fromStdString(strMiscWarning));
+    QMessageBox::critical(0, "Runaway exception", EmercoinGUI::tr("A fatal error occured. FirstBitcoinCapitalCorp can no longer continue safely and will quit.") + QString("\n\n") + QString::fromStdString(strMiscWarning));
     exit(1);
 }
 
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
     // Do this early as we don't want to bother initializing if we are just calling IPC
     for (int i = 1; i < argc; i++)
     {
-        if (boost::algorithm::istarts_with(argv[i], "emercoin:"))
+        if (boost::algorithm::istarts_with(argv[i], "bitcf:"))
         {
             const char *strURI = argv[i];
             try {
@@ -172,12 +172,12 @@ int main(int argc, char *argv[])
 
     // Application identification (must be set before OptionsModel is initialized,
     // as it is used to locate QSettings)
-    app.setOrganizationName("EmerCoin");
-    app.setOrganizationDomain("emercoin.com");
+    app.setOrganizationName("FirstBitcoinCapitalCorp");
+    app.setOrganizationDomain("bitcoincapitalcorp.com");
     if(GetBoolArg("-testnet")) // Separate UI settings for testnet
-        app.setApplicationName("EmerCoin-Qt-testnet");
+        app.setApplicationName("Bitcf-Qt-testnet");
     else
-        app.setApplicationName("EmerCoin-Qt");
+        app.setApplicationName("Bitcf-Qt");
 
     // ... then GUI settings:
     OptionsModel optionsModel;
@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
                 // Check for URI in argv
                 for (int i = 1; i < argc; i++)
                 {
-                    if (boost::algorithm::istarts_with(argv[i], "emercoin:"))
+                    if (boost::algorithm::istarts_with(argv[i], "bitcf:"))
                     {
                         const char *strURI = argv[i];
                         try {
