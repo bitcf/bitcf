@@ -1,33 +1,33 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-#DEB_MAKE_CHECK_TARGET = test_emercoin
-#build/emercoind::
-#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_emercoin)
+#DEB_MAKE_CHECK_TARGET = test_bitcoin
+#build/bitcoind::
+#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_bitcoin)
 
-DEB_INSTALL_EXAMPLES_emercoind += debian/examples/*
-DEB_INSTALL_MANPAGES_emercoind += debian/manpages/*
+DEB_INSTALL_EXAMPLES_bitcoind += debian/examples/*
+DEB_INSTALL_MANPAGES_bitcoind += debian/manpages/*
 
 %:
 	dh $@
 
 override_dh_auto_build:
-	cd src; $(MAKE) -f makefile.unix emercoind
+	cd src; $(MAKE) -f makefile.unix bitcoind
 	$(MAKE)
 
 override_dh_auto_clean:
-	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f emercoin-qt; fi
+	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f bitcoin-qt; fi
 	cd src; $(MAKE) -f makefile.unix clean
 
 override_dh_auto_configure:
-	qmake emercoin-qt.pro USE_QRCODE=1
+	qmake bitcoin-qt.pro USE_QRCODE=1
 
 override_dh_auto_test:
-	cd src; $(MAKE) -f makefile.unix test_emercoin
-	src/test_emercoin
+	cd src; $(MAKE) -f makefile.unix test_bitcoin
+	src/test_bitcoin
 
 # Ensure wrapper is set executable
-binary-post-install/emercoind:
-	chmod +x $(cdbs_curdestdir)usr/bin/emercoind
-binary-post-install/emercoin-qt:
-	chmod +x $(cdbs_curdestdir)usr/bin/emercoin-qt
+binary-post-install/bitcoind:
+	chmod +x $(cdbs_curdestdir)usr/bin/bitcoind
+binary-post-install/bitcoin-qt:
+	chmod +x $(cdbs_curdestdir)usr/bin/bitcoin-qt

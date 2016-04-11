@@ -4,13 +4,13 @@ set -e
 
 umask 077
 
-basedir=~/.emercoin
+basedir=~/.bitcoin
 dbfile="$basedir/DB_CONFIG"
-cfgfile="$basedir/emercoin.conf"
+cfgfile="$basedir/bitcoin.conf"
 
 [ -e "$basedir" ] || mkdir "$basedir"
 
-# Emercoin does not clean up DB log files by default
+# Bitcoin does not clean up DB log files by default
 [ -e "$dbfile" ] || echo 'set_flags DB_LOG_AUTOREMOVE' > "$dbfile"
 
-exec /usr/lib/emercoin/emercoin-qt "$@"
+exec /usr/lib/bitcoin/bitcoin-qt "$@"
