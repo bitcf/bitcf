@@ -58,7 +58,7 @@ map<uint256, map<uint256, CDataStream*> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "EmerCoin Signed Message:\n";
+const string strMessageMagic = "FirstBitcoinCapitalCorp Signed Message:\n";
 
 double dHashesPerSec;
 int64 nHPSTimerStart;
@@ -914,32 +914,17 @@ int64 GetProofOfWorkReward(unsigned int nBits)
     CBigNum bnUpperBound = bnSubsidyLimit;
     CBigNum bnMidPart, bnRewardPart;
 
-    if (GetDifficulty(nBits) < 512) {
-        while (bnLowerBound + CENT <= bnUpperBound)
-        {
-            CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
-            bnMidPart = bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue;
-            bnRewardPart = bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit;
-            if (fDebug && GetBoolArg("-printcreation"))
-                printf("GetProofOfWorkReward() : lower=%"PRI64d" upper=%"PRI64d" mid=%"PRI64d"\n", bnLowerBound.getuint64(), bnUpperBound.getuint64(), bnMidValue.getuint64());
-            if (bnMidPart * bnTargetLimit > bnRewardPart * bnTarget)
-                bnUpperBound = bnMidValue;
-            else
-                bnLowerBound = bnMidValue;
-        }
-    } else {
-        while (bnLowerBound + CENT <= bnUpperBound)
-        {
-            CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
-            bnMidPart = bnMidValue * bnMidValue * bnMidValue * bnMidValue;
-            bnRewardPart = bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit;
-            if (fDebug && GetBoolArg("-printcreation"))
-                printf("GetProofOfWorkReward() : lower=%"PRI64d" upper=%"PRI64d" mid=%"PRI64d"\n", bnLowerBound.getuint64(), bnUpperBound.getuint64(), bnMidValue.getuint64());
-            if (bnMidPart * bnTargetLimit > bnRewardPart * bnTarget)
-                bnUpperBound = bnMidValue;
-            else
-                bnLowerBound = bnMidValue;
-        }
+    while (bnLowerBound + CENT <= bnUpperBound)
+    {
+        CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
+        bnMidPart = bnMidValue * bnMidValue * bnMidValue * bnMidValue;
+        bnRewardPart = bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit * bnSubsidyLimit;
+        if (fDebug && GetBoolArg("-printcreation"))
+            printf("GetProofOfWorkReward() : lower=%"PRI64d" upper=%"PRI64d" mid=%"PRI64d"\n", bnLowerBound.getuint64(), bnUpperBound.getuint64(), bnMidValue.getuint64());
+        if (bnMidPart * bnTargetLimit > bnRewardPart * bnTarget)
+            bnUpperBound = bnMidValue;
+        else
+            bnLowerBound = bnMidValue;
     }
 
     int64 nSubsidy = bnUpperBound.getuint64();
@@ -951,13 +936,13 @@ int64 GetProofOfWorkReward(unsigned int nBits)
 }
 
 // ppcoin: miner's coin stake is rewarded based on coin age spent (coin-days)
-int64 GetProofOfStakeReward(int64 nCoinAge)
+int64 GetProofOfStakeReward(int64 nCoinAge, int64 prevPoWReward)
 {
     static int64 nRewardCoinYear = 6 * CENT;  // creation amount per coin-year
     int64 nSubsidy = nCoinAge * 33 / (365 * 33 + 8) * nRewardCoinYear;
     if (fDebug && GetBoolArg("-printcreation"))
         printf("GetProofOfStakeReward(): create=%s nCoinAge=%"PRI64d"\n", FormatMoney(nSubsidy).c_str(), nCoinAge);
-    return nSubsidy;
+    return min(nSubsidy, prevPoWReward);
 }
 
 static const int64 nTargetTimespan = 7 * 24 * 60 * 60;  // one week
@@ -1010,13 +995,12 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
 
-    int nSpacingRatio = (pindexLast->nHeight <= 10000) ? max(10, STAKE_TARGET_SPACING * pindexLast->nHeight / 10000) :
-                                                         max(10, STAKE_TARGET_SPACING);
-
-    int64 nTargetSpacing = fProofOfStake? STAKE_TARGET_SPACING : min(nTargetSpacingWorkMax, (int64) nSpacingRatio * (1 + pindexLast->nHeight - pindexPrev->nHeight));
+    int64 nTargetSpacing = fProofOfStake ?
+        STAKE_TARGET_SPACING :
+        min(nTargetSpacingWorkMax, (int64) STAKE_TARGET_SPACING * (1 + pindexLast->nHeight - pindexPrev->nHeight));
     int64 nInterval = nTargetTimespan / nTargetSpacing;
 
-    int n = fProofOfStake ? 1 : ((pindexLast->nHeight < 6666) ? 1 : 3);
+    int n = fProofOfStake ? 1 : 3;
     bnNew *= ((nInterval - n) * nTargetSpacing + (n + 1) * nActualSpacing);
     bnNew /= ((nInterval + 1) * nTargetSpacing);
 
@@ -1342,7 +1326,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs,
             if (!GetCoinAge(txdb, nCoinAge))
                 return error("ConnectInputs() : %s unable to get coin age for coinstake", GetHash().ToString().substr(0,10).c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
-            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee2() + MIN_TX_FEE)
+            if (nStakeReward > GetProofOfStakeReward(nCoinAge, GetLastBlockIndex(pindexBlock, false)->nMint) - GetMinFee2() + MIN_TX_FEE)
                 return DoS(100, error("ConnectInputs() : %s stake reward exceeded", GetHash().ToString().substr(0,10).c_str()));
         }
         else
@@ -1891,7 +1875,7 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos)
     pindexNew->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
     pindexNew->nStakeModifierChecksum = GetStakeModifierChecksum(pindexNew);
     if (!CheckStakeModifierCheckpoints(pindexNew->nHeight, pindexNew->nStakeModifierChecksum))
-        return error("AddToBlockIndex() : Rejected by stake modifier checkpoint height=%d, modifier=0x%016"PRI64x, pindexNew->nHeight, nStakeModifier);
+        return error("AddToBlockIndex() : Rejected by stake modifier checkpoint height=%d, modifier=0x%016"PRI64x" checksum=0x%016"PRI64x, pindexNew->nHeight, nStakeModifier, pindexNew->nStakeModifierChecksum);
 
     // Add to mapBlockIndex
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
@@ -1973,8 +1957,8 @@ bool CBlock::CheckBlock() const
         return DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%u nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
 
     // Check coinbase reward
-    // changed getMinFee() to GetMinFee2()
-    if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee2() + MIN_TX_FEE) : 0))
+    // first block can have any reward
+    if (hashPrevBlock != hashGenesisBlock && vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee2() + MIN_TX_FEE) : 0))
         return DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s",
                    FormatMoney(vtx[0].GetValueOut()).c_str(),
                    FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));
@@ -2033,19 +2017,8 @@ bool CBlock::AcceptBlock()
     int nHeight = pindexPrev->nHeight+1;
 
     // Check proof-of-work or proof-of-stake
-    if (nHeight > 10000)
-    {
-        if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
-            return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
-    }
-    else
-    {
-        // this is needed only for emercoin official blockchain, because of mistake we made at the beginning
-        unsigned int check = GetNextTargetRequired(pindexPrev, IsProofOfStake());
-        unsigned int max_error = check / 100000;
-        if (!(nBits >= check - max_error && nBits <= check + max_error)) // +- 0.001% interval
-            return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
-    }
+    if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
+        return DoS(100, error("AcceptBlock() : incorrect proof-of-work/proof-of-stake"));
 
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast() || GetBlockTime() + nMaxClockDrift < pindexPrev->GetBlockTime())
@@ -2371,27 +2344,25 @@ bool LoadBlockIndex(bool fAllowNew)
         //   vMerkleTree: 4a5e1e
 
         // Genesis block
-        const char* pszTimestamp = "2013: Emergence is inevitable! heideg.livejournal.com/313676.html";
+        const char* pszTimestamp = "FirstBitcoinCapitalCorp";
         CTransaction txNew;
-        txNew.nTime = 1386627289;
+        txNew.nTime = 1459780102;  // Mon, 04 Apr 2016 14:28:22 GMT
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(9999) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         txNew.vout[0].SetEmpty();
+
         CBlock block;
         block.vtx.push_back(txNew);
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1386628033;
+        block.nTime    = 1459780102;  // Mon, 04 Apr 2016 14:28:22 GMT
         block.nBits    = bnProofOfWorkLimit.GetCompact();
-        block.nNonce   = 139946546u;
+        block.nNonce   = 3450927596;
 
         if (fTestNet)
-        {
-            block.nTime    = 1386628033;
             block.nNonce   = 18330017;
-        }
 
         //// debug print
         block.print();
@@ -2400,7 +2371,7 @@ bool LoadBlockIndex(bool fAllowNew)
         printf("block.nTime = %u \n", block.nTime);
         printf("block.nNonce = %u \n", block.nNonce);
         printf("block.nBits = %u \n", block.nBits);
-        assert(block.hashMerkleRoot == uint256("0xd8eee032f95716d0cf14231dc7a238b96bbf827e349e75344c9a88e849262ee0"));
+        assert(block.hashMerkleRoot == uint256("0xc762ada066b6c9bef82c44f2ac2ace5eaacb60d5c4294f8ebee66ab3e8a4e33f"));
 
         if (block.GetHash() != hashGenesisBlock) {
             block.nNonce = 0;
@@ -2416,13 +2387,13 @@ bool LoadBlockIndex(bool fAllowNew)
                     printf("NONCE WRAPPED, incrementing time");
                     ++block.nTime;
                 }
-                if (block.nNonce % 100000 == 0)
+                if (block.nNonce % 10000000 == 0)
                 {
                     printf("nonce %08u: hash = %s \n", block.nNonce, block.GetHash().ToString().c_str());
                 }
             }
             block.print();
-            printf("block.GetHash() == %s\n", block.GetHash().ToString().c_str());
+            printf("nonce = %08u, hash == %s\n", block.nNonce, block.GetHash().ToString().c_str());
         }
 
         assert(block.GetHash() == hashGenesisBlock);
@@ -3979,7 +3950,12 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
 
     }
     if (pblock->IsProofOfWork())
-        pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pblock->nBits);
+    {
+        if (pindexPrev->GetBlockHash() == hashGenesisBlock)
+            pblock->vtx[0].vout[0].nValue = 20900000000 * COIN;   // first block is rewarded with 20 900 000 000 BIT
+        else
+            pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pblock->nBits);
+    }
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();

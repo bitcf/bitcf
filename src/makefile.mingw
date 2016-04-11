@@ -126,12 +126,12 @@ OBJS= \
     obj/namecoin.o \
     obj/emcdns.o
 
-all: emercoind.exe
+all: bitcfd.exe
 
 obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-emercoind.exe: $(OBJS:obj/%=obj/%)
+bitcfd.exe: $(OBJS:obj/%=obj/%)
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
@@ -139,11 +139,11 @@ TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 obj-test/%.o: test/%.cpp $(HEADERS)
 	g++ -c $(TESTDEFS) $(CFLAGS) -o $@ $<
 
-test_emercoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+test_bitcf.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework $(LIBS)
 
 clean:
-	-del /Q emercoind test_emercoin
+	-del /Q bitcfd test_BIT
 	-del /Q obj\*
 	-del /Q obj-test\*
 	-del /Q build.h

@@ -854,12 +854,12 @@ boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
 
-    // Windows: C:\Documents and Settings\username\Application Data\EmerCoin
-    // Mac: ~/Library/Application Support/EmerCoin
-    // Unix: ~/.emercoin
+    // Windows: C:\Documents and Settings\username\Application Data\FirstBitcoinCapitalCorp
+    // Mac: ~/Library/Application Support/FirstBitcoinCapitalCorp
+    // Unix: ~/.FirstBitcoinCapitalCorp
 #ifdef WIN32
     // Windows
-    return MyGetSpecialFolderPath(CSIDL_APPDATA, true) / "EmerCoin";
+    return MyGetSpecialFolderPath(CSIDL_APPDATA, true) / "FirstBitcoinCapitalCorp";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -871,10 +871,10 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     fs::create_directory(pathRet);
-    return pathRet / "EmerCoin";
+    return pathRet / "FirstBitcoinCapitalCorp";
 #else
     // Unix
-    return pathRet / ".emercoin";
+    return pathRet / ".FirstBitcoinCapitalCorp";
 #endif
 #endif
 }
@@ -918,7 +918,7 @@ boost::filesystem::path GetConfigFile()
 {
     namespace fs = boost::filesystem;
 
-    fs::path pathConfigFile(GetArg("-conf", "emercoin.conf"));
+    fs::path pathConfigFile(GetArg("-conf", "bitcf.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
     return pathConfigFile;
 }
@@ -954,7 +954,7 @@ boost::filesystem::path GetPidFile()
 {
     namespace fs = boost::filesystem;
 
-    fs::path pathPidFile(GetArg("-pid", "emercoin.pid"));
+    fs::path pathPidFile(GetArg("-pid", "bitcf.pid"));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }
@@ -1124,7 +1124,7 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()
 {
-    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) / "EmerCoin.lnk";
+    return MyGetSpecialFolderPath(CSIDL_STARTUP, true) / "bitcf.lnk";
 }
 
 bool GetStartOnSystemStartup()
@@ -1205,7 +1205,7 @@ boost::filesystem::path static GetAutostartDir()
 
 boost::filesystem::path static GetAutostartFilePath()
 {
-    return GetAutostartDir() / "emercoin.desktop";
+    return GetAutostartDir() / "bitcf.desktop";
 }
 
 bool GetStartOnSystemStartup()
@@ -1246,7 +1246,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         // Write a emercoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
-        optionFile << "Name=EmerCoin\n";
+        optionFile << "Name=bitcf\n";
         optionFile << "Exec=" << pszExePath << " -min\n";
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";

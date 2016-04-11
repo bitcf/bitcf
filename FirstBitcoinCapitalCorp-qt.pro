@@ -1,6 +1,6 @@
 TEMPLATE = app
-TARGET = emercoin-qt
-VERSION = 0.3.7.0
+TARGET = bitcf-qt
+VERSION = 0.1.0.0
 INCLUDEPATH += src src/json src/qt
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
@@ -263,7 +263,7 @@ SOURCES += src/qt/test/test_main.cpp \
 HEADERS += src/qt/test/uritests.h
 DEPENDPATH += src/qt/test
 QT += testlib
-TARGET = emercoin-qt_test
+TARGET = bitcf-qt_test
 DEFINES += BITCOIN_QT_TEST
 }
 
@@ -345,8 +345,8 @@ macx:HEADERS += src/qt/macdockiconhandler.h
 macx:OBJECTIVE_SOURCES += src/qt/macdockiconhandler.mm
 macx:LIBS += -framework Foundation -framework ApplicationServices -framework AppKit
 macx:DEFINES += MAC_OSX MSG_NOSIGNAL=0
-macx:ICON = src/qt/res/icons/emercoin.icns
-macx:TARGET = "Emercoin-Qt"
+macx:ICON = src/qt/res/icons/bitcf.icns
+macx:TARGET = "Bitcf-Qt"
 
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
 INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH

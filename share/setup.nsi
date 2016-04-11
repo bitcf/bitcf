@@ -1,16 +1,16 @@
-Name EmerCoin
+Name FirstBitcoinCapitalCorp
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.3.7
-!define COMPANY "EmerCoin project"
-!define URL http://www.emercoin.com/
+!define VERSION 0.1.0
+!define COMPANY "First Bitcoin Capital Corp"
+!define URL http://bitcoincapitalcorp.com/
 
 # MUI Symbol Definitions
-!define MUI_ICON "../share/pixmaps/emercoin.ico"
+!define MUI_ICON "../share/pixmaps/bitcf.ico"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
@@ -19,8 +19,8 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
-!define MUI_STARTMENUPAGE_DEFAULTFOLDER EmerCoin
-!define MUI_FINISHPAGE_RUN $INSTDIR\emercoin-qt.exe
+!define MUI_STARTMENUPAGE_DEFAULTFOLDER FirstBitcoinCapitalCorp
+!define MUI_FINISHPAGE_RUN $INSTDIR\bitcf-qt.exe
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
@@ -45,14 +45,14 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile emercoin-0.3.7-win32-setup.exe
-InstallDir $PROGRAMFILES\EmerCoin
+OutFile FirstBitcoinCapitalCorp-0.1.0-win32-setup.exe
+InstallDir $PROGRAMFILES\FirstBitcoinCapitalCorp
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.3.7.0
-VIAddVersionKey ProductName EmerCoin
+VIProductVersion 0.1.0.0
+VIAddVersionKey ProductName FirstBitcoinCapitalCorp
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
 VIAddVersionKey CompanyWebsite "${URL}"
@@ -66,11 +66,11 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File ../release/emercoin-qt.exe
+    File ../release/bitcf-qt.exe
     File /oname=license.txt ../COPYING
     File /oname=readme.txt ../doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File ../src/emercoind.exe
+    File ../src/bitcfd.exe
     SetOutPath $INSTDIR\src
     File /r /x *.exe /x *.o ../src\*.*
     SetOutPath $INSTDIR
@@ -87,8 +87,8 @@ Section -post SEC0001
     WriteUninstaller $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\EmerCoin.lnk" $INSTDIR\emercoin-qt.exe
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall EmerCoin.lnk" $INSTDIR\uninstall.exe
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\bitcf.lnk" $INSTDIR\bitcf-qt.exe
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall bitcf.lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "${VERSION}"
@@ -99,11 +99,11 @@ Section -post SEC0001
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
 
-    # emercoin: URI handling
-    WriteRegStr HKCR "emercoin" "URL Protocol" ""
-    WriteRegStr HKCR "emercoin" "" "URL:Emercoin"
-    WriteRegStr HKCR "emercoin\DefaultIcon" "" $INSTDIR\emercoin-qt.exe
-    WriteRegStr HKCR "emercoin\shell\open\command" "" '"$INSTDIR\emercoin-qt.exe" "%1"'
+    # FirstBitcoinCapitalCorp: URI handling
+    WriteRegStr HKCR "FirstBitcoinCapitalCorp" "URL Protocol" ""
+    WriteRegStr HKCR "FirstBitcoinCapitalCorp" "" "URL:bitcf"
+    WriteRegStr HKCR "FirstBitcoinCapitalCorp\DefaultIcon" "" $INSTDIR\bitcf-qt.exe
+    WriteRegStr HKCR "FirstBitcoinCapitalCorp\shell\open\command" "" '"$INSTDIR\bitcf-qt.exe" "%1"'
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -121,7 +121,7 @@ done${UNSECTION_ID}:
 
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
-    Delete /REBOOTOK $INSTDIR\emercoin-qt.exe
+    Delete /REBOOTOK $INSTDIR\bitcf-qt.exe
     Delete /REBOOTOK $INSTDIR\license.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
@@ -131,9 +131,9 @@ SectionEnd
 
 Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall EmerCoin.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\EmerCoin.lnk"
-    Delete /REBOOTOK "$SMSTARTUP\EmerCoin.lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall bitcf.lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\bitcf.lnk"
+    Delete /REBOOTOK "$SMSTARTUP\bitcf.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
     Delete /REBOOTOK $INSTDIR\db.log
@@ -141,7 +141,7 @@ Section -un.post UNSEC0001
     DeleteRegValue HKCU "${REGKEY}" Path
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
-    DeleteRegKey HKCR "emercoin"
+    DeleteRegKey HKCR "FirstBitcoinCapitalCorp"
     RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
     RmDir /REBOOTOK $INSTDIR
     Push $R0

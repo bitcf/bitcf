@@ -1,6 +1,6 @@
 src/*.exe
-src/emercoind
-src/test_emercoin
+src/bitcfd
+src/test_bitcf
 src/build.h
 .*.swp
 *.*~*
@@ -12,7 +12,7 @@ src/build.h
 #compilation and Qt preprocessor part
 *.qm
 Makefile
-emercoin-qt
+bitcf-qt
 #resources cpp
 qrc_*.cpp
 #qt creator

@@ -116,7 +116,7 @@ OBJS= \
     obj/namecoin.o \
     obj/emcdns.o
 
-all: emercoind
+all: bitcfd
 
 # auto-generated dependencies:
 -include obj/*.P
@@ -134,7 +134,7 @@ obj/%.o: %.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-emercoind: $(OBJS:obj/%=obj/%)
+bitcfd: $(OBJS:obj/%=obj/%)
 	$(CXX) $(xCXXFLAGS) -rdynamic -o $@ $^ $(LDFLAGS) $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
@@ -146,11 +146,11 @@ obj-test/%.o: test/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-test_emercoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+test_BIT: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	$(CXX) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ -Wl,-B$(LMODE) -lboost_unit_test_framework $(LDFLAGS) $(LIBS)
 
 clean:
-	-rm -f emercoind test_emercoin
+	-rm -f bitcfd test_BIT
 	-rm -f obj/*.o
 	-rm -f obj-test/*.o
 	-rm -f obj/*.P

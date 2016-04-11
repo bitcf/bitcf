@@ -990,9 +990,9 @@ void MapPort(bool /* unused fMapPort */)
 // The second name should resolve to a list of seed addresses.
 // testnet dns seed begins with 't', all else are emercoin dns seeds.
 static const char *strDNSSeed[][2] = {
-    {"seed"  , "seed.emercoin.com"},
-    {"emcdns", "seed.emc"},
-    {"tnseed", "tnseed.emercoin.com"},
+    {"seed"  , "seed.bitcf.net"},
+    {"emcdns", "bitcf.emc"},
+    {"tnseed", "tnseed.bitcf.net"},
 };
 
 void ThreadDNSAddressSeed(void* parg)

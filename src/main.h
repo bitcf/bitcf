@@ -37,7 +37,7 @@ static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 static const int64 MIN_TX_FEE = CENT;
 static const int64 MIN_RELAY_TX_FEE = 2 * SUBCENT;
-static const int64 MAX_MONEY = 1000000000 * COIN;
+static const int64 MAX_MONEY = 21000000000 * COIN;         // 21 000 000 000 BIT
 static const int64 MAX_MINT_PROOF_OF_WORK = 5020 * COIN;
 static const int64 MIN_TXOUT_AMOUNT = MIN_TX_FEE;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
@@ -54,7 +54,7 @@ static const int fHaveUPnP = true;
 static const int fHaveUPnP = false;
 #endif
 
-static const uint256 hashGenesisBlockOfficial("0x00000000bcccd459d036a588d1008fce8da3754b205736f32ddfd35350e84c2d");
+static const uint256 hashGenesisBlockOfficial("0x00000000f27a49c4c32eb64188c24caa12650d53e2d2be6a84911a0744aae87a");
 static const uint256 hashGenesisBlockTestNet("0x0000000810da236a5c9239aa1c49ab971de289dbd41d08c4120fc9c8920d2212");
 
 static const int64 nMaxClockDrift = 2 * 60 * 60;        // two hours
@@ -119,7 +119,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 int64 GetProofOfWorkReward(unsigned int nBits);
-int64 GetProofOfStakeReward(int64 nCoinAge);
+int64 GetProofOfStakeReward(int64 nCoinAge, int64 prevPoWReward);
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime);
 int GetNumBlocksOfPeers();
 bool IsInitialBlockDownload();
@@ -1830,7 +1830,7 @@ public:
     bool CheckSignature()
     {
         CKey key;
-        if (!key.SetPubKey(ParseHex("04e14603d29d0a051df1392c6256bb271ff4a7357260f8e2b82350ad29e1a5063d4a8118fa4cc8a0175cb45776e720cf4ef02cc2b160f5ef0144c3bb37ba3eea58")))
+        if (!key.SetPubKey(ParseHex("0449b0c2f5521a3215f56cb2b0bdc3547416daf1235fcf3cf87287b0e25b24d9e8475b3c0a273e879ca0ad65a338356bdf8a91ae8a1373444d650897d25b05ce94")))
             return error("CAlert::CheckSignature() : SetPubKey failed");
         if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
             return error("CAlert::CheckSignature() : verify signature failed");

@@ -27,10 +27,6 @@ namespace Checkpoints
     static MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
         ( 0, hashGenesisBlockOfficial )
-        ( 25000, uint256("20cc6639e9593e4e9344e1d40a234c552da81cb90b991aed6200ff0f72a69719"))
-        ( 50000, uint256("4c3d02a982bcb47ed9e076f754870606a6892d258720dc13863e10badbfd0e78"))
-        ( 100000, uint256("0000000000000071c614fefb88072459cced7b9d9a9cffd04064d3c3d539ecaf"))
-        ( 137250, uint256("6c9e7cebac95ac26e9137765c6ac6361fe3f9cbcbbc49eac73b59504ef3dc7b4"))
         ;
 
     bool CheckHardened(int nHeight, const uint256& hash)
@@ -370,7 +366,7 @@ namespace Checkpoints
 }
 
 // emercoin: sync-checkpoint master key
-const std::string CSyncCheckpoint::strMasterPubKey = "046fbfdd8aac1671681dfe257a65cb1a87056814955ae1faeefa20c158a66ad5514c77f858a417da79f56c69e97ece8c5363dbd41994db22435596f84a002736b0";
+const std::string CSyncCheckpoint::strMasterPubKey = "0459cc6e8fc8b162345fe31e31656da1a9849250afb9303034046da2ea9e2992b0a649c306d72e60285d2021641d62052b37f1c1bec123a209d5172671947e6f55";
 std::string CSyncCheckpoint::strMasterPrivKey = "";
 
 // ppcoin: verify signature of sync-checkpoint message
