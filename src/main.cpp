@@ -986,7 +986,7 @@ unsigned int static GetNextTargetRequired(const CBlockIndex* pindexLast, bool fP
         return bnInitialHashTarget.GetCompact(); // first block
     const CBlockIndex* pindexPrevPrev = GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
     if (pindexPrevPrev->pprev == NULL)
-        return bnInitialHashTarget.GetCompact(); // second block
+        return (bnInitialHashTarget / 100000).GetCompact(); // second block
 
     int64 nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
 
@@ -3952,7 +3952,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     if (pblock->IsProofOfWork())
     {
         if (pindexPrev->GetBlockHash() == hashGenesisBlock)
-            pblock->vtx[0].vout[0].nValue = 20900000000 * COIN;   // first block is rewarded with 20 900 000 000 BIT
+            pblock->vtx[0].vout[0].nValue = 20697000000 * COIN;   // first block is rewarded with 20 697 000 000 BIT
         else
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pblock->nBits);
     }
