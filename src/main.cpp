@@ -3952,7 +3952,7 @@ CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake)
     if (pblock->IsProofOfWork())
     {
         if (pindexPrev->GetBlockHash() == hashGenesisBlock)
-            pblock->vtx[0].vout[0].nValue = 20697000000 * COIN;   // first block is rewarded with 20 697 000 000 BIT
+            pblock->vtx[0].vout[0].nValue = 20697000000llu * COIN;   // first block is rewarded with 20 697 000 000 BIT
         else
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pblock->nBits);
     }
