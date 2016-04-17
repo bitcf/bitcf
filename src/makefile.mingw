@@ -143,7 +143,7 @@ test_bitcf.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	g++ $(CFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework $(LIBS)
 
 clean:
-	-del /Q bitcfd test_BIT
+	-del /Q bitcfd test_bitcf
 	-del /Q obj\*
 	-del /Q obj-test\*
 	-del /Q build.h

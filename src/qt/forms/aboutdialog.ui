@@ -86,53 +86,19 @@
       </layout>
      </item>
      <item>
-      <widget class="QLabel" name="label_ppcoin_copyright">
-       <property name="text">
-        <string>Copyright © 2013-2015 Emercoin Developers</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-       <property name="textInteractionFlags">
-        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_emercoin_copyright">
-       <property name="text">
-        <string>Copyright © 2011-2014 PPCoin Developers</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-       <property name="textInteractionFlags">
-        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_namecoin_copyright">
-       <property name="text">
-        <string>Copyright © 2009-2013 Namecoin Developers</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-       <property name="textInteractionFlags">
-        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Copyright © 2009-2012 Bitcoin Developers
+        <string>Copyright © 2013-2015 Emercoin Developers
+Copyright © 2011-2014 PPCoin Developers
+Copyright © 2009-2013 Namecoin Developers
+Copyright © 2009-2012 Bitcoin Developers
 
-This is experimental software.
+Electronic Shares Wallet
+First Bitcoin Capital Corp
+OTC:BITCF
+CUSIP: 31932X105
 
-Distributed under the MIT/X11 software license, see the accompanying file license.txt or http://www.opensource.org/licenses/mit-license.php.
-
+For license see the accompanying file COPYING.txt.
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</string>
        </property>
        <property name="wordWrap">
