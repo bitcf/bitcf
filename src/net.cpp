@@ -1119,7 +1119,7 @@ void ThreadOpenConnections2(void* parg)
     printf("ThreadOpenConnections started\n");
 
     // Connect to specific addresses
-    if (mapArgs.count("-connect"))
+    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0)
     {
         for (int64 nLoop = 0;; nLoop++)
         {
@@ -1135,6 +1135,7 @@ void ThreadOpenConnections2(void* parg)
                         return;
                 }
             }
+            Sleep(500);
         }
     }
 
@@ -1206,14 +1207,17 @@ void ThreadOpenConnections2(void* parg)
         {
             // use an nUnkBias between 10 (no outgoing connections) and 90 (8 outgoing connections)
             CAddress addr = addrman.Select(10 + min(nOutbound,8)*10);
-            if (fTestNet)
-                Sleep(10000); //For some reason this loop lags if there is only few clients visible (which happens in testnet).
 
             // if we selected an invalid address, restart
             if (!addr.IsIPv4() || !addr.IsValid() || setConnected.count(addr.GetGroup()) || addr == addrLocalHost)
                 break;
 
+            // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,
+            // stop this loop, and let the outer loop run again (which sleeps, adds seed nodes, recalculates
+            // already-connected network ranges, ...) before trying new addrman addresses.
             nTries++;
+            if (nTries > 100)
+                break;
 
             // only consider very recently tried nodes after 30 failed attempts
             if (nANow - addr.nLastTry < 600 && nTries < 30)
